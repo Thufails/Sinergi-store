@@ -7,3 +7,67 @@
     --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
         'Segoe UI Symbol', 'Noto Color Emoji';
 }
+
+@layer components {
+    .store-header {
+        position: fixed;
+        inset: 0 0 auto;
+        z-index: 50;
+        width: 100%;
+        background: rgb(255 255 255 / 97%);
+        backdrop-filter: blur(12px);
+    }
+
+    .store-main {
+        width: 100%;
+        padding-top: 73px;
+    }
+
+    .store-nav-link {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        padding-block: 0.5rem;
+        color: rgb(71 85 105);
+        transition: color 150ms ease;
+    }
+
+    .store-nav-link:hover,
+    .store-nav-link.is-active {
+        color: rgb(180 83 9);
+    }
+
+    .store-nav-link::after {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 2px;
+        border-radius: 9999px;
+        background: rgb(245 158 11);
+        content: '';
+        transform: scaleX(0);
+        transform-origin: center;
+        transition: transform 150ms ease;
+    }
+
+    .store-nav-link.is-active::after {
+        transform: scaleX(1);
+    }
+
+    .store-mobile-nav-link.is-active {
+        background: rgb(255 251 235);
+        color: rgb(180 83 9);
+        font-weight: 600;
+    }
+
+    .store-testimonial-slide {
+        flex: 0 0 100%;
+    }
+
+    @media (min-width: 768px) {
+        .store-testimonial-slide {
+            flex-basis: calc((100% - 1.25rem) / 2);
+        }
+    }
+}

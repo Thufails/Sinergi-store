@@ -50,6 +50,13 @@
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         Kategori
                 </a>
+                <a href="{{ route('admin.testimonials.index') }}"
+                    class="block rounded-xl px-4 py-3 text-sm transition
+                    {{ request()->routeIs('admin.testimonials.*')
+                            ? 'bg-amber-500 font-semibold text-slate-950'
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                        Testimoni
+                </a>
                 </div>
             </nav>
 

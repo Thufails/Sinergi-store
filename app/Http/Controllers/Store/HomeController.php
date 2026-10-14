@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
-use App\Models\Category;
 use App\Models\Product;
+use App\Models\Testimonial;
 use Illuminate\View\View;
 
 class HomeController extends Controller
@@ -18,13 +18,12 @@ class HomeController extends Controller
             ->limit(6)
             ->get();
 
-        $categories = Category::query()
+        $testimonials = Testimonial::query()
             ->where('is_active', true)
-            ->withCount(['products' => fn ($query) => $query->where('is_active', true)])
-            ->orderBy('sort_order')
-            ->orderBy('name')
+            ->latest()
+            ->limit(6)
             ->get();
 
-        return view('store.home', compact('featuredProducts', 'categories'));
+        return view('store.home', compact('featuredProducts', 'testimonials'));
     }
 }
