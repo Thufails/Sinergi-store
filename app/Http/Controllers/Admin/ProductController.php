@@ -9,6 +9,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class ProductController extends Controller
@@ -29,6 +30,10 @@ class ProductController extends Controller
 
         $query->when($request->status === 'active', fn ($query) => $query->where('is_active', true));
         $query->when($request->status === 'inactive', fn ($query) => $query->where('is_active', false));
+        $query->when($request->discount === 'yes', fn ($query) => $query->where('discount_value', '>', 0));
+        $query->when($request->discount === 'no', fn ($query) => $query->where('discount_value', 0));
+        $query->when($request->stock === 'out', fn ($query) => $query->where('stock', 0));
+        $query->when($request->stock === 'low', fn ($query) => $query->whereBetween('stock', [1, 5]));
 
         $sort = $request->input('sort', 'latest');
         match ($sort) {
@@ -106,14 +111,26 @@ class ProductController extends Controller
 
     private function validateProduct(Request $request, ?Product $product = null): array
     {
-        return $request->validate([
+        $validated = $request->validate([
             'category_id' => ['required', 'exists:categories,id'],
             'name' => ['required', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
+            'discount_type' => ['required', 'in:percentage,fixed'],
+            'discount_value' => ['required', 'numeric', 'min:0'],
             'stock' => ['required', 'integer', 'min:0'],
             'image' => ['nullable', 'image', 'max:2048'],
         ]);
+
+        if ($validated['discount_type'] === 'percentage' && $validated['discount_value'] > 100) {
+            throw ValidationException::withMessages(['discount_value' => 'Diskon persentase tidak boleh lebih dari 100%.']);
+        }
+
+        if ($validated['discount_type'] === 'fixed' && $validated['discount_value'] > $validated['price']) {
+            throw ValidationException::withMessages(['discount_value' => 'Diskon nominal tidak boleh lebih besar dari harga produk.']);
+        }
+
+        return $validated;
     }
 
     private function uniqueSlug(string $name, ?int $ignoreId = null): string

@@ -12,10 +12,13 @@
 <body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
     <div class="min-h-screen lg:flex">
         <aside class="w-full border-b border-white/10 bg-slate-950 text-white lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-b-0">
-            <div class="flex items-center justify-between px-5 py-4 sm:px-6 sm:py-5">
-                <div>
-                    <p class="text-xs font-semibold uppercase tracking-[0.25em] text-amber-400">Sinergi Store</p>
-                    <p class="mt-2 text-sm text-slate-400">Admin workspace</p>
+            <div class="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6 sm:py-5 lg:border-b-0">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-900/40 p-1 shadow-lg shadow-amber-500/10"><img src="{{ asset('images/logo-sinergi.png') }}" alt="Logo Sinergi Store" class="h-full w-full object-contain"></span>
+                    <div>
+                        <p class="text-xs font-semibold uppercase tracking-[0.25em] text-amber-400">Sinergi Store</p>
+                        <p class="mt-1 text-xs text-slate-400">Admin workspace</p>
+                    </div>
                 </div>
                 <button type="button" id="mobile-menu-button" aria-controls="admin-navigation" aria-expanded="false" class="rounded-lg p-2 text-slate-300 transition hover:bg-white/10 hover:text-white lg:hidden">
                     <span class="sr-only">Buka menu</span>
@@ -23,7 +26,9 @@
                 </button>
             </div>
 
-            <nav id="admin-navigation" class="max-h-0 -translate-y-2 overflow-hidden space-y-2 px-4 opacity-0 transition-all duration-300 ease-out lg:max-h-none lg:translate-y-0 lg:overflow-visible lg:pb-0 lg:opacity-100">
+            <nav id="admin-navigation" class="max-h-0 -translate-y-2 overflow-hidden px-4 opacity-0 transition-all duration-300 ease-out lg:max-h-none lg:translate-y-0 lg:overflow-visible lg:pb-0 lg:opacity-100">
+                <p class="mb-2 px-4 pt-3 text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">Menu utama</p>
+                <div class="space-y-2">
                 <a href="{{ route('admin.dashboard') }}"
                     class="block rounded-xl px-4 py-3 text-sm font-semibold transition
                     {{ request()->routeIs('admin.dashboard')
@@ -45,6 +50,7 @@
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         Kategori
                 </a>
+                </div>
             </nav>
 
             <div class="mt-auto hidden border-t border-white/10 p-4 lg:block">

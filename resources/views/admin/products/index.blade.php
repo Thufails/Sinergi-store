@@ -17,14 +17,16 @@
             <select name="category" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Semua kategori</option>@foreach ($categories as $category)<option value="{{ $category->id }}" @selected((string) request('category') === (string) $category->id)>{{ $category->name }}</option>@endforeach</select>
             <select name="status" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Semua status</option><option value="active" @selected(request('status') === 'active')>Aktif</option><option value="inactive" @selected(request('status') === 'inactive')>Nonaktif</option></select>
             <select name="sort" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="latest" @selected(request('sort', 'latest') === 'latest')>Terbaru</option><option value="name_asc" @selected(request('sort') === 'name_asc')>Nama A-Z</option><option value="price_low" @selected(request('sort') === 'price_low')>Harga terendah</option><option value="price_high" @selected(request('sort') === 'price_high')>Harga tertinggi</option><option value="stock_high" @selected(request('sort') === 'stock_high')>Stok terbanyak</option></select>
+            <select name="discount" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Semua diskon</option><option value="yes" @selected(request('discount') === 'yes')>Sedang diskon</option><option value="no" @selected(request('discount') === 'no')>Tanpa diskon</option></select>
+            <select name="stock" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Semua stok</option><option value="out" @selected(request('stock') === 'out')>Stok habis</option><option value="low" @selected(request('stock') === 'low')>Stok menipis (1-5)</option></select>
             <div class="flex gap-2 sm:col-span-2 lg:col-span-4"><button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-medium text-white hover:bg-slate-700">Terapkan filter</button><a href="{{ route('admin.products.index') }}" class="rounded-xl px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-200">Reset</a></div>
         </form>
         @if ($products->isEmpty())
-            <div class="px-6 py-16 text-center"><p class="font-medium text-slate-700">{{ request()->hasAny(['search', 'category', 'status', 'sort']) ? 'Produk tidak ditemukan.' : 'Belum ada produk.' }}</p><p class="mt-1 text-sm text-slate-500">{{ request()->hasAny(['search', 'category', 'status', 'sort']) ? 'Coba ubah kata kunci atau filter yang digunakan.' : 'Klik tombol tambah produk untuk memulai.' }}</p></div>
+            <div class="px-6 py-16 text-center"><p class="font-medium text-slate-700">{{ request()->hasAny(['search', 'category', 'status', 'sort', 'discount', 'stock']) ? 'Produk tidak ditemukan.' : 'Belum ada produk.' }}</p><p class="mt-1 text-sm text-slate-500">{{ request()->hasAny(['search', 'category', 'status', 'sort', 'discount', 'stock']) ? 'Coba ubah kata kunci atau filter yang digunakan.' : 'Klik tombol tambah produk untuk memulai.' }}</p></div>
         @else
-            <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-left text-sm"><thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="px-6 py-4 font-semibold">Gambar</th><th class="px-6 py-4 font-semibold">Produk</th><th class="px-6 py-4 font-semibold">Kategori</th><th class="px-6 py-4 font-semibold">Harga</th><th class="px-6 py-4 font-semibold">Stok</th><th class="px-6 py-4 font-semibold">Status</th><th class="px-6 py-4 text-right font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-slate-100">
+            <div class="overflow-x-auto"><table class="min-w-full divide-y divide-slate-200 text-left text-sm"><thead class="bg-slate-50 text-xs uppercase tracking-wide text-slate-500"><tr><th class="px-6 py-4 font-semibold">Gambar</th><th class="px-6 py-4 font-semibold">Produk</th><th class="px-6 py-4 font-semibold">Kategori</th><th class="px-6 py-4 font-semibold">Harga</th><th class="px-6 py-4 font-semibold">Diskon</th><th class="px-6 py-4 font-semibold">Stok</th><th class="px-6 py-4 font-semibold">Status</th><th class="px-6 py-4 text-right font-semibold">Aksi</th></tr></thead><tbody class="divide-y divide-slate-100">
                 @foreach ($products as $product)
-                    <tr class="hover:bg-slate-50"><td class="px-6 py-4">@if ($product->image)<img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-14 w-14 rounded-xl object-cover">@else<span class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">Tidak ada</span>@endif</td><td class="px-6 py-4"><p class="font-medium text-slate-900">{{ $product->name }}</p><p class="text-xs text-slate-500">{{ $product->slug }}</p></td><td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $product->category?->name ?? '-' }}</td><td class="whitespace-nowrap px-6 py-4 text-slate-700">Rp {{ number_format((float) $product->price, 0, ',', '.') }}</td><td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $product->stock }}</td><td class="whitespace-nowrap px-6 py-4">@if ($product->is_active)<span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Aktif</span>@else<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Nonaktif</span>@endif</td><td class="whitespace-nowrap px-6 py-4 text-right"><a href="{{ route('admin.products.index', ['edit' => $product->id]) }}" class="mr-3 font-medium text-amber-600 hover:text-amber-700">Edit</a><form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="inline" onsubmit="return confirm('Produk ini akan dihapus permanen. Lanjutkan?')">@csrf @method('DELETE')<button type="submit" class="font-medium text-red-600 hover:text-red-700">Hapus</button></form></td></tr>
+                    <tr class="hover:bg-slate-50"><td class="px-6 py-4">@if ($product->image)<img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-14 w-14 rounded-xl object-cover">@else<span class="flex h-14 w-14 items-center justify-center rounded-xl bg-slate-100 text-xs text-slate-400">Tidak ada</span>@endif</td><td class="px-6 py-4"><p class="font-medium text-slate-900">{{ $product->name }}</p><p class="text-xs text-slate-500">{{ $product->slug }}</p></td><td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $product->category?->name ?? '-' }}</td><td class="whitespace-nowrap px-6 py-4">@if ((float) $product->discount_value > 0)<p class="font-semibold text-emerald-700">Rp {{ number_format($product->final_price, 0, ',', '.') }}</p><p class="text-xs text-slate-400 line-through">Rp {{ number_format((float) $product->price, 0, ',', '.') }}</p>@else<span class="text-slate-700">Rp {{ number_format((float) $product->price, 0, ',', '.') }}</span>@endif</td><td class="whitespace-nowrap px-6 py-4">@if ((float) $product->discount_value > 0)<span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-700">{{ $product->discount_type === 'fixed' ? 'Rp ' . number_format((float) $product->discount_value, 0, ',', '.') : rtrim(rtrim(number_format((float) $product->discount_value, 2, ',', '.'), '0'), ',') . '%' }}</span>@else<span class="text-slate-400">Tidak ada</span>@endif</td><td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $product->stock }}</td><td class="whitespace-nowrap px-6 py-4">@if ($product->is_active)<span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Aktif</span>@else<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Nonaktif</span>@endif</td><td class="whitespace-nowrap px-6 py-4 text-right"><a href="{{ route('admin.products.index', ['edit' => $product->id]) }}" class="mr-3 font-medium text-amber-600 hover:text-amber-700">Edit</a><form action="{{ route('admin.products.destroy', $product) }}" method="POST" class="inline" onsubmit="return confirm('Produk ini akan dihapus permanen. Lanjutkan?')">@csrf @method('DELETE')<button type="submit" class="font-medium text-red-600 hover:text-red-700">Hapus</button></form></td></tr>
                 @endforeach
             </tbody></table></div>
             <div class="border-t border-slate-200 px-6 py-4">{{ $products->links() }}</div>
@@ -41,7 +43,8 @@
                 @if ($editingProduct) @method('PUT') @endif
                 <div><label for="name" class="mb-2 block text-sm font-medium text-slate-700">Nama produk</label><input id="name" name="name" type="text" value="{{ old('name', $editingProduct?->name) }}" required placeholder="Contoh: Laptop Pro" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div>
                 <div><label for="category_id" class="mb-2 block text-sm font-medium text-slate-700">Kategori</label><select id="category_id" name="category_id" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Pilih kategori</option>@foreach ($categories as $category)<option value="{{ $category->id }}" @selected(old('category_id', $editingProduct?->category_id) == $category->id)>{{ $category->name }}{{ $category->is_active ? '' : ' (Nonaktif)' }}</option>@endforeach</select></div>
-                <div class="grid gap-4 sm:grid-cols-2"><div><label for="price" class="mb-2 block text-sm font-medium text-slate-700">Harga</label><input id="price" name="price" type="number" min="0" step="0.01" value="{{ old('price', $editingProduct?->price) }}" required placeholder="0" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div><div><label for="stock" class="mb-2 block text-sm font-medium text-slate-700">Stok</label><input id="stock" name="stock" type="number" min="0" value="{{ old('stock', $editingProduct?->stock ?? 0) }}" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div></div>
+                <div class="grid gap-4 sm:grid-cols-2"><div><label for="price" class="mb-2 block text-sm font-medium text-slate-700">Harga normal</label><input id="price" name="price" type="number" min="0" step="0.01" value="{{ old('price', $editingProduct?->price) }}" required placeholder="0" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div><div><label for="stock" class="mb-2 block text-sm font-medium text-slate-700">Stok</label><input id="stock" name="stock" type="number" min="0" value="{{ old('stock', $editingProduct?->stock ?? 0) }}" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div></div>
+                <div class="grid gap-4 sm:grid-cols-2"><div><label for="discount_type" class="mb-2 block text-sm font-medium text-slate-700">Tipe diskon</label><select id="discount_type" name="discount_type" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="percentage" @selected(old('discount_type', $editingProduct?->discount_type ?? 'percentage') === 'percentage')>Persentase (%)</option><option value="fixed" @selected(old('discount_type', $editingProduct?->discount_type) === 'fixed')>Nominal (Rp)</option></select></div><div><label for="discount_value" class="mb-2 block text-sm font-medium text-slate-700">Nilai diskon</label><input id="discount_value" name="discount_value" type="number" min="0" step="0.01" value="{{ old('discount_value', $editingProduct?->discount_value ?? 0) }}" required placeholder="0" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><p id="discount-help" class="mt-1 text-xs text-slate-400">Isi persentase, contoh 10 untuk 10%.</p></div></div>
                 <div><label for="description" class="mb-2 block text-sm font-medium text-slate-700">Deskripsi <span class="font-normal text-slate-400">(opsional)</span></label><textarea id="description" name="description" rows="5" placeholder="Deskripsi singkat produk" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">{{ old('description', $editingProduct?->description) }}</textarea></div>
                 <div><label for="image" class="mb-2 block text-sm font-medium text-slate-700">Gambar <span class="font-normal text-slate-400">(opsional, max 2 MB)</span></label><img id="product-image-preview" src="{{ $editingProduct?->image ? asset('storage/' . $editingProduct->image) : '' }}" alt="Preview gambar produk" class="{{ $editingProduct?->image ? '' : 'hidden' }} mb-3 h-24 w-24 rounded-xl object-cover"><input id="image" name="image" type="file" accept="image/*" class="block w-full rounded-xl border border-slate-300 px-4 py-3 text-sm text-slate-500 file:mr-4 file:rounded-lg file:border-0 file:bg-amber-100 file:px-3 file:py-2 file:font-medium file:text-amber-800"></div>
                 <label class="flex items-center gap-3 text-sm font-medium text-slate-700"><input name="is_active" type="checkbox" value="1" @checked(old('is_active', $editingProduct ? $editingProduct->is_active : true)) class="h-4 w-4 rounded border-slate-300 text-amber-500 focus:ring-amber-400"><span>Produk aktif</span></label>
@@ -49,6 +52,7 @@
         </div>
         <div class="flex shrink-0 gap-3 border-t border-slate-200 bg-white px-6 py-4"><button type="submit" form="product-form" class="flex-1 rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">{{ $editingProduct ? 'Simpan perubahan' : 'Simpan produk' }}</button>@if ($editingProduct)<button type="button" data-close-product-drawer class="rounded-xl px-5 py-3 text-sm font-medium text-slate-500 hover:bg-slate-100">Batal</button>@endif</div>
     </aside>
+    <div data-image-modal class="fixed inset-0 z-[10000] hidden items-center justify-center bg-slate-950/80 p-6"><button type="button" data-close-image-modal aria-label="Tutup preview gambar" class="absolute right-6 top-5 text-4xl leading-none text-white/80 hover:text-white">&times;</button><img data-image-modal-content src="" alt="" class="max-h-[85vh] max-w-full rounded-2xl object-contain shadow-2xl"></div>
 @endsection
 
 @push('scripts')
@@ -59,24 +63,56 @@
     const hasEditingProduct = @json((bool) $editingProduct);
     const productImageInput = document.getElementById('image');
     const productImagePreview = document.getElementById('product-image-preview');
+    const discountType = document.getElementById('discount_type');
+    const discountValue = document.getElementById('discount_value');
+    const discountHelp = document.getElementById('discount-help');
+    const imageModal = document.querySelector('[data-image-modal]');
+    const imageModalContent = document.querySelector('[data-image-modal-content]');
+    const updateDiscountFields = () => {
+        const isFixed = discountType?.value === 'fixed';
+        if (discountValue) discountValue.max = isFixed ? '' : '100';
+        if (discountHelp) discountHelp.textContent = isFixed ? 'Isi nominal rupiah, contoh 20000.' : 'Isi persentase, contoh 10 untuk 10%.';
+    };
     const openProductDrawer = () => { productDrawer.style.transform = 'translate(-50%, -50%)'; productDrawer.classList.remove('pointer-events-none', 'opacity-0'); productBackdrop.classList.remove('hidden'); document.body.classList.add('overflow-hidden'); };
     const closeProductDrawer = () => {
         if (hasEditingProduct) { window.location.href = productsUrl; return; }
         productDrawer.style.transform = 'translate(-50%, -45%)'; productDrawer.classList.add('pointer-events-none', 'opacity-0'); productBackdrop.classList.add('hidden'); document.body.classList.remove('overflow-hidden');
     };
     document.addEventListener('click', (event) => {
+        const imageButton = event.target.closest('[data-image-preview]');
+        if (imageButton) {
+            imageModalContent.src = imageButton.dataset.imagePreview;
+            imageModalContent.alt = imageButton.dataset.imageAlt;
+            imageModal.classList.remove('hidden');
+            imageModal.classList.add('flex');
+            return;
+        }
         if (event.target.closest('[data-open-product-drawer]')) {
             if (hasEditingProduct) { window.location.href = productsUrl; } else { openProductDrawer(); }
         }
     });
     document.querySelectorAll('[data-close-product-drawer]').forEach((button) => button.addEventListener('click', closeProductDrawer));
     productBackdrop?.addEventListener('click', closeProductDrawer);
+    const closeImageModal = () => { imageModal.classList.add('hidden'); imageModal.classList.remove('flex'); imageModalContent.src = ''; };
+    document.querySelector('[data-close-image-modal]')?.addEventListener('click', closeImageModal);
+    imageModal?.addEventListener('click', (event) => { if (event.target === imageModal) closeImageModal(); });
+    document.querySelectorAll('table tbody tr td:first-child img').forEach((image) => {
+        image.classList.add('cursor-zoom-in');
+        image.addEventListener('click', () => {
+            imageModalContent.src = image.src;
+            imageModalContent.alt = image.alt;
+            imageModal.classList.remove('hidden');
+            imageModal.classList.add('flex');
+        });
+    });
     productImageInput?.addEventListener('change', (event) => {
         const file = event.target.files[0];
         if (!file) return;
         productImagePreview.src = URL.createObjectURL(file);
         productImagePreview.classList.remove('hidden');
     });
+    discountType?.addEventListener('change', updateDiscountFields);
+    updateDiscountFields();
     @if ($editingProduct || $errors->any()) openProductDrawer(); @endif
 </script>
 @endpush

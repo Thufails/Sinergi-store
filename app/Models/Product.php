@@ -18,6 +18,8 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'discount_type',
+        'discount_value',
         'stock',
         'image',
         'is_active',
@@ -28,9 +30,20 @@ class Product extends Model
     {
         return [
             'price' => 'decimal:2',
+            'discount_value' => 'decimal:2',
             'stock' => 'integer',
             'is_active' => 'boolean',
         ];
+    }
+
+    public function getFinalPriceAttribute(): float
+    {
+        $price = (float) $this->price;
+        $discount = (float) $this->discount_value;
+
+        return round(max(0, $this->discount_type === 'fixed'
+            ? $price - $discount
+            : $price - ($price * $discount / 100)), 2);
     }
 
     // Relasi: produk dimiliki satu kategori

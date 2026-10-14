@@ -17,11 +17,21 @@ class DashboardController extends Controller
         $totalProducts = Product::count();
         $totalCategories = Category::count();
         $activeProducts = Product::where('is_active', true)->count();
+        $discountedProducts = Product::where('discount_value', '>', 0)->count();
+        $lowStockProducts = Product::whereBetween('stock', [1, 5])->orderBy('stock')->orderBy('name')->get();
+        $outOfStockProducts = Product::where('stock', 0)->orderBy('name')->get();
+        $latestProducts = Product::with('category')->latest()->limit(5)->get();
+        $categorySummary = Category::withCount('products')->orderByDesc('products_count')->orderBy('name')->limit(5)->get();
 
         return view('admin.dashboard', compact(
             'totalProducts',
             'totalCategories',
             'activeProducts',
+            'discountedProducts',
+            'lowStockProducts',
+            'outOfStockProducts',
+            'latestProducts',
+            'categorySummary',
         ));
     }
 

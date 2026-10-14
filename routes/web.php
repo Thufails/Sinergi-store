@@ -6,11 +6,8 @@ use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ProductController;
-
-// ==================== PUBLIC STORE ====================
-Route::get('/', function () {
-    return view('welcome');
-})->name('store.home');
+use App\Http\Controllers\Store\HomeController;
+use App\Http\Controllers\Store\ProductController as StoreProductController;
 
 // ==================== ADMIN AUTHENTICATION ====================
 Route::get('/admin/login', [AuthController::class, 'showLoginForm'])
@@ -57,3 +54,13 @@ Route::middleware('auth')
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('admin.logout');
 });
+
+// ==================== PUBLIC STORE ====================
+Route::get('/', [HomeController::class, 'index'])
+    ->name('store.home');
+
+Route::get('/products', [StoreProductController::class, 'index'])
+    ->name('store.products.index');
+
+Route::get('/products/{product:slug}', [StoreProductController::class, 'show'])
+    ->name('store.products.show');
