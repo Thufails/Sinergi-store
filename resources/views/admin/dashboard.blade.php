@@ -9,7 +9,7 @@
             <p class="text-sm font-semibold text-amber-950">Selamat datang kembali, {{ auth()->user()->name }}</p>
             <h2 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Kelola Sinergi Store dengan lebih mudah.</h2>
             <p class="mt-4 max-w-xl text-sm leading-6 text-amber-950/80 sm:text-base">Pantau katalog, stok, kategori, dan promosi produk dari satu ruang kerja yang rapi.</p>
-            <div class="mt-6 flex flex-wrap gap-3 text-xs font-semibold text-amber-950/80"><span class="rounded-full bg-white/25 px-4 py-2">Katalog lebih rapi</span><span class="rounded-full bg-white/25 px-4 py-2">Produk mudah dikelola</span><span class="rounded-full bg-white/25 px-4 py-2">Promosi lebih fleksibel</span></div>
+            {{-- <div class="mt-6 flex flex-wrap gap-3 text-xs font-semibold text-amber-950/80"><span class="rounded-full bg-white/25 px-4 py-2">Katalog lebih rapi</span><span class="rounded-full bg-white/25 px-4 py-2">Produk mudah dikelola</span><span class="rounded-full bg-white/25 px-4 py-2">Promosi lebih fleksibel</span></div> --}}
         </div>
         <div class="pointer-events-none absolute -right-10 -top-16 h-64 w-64 rounded-full border-[28px] border-white/15"></div>
         <div class="pointer-events-none absolute -bottom-28 right-24 h-72 w-72 rounded-full border-[42px] border-amber-200/20"></div>
