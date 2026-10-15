@@ -16,20 +16,36 @@
             <div class="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-amber-300/50"></div>
             <div class="absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-amber-600/30"></div>
             <div class="relative">
-                <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-950">Sinergi Store</p>
-                <h1 class="mt-16 max-w-lg text-5xl font-semibold leading-tight tracking-tight text-stone-950">Kelola katalog dengan lebih sederhana.</h1>
+                <div class="flex items-center gap-3">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/90 p-2 shadow-lg shadow-amber-950/10">
+                        <img src="{{ asset('images/logo-sinergi.png') }}" alt="" class="h-full w-full object-contain">
+                    </span>
+                    <div>
+                        <p class="text-sm font-bold uppercase tracking-[0.25em] text-amber-950">Sinergi Store</p>
+                        <p class="mt-1 text-xs font-medium text-amber-950/70">Admin workspace</p>
+                    </div>
+                </div>
+                <h1 class="mt-14 max-w-lg text-5xl font-semibold leading-tight tracking-tight text-stone-950">Kelola katalog dengan lebih sederhana.</h1>
                 <p class="mt-6 max-w-md text-lg leading-8 text-amber-950/80">Atur produk, kategori, dan konten toko dari satu ruang kerja yang rapi.</p>
             </div>
             <p class="relative text-sm text-amber-950/70">Admin workspace · Sinergi Store</p>
         </section>
 
-        <section class="flex items-center justify-center bg-stone-950 px-6 py-12 sm:px-10">
-            <div class="w-full max-w-md">
-                <div class="mb-10 lg:hidden">
-                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-400">Sinergi Store</p>
+        <section class="relative isolate flex items-center justify-center overflow-hidden bg-stone-950 px-6 py-12 sm:px-10">
+            <div class="pointer-events-none absolute -right-24 -top-28 h-80 w-80 rounded-full bg-amber-500/10 blur-3xl"></div>
+            <div class="pointer-events-none absolute -bottom-40 -left-24 h-96 w-96 rounded-full bg-orange-700/10 blur-3xl"></div>
+            <div class="relative w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.035] p-6 shadow-2xl shadow-black/20 sm:p-9">
+                <div class="mb-8 flex items-center gap-3 lg:hidden">
+                    <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 p-1.5">
+                        <img src="{{ asset('images/logo-sinergi.png') }}" alt="" class="h-full w-full object-contain">
+                    </span>
+                    <div>
+                        <p class="text-sm font-bold uppercase tracking-[0.2em] text-white">Sinergi Store</p>
+                        <p class="mt-1 text-xs text-slate-400">Admin workspace</p>
+                    </div>
                 </div>
                 <div class="mb-8">
-                    <p class="text-sm font-medium text-amber-400">Admin Sinergi Store area</p>
+                    <p class="text-sm font-semibold text-amber-400">Admin workspace</p>
                     <h2 class="mt-2 text-3xl font-semibold tracking-tight text-white">Selamat datang kembali</h2>
                     <p class="mt-3 text-sm leading-6 text-slate-400">Masuk untuk mengelola katalog Sinergi Store.</p>
                 </div>
