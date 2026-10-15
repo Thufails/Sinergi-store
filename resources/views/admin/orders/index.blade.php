@@ -20,16 +20,33 @@
             <p class="mt-1 text-sm text-slate-500">Tinjau pesanan dan kelola konfirmasi pembayaran.</p>
         </div>
 
-        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid gap-3 border-b border-slate-200 bg-slate-50 p-5 sm:grid-cols-[minmax(0,1fr)_240px_auto_auto]">
-            <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nomor, nama, atau WhatsApp pembeli" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
-            <select name="status" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
-                <option value="">Semua status</option>
-                @foreach ($statusLabels as $status => $label)
-                    <option value="{{ $status }}" @selected(request('status') === $status)>{{ $label }}</option>
-                @endforeach
-            </select>
-            <button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Terapkan</button>
-            <a href="{{ route('admin.orders.index') }}" class="rounded-xl px-4 py-3 text-center text-sm font-medium text-slate-500 transition hover:bg-slate-200">Reset</a>
+        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid items-end gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-2 2xl:grid-cols-12">
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-4">
+                Cari pesanan
+                <input type="search" name="search" value="{{ request('search') }}" placeholder="Nomor, nama, atau WhatsApp" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-4 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+            </label>
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+                Status
+                <select name="status" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                    <option value="">Semua status</option>
+                    @foreach ($statusLabels as $status => $label)
+                        <option value="{{ $status }}" @selected(request('status') === $status)>{{ $label }}</option>
+                    @endforeach
+                </select>
+            </label>
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+                Dari tanggal
+                <input type="date" name="date_from" value="{{ request('date_from') }}" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+            </label>
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+                Sampai tanggal
+                <input type="date" name="date_to" value="{{ request('date_to') }}" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+            </label>
+            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-700 2xl:col-span-1">Terapkan</button>
+            <a href="{{ route('admin.orders.index') }}" class="flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 2xl:col-span-1">Reset</a>
+            @if ($errors->has('date_from') || $errors->has('date_to'))
+                <p class="text-sm text-rose-600 md:col-span-2 xl:col-span-12" role="alert">{{ $errors->first('date_to') ?: $errors->first('date_from') }}</p>
+            @endif
         </form>
 
         @if ($orders->isEmpty())
@@ -62,7 +79,7 @@
                                 <td class="whitespace-nowrap px-6 py-4 text-slate-600">{{ $order->items->sum('quantity') }} unit · {{ $order->items->count() }} jenis</td>
                                 <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-800">Rp {{ number_format((float) $order->total_amount, 0, ',', '.') }}</td>
                                 <td class="whitespace-nowrap px-6 py-4"><span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyles[$order->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $statusLabels[$order->status] ?? $order->status }}</span></td>
-                                <td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $order->created_at->format('d M Y, H:i') }}</td>
+                                <td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $order->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right"><a href="{{ route('admin.orders.show', $order) }}" class="font-semibold text-amber-700 hover:text-amber-800">Lihat detail</a></td>
                             </tr>
                         @endforeach

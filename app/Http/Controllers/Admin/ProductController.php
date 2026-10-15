@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -47,6 +49,28 @@ class ProductController extends Controller
         };
 
         $products = $query->paginate(10)->withQueryString();
+        $productIds = $products->getCollection()->modelKeys();
+        $heldStockByProduct = OrderItem::query()
+            ->whereIn('product_id', $productIds)
+            ->whereHas('order', fn ($orderQuery) => $orderQuery
+                ->where('status', Order::STATUS_AWAITING_PAYMENT)
+                ->where('payment_due_at', '>', now()))
+            ->selectRaw('product_id, SUM(quantity) as reserved_quantity')
+            ->groupBy('product_id')
+            ->pluck('reserved_quantity', 'product_id');
+        $soldStockByProduct = OrderItem::query()
+            ->whereIn('product_id', $productIds)
+            ->whereHas('order', fn ($orderQuery) => $orderQuery->where('status', Order::STATUS_PAID))
+            ->selectRaw('product_id, SUM(quantity) as sold_quantity')
+            ->groupBy('product_id')
+            ->pluck('sold_quantity', 'product_id');
+
+        $products->getCollection()->each(function (Product $product) use ($heldStockByProduct, $soldStockByProduct) {
+            $heldStock = (int) $heldStockByProduct->get($product->id, 0);
+            $product->setAttribute('held_stock', $heldStock);
+            $product->setAttribute('available_stock', max(0, (int) $product->stock - $heldStock));
+            $product->setAttribute('sold_stock', (int) $soldStockByProduct->get($product->id, 0));
+        });
         $categories = Category::query()
             ->orderBy('sort_order')
             ->orderBy('name')

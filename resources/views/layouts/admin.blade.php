@@ -131,7 +131,80 @@
         </div>
     @endif
 
+    <dialog data-admin-confirmation-dialog aria-labelledby="admin-confirmation-title" aria-describedby="admin-confirmation-description" class="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
+        <div class="bg-white p-6 sm:p-7">
+            <div class="flex items-start gap-4">
+                <span data-admin-confirmation-icon class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700" aria-hidden="true">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" /></svg>
+                </span>
+                <div>
+                    <p class="text-sm font-semibold text-amber-700">Konfirmasi tindakan</p>
+                    <h2 data-admin-confirmation-title id="admin-confirmation-title" class="mt-1 text-xl font-semibold text-slate-900">Lanjutkan tindakan ini?</h2>
+                </div>
+            </div>
+            <p data-admin-confirmation-description id="admin-confirmation-description" class="mt-5 text-sm leading-6 text-slate-600"></p>
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" data-admin-confirmation-cancel class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Batal</button>
+                <button type="button" data-admin-confirmation-submit class="rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Ya, lanjutkan</button>
+            </div>
+        </div>
+    </dialog>
+
     <script>
+        (() => {
+            const dialog = document.querySelector('[data-admin-confirmation-dialog]');
+            const title = dialog?.querySelector('[data-admin-confirmation-title]');
+            const description = dialog?.querySelector('[data-admin-confirmation-description]');
+            const icon = dialog?.querySelector('[data-admin-confirmation-icon]');
+            const submitButton = dialog?.querySelector('[data-admin-confirmation-submit]');
+            const cancelButton = dialog?.querySelector('[data-admin-confirmation-cancel]');
+            let pendingForm = null;
+
+            const dangerIconClasses = ['bg-amber-100', 'text-amber-700'];
+            const dangerButtonClasses = ['bg-amber-500', 'text-slate-950', 'hover:bg-amber-400'];
+            const neutralIconClasses = ['bg-rose-100', 'text-rose-700'];
+            const neutralButtonClasses = ['bg-rose-600', 'text-white', 'hover:bg-rose-700'];
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm-title')) return;
+
+                event.preventDefault();
+                pendingForm = form;
+                title.textContent = form.dataset.confirmTitle || 'Lanjutkan tindakan ini?';
+                description.textContent = form.dataset.confirmDescription || 'Pastikan tindakan ini memang ingin dilanjutkan.';
+                submitButton.textContent = form.dataset.confirmButton || 'Ya, lanjutkan';
+
+                const isDestructive = form.dataset.confirmTone === 'danger';
+                icon.classList.remove(...(isDestructive ? dangerIconClasses : neutralIconClasses));
+                icon.classList.add(...(isDestructive ? neutralIconClasses : dangerIconClasses));
+                submitButton.classList.remove(...(isDestructive ? dangerButtonClasses : neutralButtonClasses));
+                submitButton.classList.add(...(isDestructive ? neutralButtonClasses : dangerButtonClasses));
+
+                dialog.showModal();
+            });
+
+            submitButton?.addEventListener('click', () => {
+                if (!pendingForm) return;
+                const form = pendingForm;
+                pendingForm = null;
+                dialog.close();
+                form.submit();
+            });
+
+            cancelButton?.addEventListener('click', () => {
+                pendingForm = null;
+                dialog.close();
+            });
+            dialog?.addEventListener('click', (event) => {
+                if (event.target === dialog) {
+                    pendingForm = null;
+                    dialog.close();
+                }
+            });
+            dialog?.addEventListener('close', () => { pendingForm = null; });
+        })();
+
         const adminToast = document.querySelector('[data-admin-toast]');
 
         if (adminToast) {

@@ -80,7 +80,7 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right">
                                     <a href="{{ route('admin.testimonials.index', ['edit' => $testimonial->id]) }}" class="mr-3 font-medium text-amber-600 hover:text-amber-700">Edit</a>
-                                    <form action="{{ route('admin.testimonials.destroy', $testimonial) }}" method="POST" class="inline" onsubmit="return confirm('Testimoni ini akan dihapus permanen. Lanjutkan?')">
+                                    <form action="{{ route('admin.testimonials.destroy', $testimonial) }}" method="POST" class="inline" data-confirm-title="Hapus testimoni ini?" data-confirm-description="Testimoni {{ $testimonial->name }} akan dihapus permanen." data-confirm-button="Ya, hapus testimoni" data-confirm-tone="danger">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="font-medium text-red-600 hover:text-red-700">Hapus</button>

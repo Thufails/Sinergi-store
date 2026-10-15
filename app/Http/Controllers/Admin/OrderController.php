@@ -7,6 +7,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -27,6 +28,11 @@ class OrderController extends Controller
 
     public function index(Request $request): View
     {
+        $filters = $request->validate([
+            'date_from' => ['nullable', 'date_format:Y-m-d'],
+            'date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:date_from'],
+        ]);
+
         $query = Order::query()->with('items');
 
         $query->when($request->filled('search'), function ($query) use ($request) {
@@ -43,6 +49,18 @@ class OrderController extends Controller
             $request->filled('status') && array_key_exists($request->string('status')->toString(), self::STATUS_LABELS),
             fn ($query) => $query->where('status', $request->string('status')->toString()),
         );
+
+        if (isset($filters['date_from'])) {
+            $dateFromUtc = CarbonImmutable::createFromFormat('!Y-m-d', $filters['date_from'], 'Asia/Jakarta')->utc();
+            $query->where('created_at', '>=', $dateFromUtc);
+        }
+
+        if (isset($filters['date_to'])) {
+            $dateToExclusiveUtc = CarbonImmutable::createFromFormat('!Y-m-d', $filters['date_to'], 'Asia/Jakarta')
+                ->addDay()
+                ->utc();
+            $query->where('created_at', '<', $dateToExclusiveUtc);
+        }
 
         $orders = $query->latest()->paginate(12)->withQueryString();
 
@@ -239,13 +257,16 @@ class OrderController extends Controller
         [$type, $id] = explode(':', $inventoryKey, 2);
 
         if ($type === 'variant') {
-            $variant = ProductVariant::query()->lockForUpdate()->find($id);
-            if (! $variant || (int) $variant->product_id !== (int) $item->product_id) {
+            $product = Product::query()->lockForUpdate()->find($item->product_id);
+            if (! $product) {
                 return null;
             }
 
-            $product = Product::query()->lockForUpdate()->find($variant->product_id);
-            if (! $product) {
+            $variant = ProductVariant::query()
+                ->where('product_id', $product->id)
+                ->lockForUpdate()
+                ->find($id);
+            if (! $variant) {
                 return null;
             }
 
