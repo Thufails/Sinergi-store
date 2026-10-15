@@ -38,6 +38,13 @@
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         Dashboard
                 </a>
+                <a href="{{ route('admin.orders.index') }}"
+                    class="block rounded-xl px-4 py-3 text-sm transition
+                    {{ request()->routeIs('admin.orders.*')
+                            ? 'bg-amber-500 font-semibold text-slate-950'
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                        Pesanan
+                </a>
                 <a href="{{ route('admin.products.index') }}"
                     class="block rounded-xl px-4 py-3 text-sm transition
                     {{ request()->routeIs('admin.products.*')

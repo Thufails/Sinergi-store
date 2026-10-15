@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Admin\AuthController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\TestimoniController;
 use App\Http\Controllers\Store\HomeController;
@@ -51,6 +52,14 @@ Route::middleware('auth')
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])
             ->name('admin.products.destroy');
 
+        // Kelola pesanan yang dibuat dari halaman publik
+        Route::get('/orders', [OrderController::class, 'index'])
+            ->name('admin.orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])
+            ->name('admin.orders.show');
+        Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
+            ->name('admin.orders.status');
+
         // CRUD testimoni dalam satu halaman
         Route::get('/testimonials', [TestimoniController::class, 'index'])
             ->name('admin.testimonials.index');
@@ -75,3 +84,6 @@ Route::get('/products', [StoreProductController::class, 'index'])
 
 Route::get('/products/{product:slug}', [StoreProductController::class, 'show'])
     ->name('store.products.show');
+
+Route::post('/products/{product:slug}/order', [StoreProductController::class, 'order'])
+    ->name('store.products.order');
