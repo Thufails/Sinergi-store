@@ -86,16 +86,16 @@
         </div>
     </section>
 
-    <section id="about" class="bg-white px-6 py-16 sm:py-20 lg:px-8">
-        <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-center">
+    <section id="about" class="bg-white px-6 py-12 sm:py-16 lg:px-8">
+        <div class="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.65fr_1.35fr] lg:items-center">
             <div>
                 <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Tentang kami</p>
                 <h2 class="mt-3 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Sinergi Store</h2>
             </div>
 
-            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-8">
+            <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
                 <p class="text-base leading-7 text-slate-600">
-                    Sinergi Store menghadirkan produk pilihan untuk mendukung kebutuhan dan perkembanganmu. Jelajahi katalog kami dengan informasi produk yang jelas dan harga yang transparan.
+                    Sinergi Store hadir untuk memudahkan Anda mendapatkan produk merchandise secara online, kapan pun dan di mana pun. Sebagai bagian dari Sinergi Grup, kami juga menyediakan layanan kreatif berupa pembuatan katalog, fotografi produk, video promosi, hingga desain produk untuk membantu bisnis Anda tampil lebih menarik dan profesional.
                 </p>
             </div>
         </div>

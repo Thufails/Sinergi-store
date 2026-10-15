@@ -4,6 +4,8 @@
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>@yield('title', 'Sinergi Store')</title>
+        <link rel="icon" type="image/png" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
+        <link rel="apple-touch-icon" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
 
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
