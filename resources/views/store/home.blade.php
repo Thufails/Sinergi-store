@@ -204,6 +204,78 @@
         </div>
     </section>
 
+    <section id="cara-pemesanan" class="scroll-mt-24 bg-white px-6 py-14 sm:py-16 lg:px-8" aria-labelledby="order-steps-heading">
+        <div class="mx-auto max-w-7xl">
+            <div class="mx-auto max-w-2xl text-center">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Mudah dan dibantu admin</p>
+                <h2 id="order-steps-heading" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Cara Pemesanan</h2>
+                <p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Pesan produk dalam beberapa langkah, lalu lanjutkan konfirmasi langsung melalui WhatsApp.</p>
+            </div>
+
+            <ol class="mt-9 grid gap-4 md:grid-cols-3">
+                <li class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">01</span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Pilih produk</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Buka produk yang kamu inginkan, lalu pilih varian dan jumlah jika tersedia.</p>
+                </li>
+                <li class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">02</span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Isi data pesanan</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Masukkan nama dan nomor WhatsApp. Pesanan dicatat, lalu WhatsApp terbuka dengan ringkasan pesanan untuk kamu kirim.</p>
+                </li>
+                <li class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
+                    <span class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-sm font-bold text-amber-800">03</span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Konfirmasi dengan admin</h3>
+                    <p class="mt-2 text-sm leading-6 text-slate-600">Admin mengecek pesanan dan mengonfirmasi ongkir serta pembayaran. Setelah disetujui, stok di-hold 24 jam; stok fisik dikurangi setelah pembayaran dikonfirmasi.</p>
+                </li>
+            </ol>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 px-6 py-14 sm:py-16 lg:px-8" aria-labelledby="order-faq-heading">
+        <div class="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.7fr_1.3fr] lg:gap-16">
+            <div>
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Info singkat</p>
+                <h2 id="order-faq-heading" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Pertanyaan Umum</h2>
+                <p class="mt-3 text-sm leading-6 text-slate-600">Hal-hal yang sering ditanyakan sebelum memesan produk.</p>
+            </div>
+
+            <div class="space-y-3">
+                <details class="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Apakah pesanan langsung dikonfirmasi setelah form dikirim?
+                        <svg class="h-5 w-5 shrink-0 text-amber-700 transition group-open:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+                    </summary>
+                    <p class="mt-3 pr-8 text-sm leading-6 text-slate-600">Belum. Pesanan akan berstatus menunggu konfirmasi admin. Kirim pesan WhatsApp yang sudah disiapkan agar admin dapat memeriksa ketersediaan produk.</p>
+                </details>
+
+                <details class="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Kapan stok di-hold dan kapan stok fisik berkurang?
+                        <svg class="h-5 w-5 shrink-0 text-amber-700 transition group-open:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+                    </summary>
+                    <p class="mt-3 pr-8 text-sm leading-6 text-slate-600">Hold dimulai setelah admin menyetujui pesanan dan berlaku 24 jam. Stok fisik baru dikurangi setelah admin mengonfirmasi pembayaran diterima.</p>
+                </details>
+
+                <details class="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Apakah ongkir sudah termasuk dalam total pesanan?
+                        <svg class="h-5 w-5 shrink-0 text-amber-700 transition group-open:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+                    </summary>
+                    <p class="mt-3 pr-8 text-sm leading-6 text-slate-600">Belum. Total yang tampil adalah subtotal produk. Admin akan mengonfirmasi ongkir dan total pembayaran melalui WhatsApp.</p>
+                </details>
+
+                <details class="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <summary class="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Apakah saya perlu membuat akun untuk memesan?
+                        <svg class="h-5 w-5 shrink-0 text-amber-700 transition group-open:rotate-45" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" d="M12 5v14M5 12h14" /></svg>
+                    </summary>
+                    <p class="mt-3 pr-8 text-sm leading-6 text-slate-600">Tidak perlu. Cukup isi nama dan nomor WhatsApp pada form pesanan produk, lalu lanjutkan konfirmasi dengan admin.</p>
+                </details>
+            </div>
+        </div>
+    </section>
+
     <section id="testimonials" class="scroll-mt-24 bg-white px-6 py-16 sm:py-20 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Cerita pelanggan</p>
