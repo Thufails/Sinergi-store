@@ -1,6 +1,6 @@
 const storeNavLinks = [...document.querySelectorAll('[data-store-nav]')];
 const routeNavKey = window.location.pathname.startsWith('/products') ? 'products' : 'home';
-const navSections = ['home', 'about', 'contact']
+const navSections = ['home', 'about', 'services', 'contact']
     .map((key) => ({ key, element: document.getElementById(key) }))
     .filter(({ element }) => element);
 
@@ -10,7 +10,7 @@ const setActiveNav = (activeKey) => {
         link.classList.toggle('is-active', isActive);
 
         if (isActive) {
-            link.setAttribute('aria-current', activeKey === 'about' || activeKey === 'contact' ? 'location' : 'page');
+            link.setAttribute('aria-current', ['about', 'services', 'contact'].includes(activeKey) ? 'location' : 'page');
         } else {
             link.removeAttribute('aria-current');
         }
@@ -83,6 +83,28 @@ storeMobileMenu?.querySelectorAll('[data-store-nav]').forEach((link) => {
         storeMobileMenu.classList.add('hidden');
     });
 });
+
+const testimonialModal = document.querySelector('[data-testimonial-modal]');
+
+if (testimonialModal instanceof HTMLDialogElement) {
+    document.querySelectorAll('[data-testimonial-modal-open]').forEach((button) => {
+        button.addEventListener('click', () => testimonialModal.showModal());
+    });
+
+    testimonialModal.querySelectorAll('[data-testimonial-modal-close]').forEach((button) => {
+        button.addEventListener('click', () => testimonialModal.close());
+    });
+
+    testimonialModal.addEventListener('click', (event) => {
+        if (event.target === testimonialModal) {
+            testimonialModal.close();
+        }
+    });
+
+    if (testimonialModal.hasAttribute('data-open-on-load')) {
+        testimonialModal.showModal();
+    }
+}
 
 document.querySelectorAll('[data-store-carousel]').forEach((carousel) => {
     const track = carousel.querySelector('[data-store-carousel-track]');

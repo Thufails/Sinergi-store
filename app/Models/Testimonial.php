@@ -14,12 +14,14 @@ class Testimonial extends Model
         'message',
         'photo',
         'is_active',
+        'is_approved',
     ];
 
     protected function casts(): array
     {
         return [
             'is_active' => 'boolean',
+            'is_approved' => 'boolean',
         ];
     }
 }

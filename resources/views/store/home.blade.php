@@ -101,12 +101,60 @@
         </div>
     </section>
 
-    <section class="bg-slate-50 px-6 py-16 sm:py-20 lg:px-8">
+    @php
+        $serviceWhatsapp = '6282142612382';
+    @endphp
+    <section id="services" class="scroll-mt-20 bg-amber-50/70 px-6 py-14 sm:py-18 lg:px-8" aria-labelledby="services-heading">
         <div class="mx-auto max-w-7xl">
+            <div class="max-w-2xl">
+                <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">Jasa Sinergi Creative</p>
+                <h2 id="services-heading" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Bantu produkmu tampil lebih menarik</h2>
+                <p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Pilih layanan kreatif yang kamu butuhkan, lalu konsultasikan langsung dengan tim kami melalui WhatsApp.</p>
+            </div>
+
+            <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
+                <article class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-amber-400 hover:shadow-md hover:ring-2 hover:ring-amber-400/30 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/30 sm:p-7">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700" aria-hidden="true">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>
+                    </span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Foto Produk</h3>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Tampilkan detail dan keunggulan produk melalui foto yang menarik untuk katalog maupun promosi.</p>
+                    <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Foto Produk. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Konsultasi via WhatsApp <span aria-hidden="true">→</span>
+                    </a>
+                </article>
+
+                <article class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-amber-400 hover:shadow-md hover:ring-2 hover:ring-amber-400/30 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/30 sm:p-7">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700" aria-hidden="true">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/><path d="m9 9 4 3-4 3z"/></svg>
+                    </span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Video Produk</h3>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Ceritakan nilai dan cara penggunaan produk lewat video promosi yang dirancang untuk menarik perhatian.</p>
+                    <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Video Produk. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Konsultasi via WhatsApp <span aria-hidden="true">→</span>
+                    </a>
+                </article>
+
+                <article class="flex h-full flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-1 hover:border-amber-400 hover:shadow-md hover:ring-2 hover:ring-amber-400/30 focus-within:border-amber-400 focus-within:ring-2 focus-within:ring-amber-400/30 sm:p-7 md:col-span-2 lg:col-span-1">
+                    <span class="flex h-12 w-12 items-center justify-center rounded-xl bg-amber-100 text-amber-700" aria-hidden="true">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6.5 3 3M4 20l4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="M13 8 16 11"/></svg>
+                    </span>
+                    <h3 class="mt-5 text-lg font-semibold text-slate-950">Desain</h3>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Wujudkan ide visual produk dan materi promosi yang sesuai dengan karakter bisnismu.</p>
+                    <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Desain. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
+                        Konsultasi via WhatsApp <span aria-hidden="true">→</span>
+                    </a>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <section class="bg-slate-50 px-6 py-12 sm:py-14 lg:px-8">
+        <div class="mx-auto {{ $featuredProducts->count() === 1 ? 'max-w-2xl' : ($featuredProducts->count() === 2 ? 'max-w-4xl' : 'max-w-7xl') }}">
             <div class="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Jelajahi katalog</p>
-                    <h2 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Produk-produk Sinergi Store</h2>
+                    <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Produk-produk Sinergi Store</h2>
                     <p class="mt-2 text-sm text-slate-500">Pilihan produk yang tersedia saat ini.</p>
                 </div>
 
@@ -115,10 +163,10 @@
                 </a>
             </div>
 
-            <div class="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div class="mt-6 grid gap-4 sm:gap-5 {{ $featuredProducts->count() === 1 ? 'grid-cols-1' : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' }}">
                 @forelse ($featuredProducts->take(6) as $product)
                     <a href="{{ route('store.products.show', $product->slug) }}" class="group overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:shadow-md">
-                        <div class="relative aspect-[4/3] overflow-hidden bg-slate-100">
+                        <div class="relative aspect-[16/10] overflow-hidden bg-slate-100">
                             @if ($product->image)
                                 <img src="{{ asset('storage/' . $product->image) }}" alt="{{ $product->name }}" class="h-full w-full object-cover transition duration-300 group-hover:scale-105">
                             @else
@@ -156,7 +204,7 @@
         </div>
     </section>
 
-    <section class="bg-white px-6 py-16 sm:py-20 lg:px-8">
+    <section id="testimonials" class="scroll-mt-24 bg-white px-6 py-16 sm:py-20 lg:px-8">
         <div class="mx-auto max-w-7xl">
             <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Cerita pelanggan</p>
             <h2 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Testimoni</h2>
@@ -193,6 +241,7 @@
                     @endif
                 </div>
             @endif
+
         </div>
     </section>
 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\TestimoniController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
+use App\Http\Controllers\Store\TestimonialController as StoreTestimonialController;
 
 // ==================== ADMIN AUTHENTICATION ====================
 Route::get('/admin/login', [AuthController::class, 'showLoginForm'])
@@ -87,3 +88,7 @@ Route::get('/products/{product:slug}', [StoreProductController::class, 'show'])
 
 Route::post('/products/{product:slug}/order', [StoreProductController::class, 'order'])
     ->name('store.products.order');
+
+Route::post('/testimonials', [StoreTestimonialController::class, 'store'])
+    ->middleware('throttle:5,1')
+    ->name('store.testimonials.store');

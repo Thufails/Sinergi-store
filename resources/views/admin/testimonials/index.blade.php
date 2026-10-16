@@ -22,7 +22,7 @@
         <div class="flex flex-col justify-between gap-4 border-b border-slate-200 px-6 py-5 sm:flex-row sm:items-center">
             <div>
                 <h2 class="text-xl font-semibold text-slate-900">Daftar testimoni</h2>
-                <p class="mt-1 text-sm text-slate-500">Kelola cerita pelanggan yang akan ditampilkan di website.</p>
+                <p class="mt-1 text-sm text-slate-500">Tinjau kiriman pelanggan, lalu pilih mana yang ditampilkan di website.</p>
             </div>
             <button type="button" data-open-testimonial-modal class="relative z-10 touch-manipulation rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">
                 + Tambah testimoni
@@ -33,6 +33,7 @@
             <input type="search" name="search" value="{{ request('search') }}" placeholder="Cari nama atau isi testimoni..." class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
             <select name="status" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
                 <option value="">Semua status</option>
+                <option value="pending" @selected(request('status') === 'pending')>Menunggu persetujuan</option>
                 <option value="active" @selected(request('status') === 'active')>Ditampilkan</option>
                 <option value="inactive" @selected(request('status') === 'inactive')>Disembunyikan</option>
             </select>
@@ -74,12 +75,14 @@
                                 <td class="whitespace-nowrap px-6 py-4">
                                     @if ($testimonial->is_active)
                                         <span class="rounded-full bg-emerald-100 px-3 py-1 text-xs font-medium text-emerald-700">Ditampilkan</span>
+                                    @elseif (! $testimonial->is_approved)
+                                        <span class="rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800">Menunggu persetujuan</span>
                                     @else
                                         <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-500">Disembunyikan</span>
                                     @endif
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right">
-                                    <a href="{{ route('admin.testimonials.index', ['edit' => $testimonial->id]) }}" class="mr-3 font-medium text-amber-600 hover:text-amber-700">Edit</a>
+                                    <a href="{{ route('admin.testimonials.index', ['edit' => $testimonial->id]) }}" class="mr-3 font-medium text-amber-600 hover:text-amber-700">{{ ! $testimonial->is_approved ? 'Tinjau' : 'Edit' }}</a>
                                     <form action="{{ route('admin.testimonials.destroy', $testimonial) }}" method="POST" class="inline" data-confirm-title="Hapus testimoni ini?" data-confirm-description="Testimoni {{ $testimonial->name }} akan dihapus permanen." data-confirm-button="Ya, hapus testimoni" data-confirm-tone="danger">
                                         @csrf
                                         @method('DELETE')

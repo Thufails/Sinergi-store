@@ -24,7 +24,12 @@ class TestimoniController extends Controller
         });
 
         $query->when($request->status === 'active', fn ($query) => $query->where('is_active', true));
-        $query->when($request->status === 'inactive', fn ($query) => $query->where('is_active', false));
+        $query->when($request->status === 'inactive', fn ($query) => $query
+            ->where('is_active', false)
+            ->where('is_approved', true));
+        $query->when($request->status === 'pending', fn ($query) => $query
+            ->where('is_active', false)
+            ->where('is_approved', false));
 
         $testimonials = $query->latest()->paginate(10)->withQueryString();
         $editingTestimonial = $request->filled('edit')
@@ -43,6 +48,7 @@ class TestimoniController extends Controller
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_approved'] = true;
 
         if ($request->hasFile('photo')) {
             $validated['photo'] = $request->file('photo')->store('testimonials', 'public');
@@ -65,6 +71,7 @@ class TestimoniController extends Controller
         ]);
 
         $validated['is_active'] = $request->boolean('is_active');
+        $validated['is_approved'] = true;
         $oldPhoto = $testimonial->photo;
         $photoWasChanged = false;
 

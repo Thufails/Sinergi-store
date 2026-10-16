@@ -20,6 +20,7 @@ class HomeController extends Controller
 
         $testimonials = Testimonial::query()
             ->where('is_active', true)
+            ->where('is_approved', true)
             ->latest()
             ->limit(6)
             ->get();
