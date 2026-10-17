@@ -191,6 +191,12 @@ class ProductController extends Controller
                 'subtotal' => round($unitPrice * $quantity, 2),
             ]);
 
+            $order->statusHistories()->create([
+                'from_status' => null,
+                'to_status' => Order::STATUS_PENDING_CONFIRMATION,
+                'actor_name' => 'Pelanggan',
+            ]);
+
             return $order->load('items');
         });
 

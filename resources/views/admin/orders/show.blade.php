@@ -159,6 +159,58 @@
         </div>
     </section>
 
+    <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm" aria-labelledby="order-history-heading">
+        <div class="border-b border-slate-200 px-6 py-5">
+            <h2 id="order-history-heading" class="text-lg font-semibold text-slate-900">Riwayat pesanan</h2>
+            <p class="mt-1 text-sm text-slate-500">Catatan perubahan status dan pihak yang melakukannya.</p>
+        </div>
+        <div class="p-6">
+            @if ($order->statusHistories->isNotEmpty())
+                <ol class="space-y-6">
+                    @foreach ($order->statusHistories as $history)
+                        <li class="relative flex gap-4">
+                            <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $statusStyles[$history->to_status] ?? 'bg-slate-100 text-slate-600' }}" aria-hidden="true">
+                                @if ($history->from_status === null)
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5h-5.5a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 10 3Z" clip-rule="evenodd" /></svg>
+                                @else
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M15.78 6.22a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0l-3.25-3.25a.75.75 0 1 1 1.06-1.06L9 11.94l5.72-5.72a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" /></svg>
+                                @endif
+                            </span>
+                            <div class="min-w-0 flex-1">
+                                <div class="flex flex-wrap items-center gap-2">
+                                    <h3 class="text-sm font-semibold text-slate-900">
+                                        {{ $history->from_status === null ? 'Pesanan dibuat' : 'Status diperbarui' }}
+                                    </h3>
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusStyles[$history->to_status] ?? 'bg-slate-100 text-slate-600' }}">
+                                        {{ $statusLabels[$history->to_status] ?? $history->to_status }}
+                                    </span>
+                                </div>
+                                @if ($history->from_status !== null)
+                                    <p class="mt-1 text-sm text-slate-600">
+                                        Dari {{ $statusLabels[$history->from_status] ?? $history->from_status }} menjadi {{ $statusLabels[$history->to_status] ?? $history->to_status }}.
+                                    </p>
+                                @else
+                                    <p class="mt-1 text-sm text-slate-600">Pesanan diterima dari formulir publik.</p>
+                                @endif
+                                <p class="mt-2 text-xs text-slate-500">
+                                    {{ $history->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB
+                                    <span aria-hidden="true">·</span>
+                                    @if ($history->from_status === null)
+                                        Oleh Pelanggan
+                                    @else
+                                        Oleh Admin ({{ $history->actor_name ?? 'Tidak diketahui' }})
+                                    @endif
+                                </p>
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+            @else
+                <p class="text-sm text-slate-500">Riwayat belum tersedia untuk pesanan yang tercatat sebelum fitur ini.</p>
+            @endif
+        </div>
+    </section>
+
     @if ($order->status === 'pending_confirmation')
         <dialog data-approve-order-dialog aria-labelledby="approve-order-title" aria-describedby="approve-order-description" class="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
             <div class="bg-white p-6 sm:p-7">

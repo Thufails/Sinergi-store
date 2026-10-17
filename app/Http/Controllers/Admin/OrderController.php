@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
 use App\Models\OrderItem;
+use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use Carbon\CarbonImmutable;
@@ -72,7 +73,7 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load(['items.product', 'items.variant']);
+        $order->load(['items.product', 'items.variant', 'statusHistories']);
 
         return view('admin.orders.show', [
             'order' => $order,
@@ -94,7 +95,8 @@ class OrderController extends Controller
             ],
         ]);
 
-        $message = DB::transaction(function () use ($order, $validated): ?string {
+        $admin = $request->user();
+        $message = DB::transaction(function () use ($order, $validated, $admin): ?string {
             $lockedOrder = Order::query()
                 ->with('items')
                 ->lockForUpdate()
@@ -115,6 +117,13 @@ class OrderController extends Controller
                     'status' => Order::STATUS_AWAITING_PAYMENT,
                     'payment_due_at' => now()->addHours(24),
                 ]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    Order::STATUS_PENDING_CONFIRMATION,
+                    Order::STATUS_AWAITING_PAYMENT,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
 
                 return null;
             }
@@ -134,6 +143,13 @@ class OrderController extends Controller
                 }
 
                 $lockedOrder->update(['status' => Order::STATUS_PAID]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    Order::STATUS_AWAITING_PAYMENT,
+                    Order::STATUS_PAID,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
 
                 return null;
             }
@@ -143,7 +159,15 @@ class OrderController extends Controller
                     return 'Pesanan yang sudah dibayar atau selesai tidak dapat dibatalkan dari alur ini.';
                 }
 
+                $previousStatus = $lockedOrder->status;
                 $lockedOrder->update(['status' => Order::STATUS_CANCELLED]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    $previousStatus,
+                    Order::STATUS_CANCELLED,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
 
                 return null;
             }
@@ -158,6 +182,13 @@ class OrderController extends Controller
                 }
 
                 $lockedOrder->update(['status' => Order::STATUS_EXPIRED]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    Order::STATUS_AWAITING_PAYMENT,
+                    Order::STATUS_EXPIRED,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
 
                 return null;
             }
@@ -172,6 +203,21 @@ class OrderController extends Controller
         return redirect()
             ->route('admin.orders.show', $order)
             ->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    private function recordStatusChange(
+        Order $order,
+        string $fromStatus,
+        string $toStatus,
+        int $adminId,
+        string $adminName,
+    ): void {
+        $order->statusHistories()->create([
+            'from_status' => $fromStatus,
+            'to_status' => $toStatus,
+            'changed_by' => $adminId,
+            'actor_name' => $adminName,
+        ]);
     }
 
     private function reserveOrderItems(Order $order): ?string
