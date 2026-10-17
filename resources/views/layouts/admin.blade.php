@@ -134,7 +134,11 @@
         <main class="admin-main w-full lg:ml-64">
             <header class="admin-header flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
                 <div>
-                    <p class="text-sm font-medium text-amber-600">Overview</p>
+                    @hasSection('header-eyebrow')
+                        <p class="text-sm font-medium text-amber-600">@yield('header-eyebrow')</p>
+                    @elseif (! request()->routeIs('admin.dashboard'))
+                        <p class="text-sm font-medium text-amber-600">Overview</p>
+                    @endif
                     <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
                         @yield('heading', 'Dashboard')
                     </h1>

@@ -56,6 +56,10 @@ Route::middleware('auth')
         // Kelola pesanan yang dibuat dari halaman publik
         Route::get('/orders', [OrderController::class, 'index'])
             ->name('admin.orders.index');
+        Route::get('/orders/export', [OrderController::class, 'exportOrders'])
+            ->name('admin.orders.export');
+        Route::get('/orders/export-sales', [OrderController::class, 'exportSales'])
+            ->name('admin.orders.export-sales');
         Route::get('/orders/{order}', [OrderController::class, 'show'])
             ->name('admin.orders.show');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])

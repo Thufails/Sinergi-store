@@ -20,32 +20,56 @@
             <p class="mt-1 text-sm text-slate-500">Tinjau pesanan dan kelola konfirmasi pembayaran.</p>
         </div>
 
-        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid items-end gap-4 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-2 2xl:grid-cols-12">
-            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-4">
+        <form method="GET" action="{{ route('admin.orders.index') }}" class="grid items-end gap-3 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-2 2xl:grid-cols-[minmax(220px,2fr)_minmax(155px,1.2fr)_minmax(135px,1fr)_minmax(135px,1fr)_auto]">
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500">
                 Cari pesanan
                 <input type="search" name="search" value="{{ request('search') }}" placeholder="Nomor, nama, atau WhatsApp" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-4 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
             </label>
-            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500">
                 Status
-                <select name="status" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                <select id="order-status-filter" name="status" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
                     <option value="">Semua status</option>
                     @foreach ($statusLabels as $status => $label)
                         <option value="{{ $status }}" @selected(request('status') === $status)>{{ $label }}</option>
                     @endforeach
                 </select>
             </label>
-            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500">
                 Dari tanggal
                 <input type="date" name="date_from" value="{{ request('date_from') }}" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
             </label>
-            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500 2xl:col-span-2">
+            <label class="flex min-w-0 flex-col gap-1 text-xs font-medium text-slate-500">
                 Sampai tanggal
                 <input type="date" name="date_to" value="{{ request('date_to') }}" class="h-11 min-w-0 rounded-xl border border-slate-300 bg-white px-3 text-sm font-normal text-slate-800 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
             </label>
-            <button type="submit" class="h-11 rounded-xl bg-slate-900 px-4 text-sm font-semibold text-white transition hover:bg-slate-700 2xl:col-span-1">Terapkan</button>
-            <a href="{{ route('admin.orders.index') }}" class="flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 text-sm font-medium text-slate-600 transition hover:bg-slate-100 2xl:col-span-1">Reset</a>
+            <div class="flex flex-nowrap items-center gap-2">
+                <button type="submit" class="h-11 whitespace-nowrap rounded-xl bg-slate-900 px-3 text-sm font-semibold text-white transition hover:bg-slate-700">Terapkan</button>
+                <a href="{{ route('admin.orders.index') }}" class="flex h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 text-sm font-medium text-slate-600 transition hover:bg-slate-100">Reset</a>
+                <details class="relative">
+                    <summary class="inline-flex h-11 cursor-pointer list-none items-center justify-center gap-2 whitespace-nowrap rounded-xl border border-amber-400 bg-amber-50 px-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 [&::-webkit-details-marker]:hidden">
+                        Ekspor XLSX
+                        <svg class="h-4 w-4 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+                    </summary>
+                    <div class="absolute right-0 z-30 mt-2 w-80 max-w-[calc(100vw-3rem)] rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
+                        <a href="{{ route('admin.orders.export', request()->query()) }}" class="block rounded-xl px-3 py-3 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                            <span class="flex items-center justify-between gap-3 text-sm font-semibold text-slate-800">
+                                Ekspor pesanan sesuai filter
+                                <span class="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">XLSX</span>
+                            </span>
+                            <span class="mt-1 block text-xs leading-5 text-slate-500">Mengikuti status, pencarian, dan tanggal pesanan yang diterapkan.</span>
+                        </a>
+                        <a href="{{ route('admin.orders.export-sales', request()->only('date_from', 'date_to')) }}" class="block rounded-xl px-3 py-3 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                            <span class="flex items-center justify-between gap-3 text-sm font-semibold text-slate-800">
+                                Laporan penjualan (dibayar)
+                                <span class="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-700">XLSX</span>
+                            </span>
+                            <span class="mt-1 block text-xs leading-5 text-slate-500">Khusus pesanan dibayar; rentang tanggal berdasarkan waktu konfirmasi pembayaran.</span>
+                        </a>
+                    </div>
+                </details>
+            </div>
             @if ($errors->has('date_from') || $errors->has('date_to'))
-                <p class="text-sm text-rose-600 md:col-span-2 xl:col-span-12" role="alert">{{ $errors->first('date_to') ?: $errors->first('date_from') }}</p>
+                <p class="text-sm text-rose-600 md:col-span-2 2xl:col-span-full" role="alert">{{ $errors->first('date_to') ?: $errors->first('date_from') }}</p>
             @endif
         </form>
 
@@ -90,3 +114,21 @@
         @endif
     </section>
 @endsection
+
+@push('scripts')
+    <script>
+        document.getElementById('order-status-filter')?.addEventListener('change', (event) => {
+            const url = new URL(window.location.href);
+            const status = event.currentTarget.value;
+
+            if (status) {
+                url.searchParams.set('status', status);
+            } else {
+                url.searchParams.delete('status');
+            }
+
+            url.searchParams.delete('page');
+            window.location.assign(url);
+        });
+    </script>
+@endpush
