@@ -18,22 +18,22 @@
     </section>
 
     <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm text-slate-500">Omzet bulan ini</p>
             <p class="mt-3 text-2xl font-semibold text-slate-900">Rp {{ number_format($monthlyRevenue, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Dari pesanan yang sudah dibayar</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm text-slate-500">Produk terjual</p>
             <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($productsSoldInPeriod, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Total unit · {{ $periodLabel }}</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm text-slate-500">Pesanan dibayar bulan ini</p>
             <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($paidOrdersThisMonth, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Jumlah transaksi berstatus dibayar</p>
         </div>
-        <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm text-slate-500">Menunggu konfirmasi</p>
             <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($ordersAwaitingConfirmation, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Pesanan perlu ditinjau admin</p>
@@ -41,7 +41,7 @@
     </section>
 
     <section class="space-y-4">
-        <form method="GET" action="{{ route('admin.dashboard') }}" class="grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5 xl:items-end">
+        <form method="GET" action="{{ route('admin.dashboard') }}" class="admin-dashboard-card grid gap-3 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:grid-cols-2 xl:grid-cols-5 xl:items-end">
             <div>
                 <label for="sales-period" class="mb-1.5 block text-xs font-medium text-slate-600">Periode penjualan</label>
                 <select id="sales-period" name="period" data-period-select class="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-800 focus:border-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-100">
@@ -68,7 +68,7 @@
         </form>
 
         <div class="grid gap-6 xl:grid-cols-[1.2fr_.8fr]">
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200 px-6 py-5">
                 <div>
                     <h2 class="text-lg font-semibold text-slate-900">Produk terjual</h2>
@@ -99,7 +99,7 @@
                         $chartLabelInterval = max(1, (int) ceil($dailyProductSales->count() / 6));
                         $chartTickSteps = min(4, $maxDailyProductSales);
                     @endphp
-                    <svg class="block h-auto w-full" viewBox="0 0 900 250" role="img" aria-labelledby="sales-chart-title sales-chart-description">
+                    <svg class="admin-sales-chart block h-auto w-full" viewBox="0 0 900 250" role="img" aria-labelledby="sales-chart-title sales-chart-description">
                         <title id="sales-chart-title">Grafik produk terjual</title>
                         <desc id="sales-chart-description">Jumlah unit terjual per hari untuk periode {{ $periodLabel }}.</desc>
 
@@ -129,7 +129,7 @@
             </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-6 py-5">
                 <h2 class="text-lg font-semibold text-slate-900">5 produk terlaris</h2>
                 <p class="mt-1 text-sm text-slate-500">Berdasarkan unit terjual · {{ $periodLabel }}.</p>
@@ -159,7 +159,7 @@
     </section>
 
     <section>
-        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div class="border-b border-slate-200 px-6 py-5"><h2 class="text-lg font-semibold text-slate-900">Perhatian stok</h2><p class="mt-1 text-sm text-slate-500">Produk yang perlu segera dicek.</p></div>
             <div class="p-6">
                 @if ($outOfStockProducts->isEmpty() && $lowStockProducts->isEmpty())<p class="text-sm text-slate-500">Semua stok masih aman.</p>@else

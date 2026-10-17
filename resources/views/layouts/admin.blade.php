@@ -3,6 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script>
+        (() => {
+            const themeStorageKey = 'sinergi-admin-theme';
+            const root = document.documentElement;
+            const systemPreference = window.matchMedia('(prefers-color-scheme: dark)');
+
+            const readPreference = () => {
+                try {
+                    const savedPreference = localStorage.getItem(themeStorageKey);
+                    return ['light', 'dark'].includes(savedPreference) ? savedPreference : 'system';
+                } catch {
+                    return 'system';
+                }
+            };
+
+            const applyPreference = (preference = readPreference()) => {
+                root.dataset.adminThemePreference = preference;
+                root.dataset.adminTheme = preference === 'system'
+                    ? (systemPreference.matches ? 'dark' : 'light')
+                    : preference;
+            };
+
+            window.setAdminThemePreference = (preference) => {
+                if (!['system', 'light', 'dark'].includes(preference)) return;
+
+                try {
+                    if (preference === 'system') {
+                        localStorage.removeItem(themeStorageKey);
+                    } else {
+                        localStorage.setItem(themeStorageKey, preference);
+                    }
+                } catch {
+                    // Keep the current page usable when browser storage is unavailable.
+                }
+
+                applyPreference(preference);
+            };
+
+            applyPreference();
+            systemPreference.addEventListener?.('change', () => {
+                if (readPreference() === 'system') applyPreference('system');
+            });
+        })();
+    </script>
     <title>@yield('title', 'Admin Sinergi Store')</title>
     <link rel="icon" type="image/png" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
     <link rel="apple-touch-icon" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
@@ -11,7 +55,7 @@
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     @endif
 </head>
-<body class="min-h-screen bg-slate-100 text-slate-900 antialiased">
+<body class="admin-app min-h-screen bg-slate-100 text-slate-900 antialiased">
     <div class="min-h-screen lg:flex">
         <aside class="w-full border-b border-white/10 bg-slate-950 text-white lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col lg:border-b-0">
             <div class="flex items-center justify-between border-b border-white/10 px-5 py-4 sm:px-6 sm:py-5 lg:border-b-0">
@@ -87,8 +131,8 @@
             </div>
         </aside>
 
-        <main class="w-full lg:ml-64">
-            <header class="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
+        <main class="admin-main w-full lg:ml-64">
+            <header class="admin-header flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 bg-white px-6 py-5 sm:px-8">
                 <div>
                     <p class="text-sm font-medium text-amber-600">Overview</p>
                     <h1 class="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
@@ -97,18 +141,40 @@
                 </div>
 
                 @auth
-                    <div class="text-right">
-                        <a href="{{ route('admin.profile') }}" class="text-sm font-medium text-slate-700 hover:text-amber-600">
-                            {{ auth()->user()->name }}
-                        </a>
-                        <p class="text-xs text-slate-500">
-                            {{ auth()->user()->email }}
-                        </p>
+                    <div class="flex min-w-0 items-center gap-3 sm:gap-5">
+                        <details class="admin-profile-menu relative">
+                            <summary class="flex cursor-pointer list-none items-center gap-2 rounded-xl px-2 py-1.5 text-right outline-none transition hover:bg-slate-50 focus-visible:ring-2 focus-visible:ring-amber-400 [&::-webkit-details-marker]:hidden">
+                                <span class="min-w-0">
+                                    <span class="block truncate text-sm font-medium text-slate-700">{{ auth()->user()->name }}</span>
+                                    <span class="hidden truncate text-xs text-slate-500 sm:block">{{ auth()->user()->email }}</span>
+                                </span>
+                                <svg class="admin-profile-chevron h-4 w-4 shrink-0 text-slate-500 transition-transform" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fill-rule="evenodd" d="M5.22 7.22a.75.75 0 0 1 1.06 0L10 10.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 8.28a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" /></svg>
+                                <span class="sr-only">Buka menu profil</span>
+                            </summary>
+                            <div class="admin-profile-dropdown absolute right-0 z-50 mt-2 w-64 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
+                                <a href="{{ route('admin.profile') }}" class="block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-50 hover:text-amber-700 focus:bg-slate-50 focus:outline-none">
+                                    Edit profil
+                                </a>
+                                <div class="my-2 border-t border-slate-200"></div>
+                                <p class="px-3 pb-1 text-xs font-semibold uppercase tracking-wide text-slate-500">Tema tampilan</p>
+                                <div class="space-y-1" role="group" aria-label="Pilihan tema">
+                                    <button type="button" data-admin-theme-option="system" aria-pressed="false" class="admin-profile-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                        Ikuti perangkat <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                    </button>
+                                    <button type="button" data-admin-theme-option="light" aria-pressed="false" class="admin-profile-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                        Terang <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                    </button>
+                                    <button type="button" data-admin-theme-option="dark" aria-pressed="false" class="admin-profile-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                        Gelap <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                    </button>
+                                </div>
+                            </div>
+                        </details>
                     </div>
                 @endauth
             </header>
 
-            <div class="space-y-8 p-6 sm:p-8">
+            <div class="admin-content space-y-8 p-6 sm:p-8">
                 @yield('content')
             </div>
         </main>
@@ -116,7 +182,7 @@
 
     @if (session()->has('success') || session()->has('error'))
         @php($toastIsError = session()->has('error'))
-        <div data-admin-toast role="{{ $toastIsError ? 'alert' : 'status' }}" aria-live="{{ $toastIsError ? 'assertive' : 'polite' }}" class="fixed right-4 top-4 z-[10001] flex w-[calc(100%-2rem)] max-w-md items-start gap-3 rounded-2xl border bg-white p-4 shadow-xl transition-all duration-300 {{ $toastIsError ? 'border-rose-200' : 'border-emerald-200' }}">
+        <div data-admin-toast role="{{ $toastIsError ? 'alert' : 'status' }}" aria-live="{{ $toastIsError ? 'assertive' : 'polite' }}" class="admin-toast fixed right-4 top-4 z-[10001] flex w-[calc(100%-2rem)] max-w-md items-start gap-3 rounded-2xl border bg-white p-4 shadow-xl transition-all duration-300 {{ $toastIsError ? 'border-rose-200' : 'border-emerald-200' }}">
             <span class="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $toastIsError ? 'bg-rose-100 text-rose-700' : 'bg-emerald-100 text-emerald-700' }}" aria-hidden="true">
                 @if ($toastIsError)
                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm0-11a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 7Zm0 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd" /></svg>
@@ -131,7 +197,7 @@
         </div>
     @endif
 
-    <dialog data-admin-confirmation-dialog aria-labelledby="admin-confirmation-title" aria-describedby="admin-confirmation-description" class="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
+    <dialog data-admin-confirmation-dialog aria-labelledby="admin-confirmation-title" aria-describedby="admin-confirmation-description" class="admin-confirmation-dialog m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
         <div class="bg-white p-6 sm:p-7">
             <div class="flex items-start gap-4">
                 <span data-admin-confirmation-icon class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700" aria-hidden="true">
@@ -223,6 +289,43 @@
             adminToast.addEventListener('mouseleave', startToastTimer);
             startToastTimer();
         }
+    </script>
+    <script>
+        const adminProfileMenu = document.querySelector('.admin-profile-menu');
+        const adminThemeOptions = document.querySelectorAll('[data-admin-theme-option]');
+        const updateAdminThemeOptions = () => {
+            const preference = document.documentElement.dataset.adminThemePreference || 'system';
+
+            adminThemeOptions.forEach((option) => {
+                const isSelected = option.dataset.adminThemeOption === preference;
+                option.setAttribute('aria-pressed', String(isSelected));
+                option.querySelector('[data-theme-check]').textContent = isSelected ? '✓' : '';
+            });
+        };
+
+        updateAdminThemeOptions();
+
+        adminThemeOptions.forEach((option) => {
+            option.addEventListener('click', () => {
+                window.setAdminThemePreference?.(option.dataset.adminThemeOption);
+                updateAdminThemeOptions();
+                adminProfileMenu.open = false;
+                adminProfileMenu.querySelector('summary')?.focus();
+            });
+        });
+
+        document.addEventListener('click', (event) => {
+            if (adminProfileMenu?.open && !adminProfileMenu.contains(event.target)) {
+                adminProfileMenu.open = false;
+            }
+        });
+
+        adminProfileMenu?.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape' && adminProfileMenu.open) {
+                adminProfileMenu.open = false;
+                adminProfileMenu.querySelector('summary')?.focus();
+            }
+        });
     </script>
 </body>
 @stack('scripts')
