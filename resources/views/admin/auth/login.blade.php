@@ -82,11 +82,6 @@
             </div>
         </div>
 
-        <label class="flex items-center gap-3 text-sm text-slate-400">
-            <input type="checkbox" name="remember" value="1" class="h-4 w-4 rounded border-white/20 bg-white/5 text-amber-500 focus:ring-amber-400">
-            Ingat saya di perangkat ini
-        </label>
-
         <button type="submit" class="w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-semibold text-stone-950 transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-300 focus:ring-offset-2 focus:ring-offset-stone-950">Masuk ke dashboard</button>
     </form>
                 <p class="mt-8 text-center text-xs text-slate-500">Gunakan akun admin yang terdaftar di database.</p>
