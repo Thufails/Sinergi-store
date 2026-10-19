@@ -72,6 +72,13 @@ class DashboardController extends Controller
         $ordersAwaitingConfirmation = Order::query()
             ->where('status', Order::STATUS_PENDING_CONFIRMATION)
             ->count();
+        $ordersAwaitingPaymentQuery = Order::query()
+            ->where('status', Order::STATUS_AWAITING_PAYMENT);
+        $ordersAwaitingPayment = (clone $ordersAwaitingPaymentQuery)->count();
+        $ordersPaymentOverdue = (clone $ordersAwaitingPaymentQuery)
+            ->whereNotNull('payment_due_at')
+            ->where('payment_due_at', '<=', $nowJakarta->copy()->utc())
+            ->count();
 
         $topSellingProducts = OrderItem::query()
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
@@ -113,6 +120,8 @@ class DashboardController extends Controller
             'paidOrdersThisMonth',
             'productsSoldInPeriod',
             'ordersAwaitingConfirmation',
+            'ordersAwaitingPayment',
+            'ordersPaymentOverdue',
             'selectedPeriod',
             'dateFrom',
             'dateTo',

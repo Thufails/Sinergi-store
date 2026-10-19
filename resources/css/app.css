@@ -271,6 +271,10 @@ html[data-admin-theme='dark'] .admin-content .border-amber-200 {
     border-color: #70551b;
 }
 
+html[data-admin-theme='dark'] .admin-content .border-amber-300 {
+    border-color: #70551b;
+}
+
 html[data-admin-theme='dark'] .admin-content .bg-emerald-50,
 html[data-admin-theme='dark'] .admin-content .bg-emerald-100 {
     background-color: #12352f;
@@ -313,6 +317,14 @@ html[data-admin-theme='dark'] .admin-content .bg-sky-100 {
 html[data-admin-theme='dark'] .admin-content .text-sky-700,
 html[data-admin-theme='dark'] .admin-content .text-sky-800 {
     color: #7dd3fc;
+}
+
+html[data-admin-theme='dark'] .admin-content .text-sky-900 {
+    color: #bae6fd;
+}
+
+html[data-admin-theme='dark'] .admin-content .border-sky-300 {
+    border-color: #075985;
 }
 
 html[data-admin-theme='dark'] .admin-toast,

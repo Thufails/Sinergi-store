@@ -5,7 +5,7 @@
 @section('header-eyebrow', 'Selamat datang kembali, ' . auth()->user()->name)
 
 @section('content')
-    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <section class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
             <p class="text-sm text-slate-500">Omzet bulan ini</p>
             <p class="mt-3 text-2xl font-semibold text-slate-900">Rp {{ number_format($monthlyRevenue, 0, ',', '.') }}</p>
@@ -21,10 +21,55 @@
             <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($paidOrdersThisMonth, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Jumlah transaksi berstatus dibayar</p>
         </div>
-        <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm text-slate-500">Menunggu konfirmasi</p>
-            <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($ordersAwaitingConfirmation, 0, ',', '.') }}</p>
-            <p class="mt-1 text-xs text-slate-400">Pesanan perlu ditinjau admin</p>
+    </section>
+
+    <section class="space-y-3">
+        <div>
+            <h2 class="text-lg font-semibold text-slate-900">Pesanan perlu ditindaklanjuti</h2>
+            <p class="mt-1 text-sm text-slate-500">Pengingat untuk admin. Perubahan status tetap dilakukan secara manual.</p>
+        </div>
+        <div class="grid gap-4 md:grid-cols-2">
+            <a href="{{ route('admin.orders.index', ['status' => 'pending_confirmation']) }}" class="admin-dashboard-card group rounded-2xl border border-amber-300 bg-white p-5 shadow-sm transition hover:border-amber-500 hover:shadow-md">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                            Menunggu konfirmasi
+                            @if ($ordersAwaitingConfirmation > 0)
+                                <span class="relative inline-flex h-6 w-6 items-center justify-center rounded-lg bg-amber-100 text-amber-800" aria-label="Ada pesanan menunggu konfirmasi">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
+                                    <span class="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 motion-safe:animate-pulse" aria-hidden="true"></span>
+                                </span>
+                            @endif
+                        </p>
+                        <p class="mt-1 text-sm text-slate-500">Pesanan yang perlu ditinjau admin.</p>
+                    </div>
+                    <span class="rounded-xl bg-amber-100 px-3 py-1.5 text-lg font-bold text-amber-900">{{ number_format($ordersAwaitingConfirmation, 0, ',', '.') }}</span>
+                </div>
+                <p class="mt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">Lihat pesanan <span aria-hidden="true">→</span></p>
+            </a>
+
+            <a href="{{ route('admin.orders.index', ['status' => 'awaiting_payment']) }}" class="admin-dashboard-card group rounded-2xl border border-sky-300 bg-white p-5 shadow-sm transition hover:border-sky-500 hover:shadow-md">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                            Menunggu pembayaran
+                            @if ($ordersAwaitingPayment > 0)
+                                <span class="relative inline-flex h-6 w-6 items-center justify-center rounded-lg bg-sky-100 text-sky-900" aria-label="Ada pesanan menunggu pembayaran">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" /><path d="M10 21h4" /></svg>
+                                    <span class="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 motion-safe:animate-pulse" aria-hidden="true"></span>
+                                </span>
+                            @endif
+                        </p>
+                        @if ($ordersPaymentOverdue > 0)
+                            <p class="mt-1 text-sm text-rose-600">{{ number_format($ordersPaymentOverdue, 0, ',', '.') }} melewati batas pembayaran; cek dan tindak lanjuti manual.</p>
+                        @else
+                            <p class="mt-1 text-sm text-slate-500">Pesanan yang menunggu pembayaran dari pembeli.</p>
+                        @endif
+                    </div>
+                    <span class="rounded-xl bg-sky-100 px-3 py-1.5 text-lg font-bold text-sky-900">{{ number_format($ordersAwaitingPayment, 0, ',', '.') }}</span>
+                </div>
+                <p class="mt-4 text-sm font-semibold text-sky-700 group-hover:text-sky-800">Lihat pesanan <span aria-hidden="true">→</span></p>
+            </a>
         </div>
     </section>
 
