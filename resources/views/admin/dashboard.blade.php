@@ -12,7 +12,7 @@
             <p class="mt-1 text-xs text-slate-400">Dari pesanan yang sudah dibayar</p>
         </div>
         <div class="admin-dashboard-card rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-            <p class="text-sm text-slate-500">Total Keseluruhan Produk terjual</p>
+            <p class="text-sm text-slate-500">Produk terjual</p>
             <p class="mt-3 text-3xl font-semibold text-slate-900">{{ number_format($productsSoldInPeriod, 0, ',', '.') }}</p>
             <p class="mt-1 text-xs text-slate-400">Total unit · {{ $periodLabel }}</p>
         </div>

@@ -95,7 +95,7 @@
 
             <div class="rounded-2xl border border-slate-200 bg-slate-50 p-6 sm:p-7">
                 <p class="text-base leading-7 text-slate-600">
-                    Sinergi Store hadir untuk memudahkan Anda mendapatkan produk merchandise secara online, kapan pun dan di mana pun. Sebagai bagian dari Sinergi Grup, kami juga menyediakan layanan kreatif berupa pembuatan katalog, fotografi produk, video promosi, hingga desain produk untuk membantu bisnis Anda tampil lebih menarik dan profesional.
+                    Sinergi Store menyediakan merchandise dari Sinergi Grup. Kami juga menerima pesanan jasa kreatif—mulai dari foto produk dan video promosi hingga desain. Hubungi tim kami untuk membahas kebutuhanmu.
                 </p>
             </div>
         </div>
@@ -108,8 +108,8 @@
         <div class="mx-auto max-w-7xl">
             <div class="max-w-2xl">
                 <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-700">Jasa Sinergi Creative</p>
-                <h2 id="services-heading" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Bantu produkmu tampil lebih menarik</h2>
-                <p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Pilih layanan kreatif yang kamu butuhkan, lalu konsultasikan langsung dengan tim kami melalui WhatsApp.</p>
+                <h2 id="services-heading" class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Butuh foto, video, atau desain produk?</h2>
+                <p class="mt-3 text-sm leading-6 text-slate-600 sm:text-base">Pilih jasa yang kamu perlukan, lalu hubungi Sinergi Creative lewat WhatsApp untuk membahas detailnya.</p>
             </div>
 
             <div class="mt-8 grid gap-5 md:grid-cols-2 lg:grid-cols-3">
@@ -118,7 +118,7 @@
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h3l1.5-2h7L17 7h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1Z"/><circle cx="12" cy="13" r="3.5"/></svg>
                     </span>
                     <h3 class="mt-5 text-lg font-semibold text-slate-950">Foto Produk</h3>
-                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Tampilkan detail dan keunggulan produk melalui foto yang menarik untuk katalog maupun promosi.</p>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Foto produk untuk katalog atau promosi. Ceritakan kebutuhan pemotretanmu saat menghubungi kami.</p>
                     <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Foto Produk. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                         Konsultasi via WhatsApp <span aria-hidden="true">→</span>
                     </a>
@@ -129,7 +129,7 @@
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="13" height="14" rx="2"/><path d="m16 10 5-3v10l-5-3"/><path d="m9 9 4 3-4 3z"/></svg>
                     </span>
                     <h3 class="mt-5 text-lg font-semibold text-slate-950">Video Produk</h3>
-                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Ceritakan nilai dan cara penggunaan produk lewat video promosi yang dirancang untuk menarik perhatian.</p>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Video untuk memperkenalkan produk atau menunjukkan cara penggunaannya. Sampaikan tujuan videomu kepada tim kami.</p>
                     <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Video Produk. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                         Konsultasi via WhatsApp <span aria-hidden="true">→</span>
                     </a>
@@ -140,7 +140,7 @@
                         <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m14.5 6.5 3 3M4 20l4.5-1 10.8-10.8a2.1 2.1 0 0 0-3-3L5.5 16 4 20Z"/><path d="M13 8 16 11"/></svg>
                     </span>
                     <h3 class="mt-5 text-lg font-semibold text-slate-950">Desain</h3>
-                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Wujudkan ide visual produk dan materi promosi yang sesuai dengan karakter bisnismu.</p>
+                    <p class="mt-2 flex-1 text-sm leading-6 text-slate-600">Desain produk dan materi promosi sesuai kebutuhan bisnismu. Kirim gambaran kebutuhanmu lewat WhatsApp.</p>
                     <a href="https://wa.me/{{ $serviceWhatsapp }}?text={{ urlencode('Halo Sinergi Creative, saya tertarik dengan jasa Desain. Boleh minta informasi paket, harga, dan proses pengerjaannya?') }}" target="_blank" rel="noopener noreferrer" class="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-900 transition hover:bg-amber-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2">
                         Konsultasi via WhatsApp <span aria-hidden="true">→</span>
                     </a>
@@ -155,7 +155,7 @@
                 <div>
                     <p class="text-sm font-semibold uppercase tracking-[0.18em] text-amber-600">Jelajahi katalog</p>
                     <h2 class="mt-2 text-2xl font-semibold tracking-tight text-slate-950 sm:text-3xl">Produk-produk Sinergi Store</h2>
-                    <p class="mt-2 text-sm text-slate-500">Pilihan produk yang tersedia saat ini.</p>
+                    <p class="mt-2 text-sm text-slate-500">Pilih produk yang ingin kamu pesan.</p>
                 </div>
 
                 <a href="{{ route('store.products.index') }}" class="inline-flex w-fit items-center text-sm font-semibold text-amber-700 transition hover:text-amber-800">

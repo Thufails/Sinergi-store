@@ -115,25 +115,48 @@
             @yield('content')
         </main>
 
-        <section aria-labelledby="store-cta-title" class="relative isolate overflow-hidden bg-gradient-to-b from-orange-700 via-orange-900 to-slate-950">
+        @php
+            $storeLocationName = 'PEUBA Usman Bin Affan';
+            $storeLocation = 'Jl Terusan Nusa Indah No.21, Dusun Durek, Giripurno, Kec. Bumiaji, Kota Batu, Jawa Timur 65333, Indonesia';
+            $storeLocationQuery = urlencode($storeLocationName . ', ' . $storeLocation);
+        @endphp
+        <section aria-labelledby="store-cta-title" class="relative isolate overflow-hidden bg-gradient-to-br from-orange-700 via-orange-900 to-slate-950 px-6 py-10 sm:py-12 lg:px-8">
             <div aria-hidden="true" class="pointer-events-none absolute -left-24 -top-36 h-80 w-80 rounded-full border-[36px] border-amber-200/10"></div>
             <div aria-hidden="true" class="pointer-events-none absolute -bottom-48 -right-16 h-[26rem] w-[26rem] rounded-full border-[42px] border-amber-200/10"></div>
             <div aria-hidden="true" class="pointer-events-none absolute right-[18%] top-8 h-24 w-40 rotate-12 rounded-3xl border border-amber-100/15 bg-white/5 backdrop-blur-sm"></div>
 
-            <div class="relative mx-auto max-w-4xl px-6 pb-9 pt-16 text-center sm:pb-10 sm:pt-20 lg:px-8">
-                <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Sinergi Store &amp; Sinergi Creative</p>
-                <h2 id="store-cta-title" class="mx-auto mt-3 max-w-3xl text-3xl font-semibold tracking-tight text-white sm:text-4xl lg:text-5xl">
-                    Penuhi kebutuhanmu bersama kami
-                </h2>
-                <p class="mx-auto mt-4 max-w-2xl text-base leading-7 text-orange-50/90 sm:text-lg">
-                    Dari produk pilihan sampai layanan foto, video, dan desain—kami siap membantu mewujudkan kebutuhanmu.
-                </p>
-                <a href="https://wa.me/6282142612382?text=Halo%20Sinergi%20Store%2C%20saya%20ingin%20bertanya%20tentang%20produk%20atau%20jasa." target="_blank" rel="noopener noreferrer" class="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-7 py-3 text-base font-semibold text-orange-700 shadow-lg shadow-orange-950/10 transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-orange-600">
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path d="M20.52 3.48A11.8 11.8 0 0 0 12.1 0C5.55 0 .22 5.32.22 11.87c0 2.1.55 4.15 1.6 5.96L.12 24l6.32-1.66a11.9 11.9 0 0 0 5.66 1.44h.01c6.55 0 11.88-5.33 11.89-11.88a11.8 11.8 0 0 0-3.48-8.42ZM12.1 21.76h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.75.98 1-3.65-.24-.38a9.83 9.83 0 0 1-1.51-5.25c0-5.47 4.45-9.92 9.92-9.92a9.85 9.85 0 0 1 7.02 2.91 9.85 9.85 0 0 1 2.9 7.02c0 5.47-4.45 9.92-9.93 9.92Zm5.45-7.43c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.9-.8-1.5-1.78-1.68-2.08-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.72.31 1.28.5 1.72.64.72.23 1.37.2 1.88.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.18-1.42-.08-.13-.28-.2-.58-.35Z" />
-                    </svg>
-                    Hubungi Kami
-                </a>
+            <div class="relative mx-auto grid max-w-7xl items-stretch gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+                <div class="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-slate-950/20 px-6 py-10 text-center shadow-xl shadow-orange-950/10 sm:px-10 sm:py-12">
+                    <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Sinergi Store &amp; Sinergi Creative</p>
+                    <h2 id="store-cta-title" class="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl xl:text-[2.7rem]">
+                        Cari merchandise atau butuh jasa kreatif?
+                    </h2>
+                    <p class="mx-auto mt-4 max-w-xl text-base leading-7 text-orange-50/90">
+                        Lihat merchandise di katalog atau hubungi Sinergi Creative untuk membahas foto, video, dan desain produk.
+                    </p>
+                    <a href="https://wa.me/6282142612382?text=Halo%20Sinergi%20Store%2C%20saya%20ingin%20bertanya%20tentang%20produk%20atau%20jasa." target="_blank" rel="noopener noreferrer" class="mt-7 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-white px-7 py-3 text-base font-semibold text-orange-700 shadow-lg shadow-orange-950/10 transition hover:-translate-y-0.5 hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-orange-600">
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+                            <path d="M20.52 3.48A11.8 11.8 0 0 0 12.1 0C5.55 0 .22 5.32.22 11.87c0 2.1.55 4.15 1.6 5.96L.12 24l6.32-1.66a11.9 11.9 0 0 0 5.66 1.44h.01c6.55 0 11.88-5.33 11.89-11.88a11.8 11.8 0 0 0-3.48-8.42ZM12.1 21.76h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.75.98 1-3.65-.24-.38a9.83 9.83 0 0 1-1.51-5.25c0-5.47 4.45-9.92 9.92-9.92a9.85 9.85 0 0 1 7.02 2.91 9.85 9.85 0 0 1 2.9 7.02c0 5.47-4.45 9.92-9.93 9.92Zm5.45-7.43c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.9-.8-1.5-1.78-1.68-2.08-.17-.3-.02-.46.13-.6.13-.13.3-.35.45-.52.15-.18.2-.3.3-.5.1-.2.05-.38-.03-.53-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.48s1.07 2.88 1.22 3.08c.15.2 2.1 3.2 5.1 4.49.72.31 1.28.5 1.72.64.72.23 1.37.2 1.88.12.58-.09 1.77-.72 2.02-1.42.25-.7.25-1.3.18-1.42-.08-.13-.28-.2-.58-.35Z" />
+                        </svg>
+                        Hubungi Kami
+                    </a>
+                </div>
+
+                <section aria-labelledby="store-location-title" class="rounded-3xl border border-white/15 bg-slate-950/80 p-5 text-white shadow-xl shadow-slate-950/20 sm:p-6">
+                    <div class="mb-4">
+                        <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-300">Kunjungi kami</p>
+                        <h2 id="store-location-title" class="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">Lokasi Sinergi Store</h2>
+                        <p class="mt-2 text-sm leading-6 text-slate-300">Jl Terusan Nusa Indah No.21, Dusun Durek, Giripurno, Kec. Bumiaji, Kota Batu, Jawa Timur 65333</p>
+                    </div>
+                    <iframe
+                        title="Peta lokasi Sinergi Store di Kota Batu"
+                        src="https://maps.google.com/maps?q={{ $storeLocationQuery }}&amp;output=embed"
+                        class="h-52 w-full rounded-2xl border border-white/10 bg-slate-800 sm:h-60"
+                        loading="lazy"
+                        referrerpolicy="no-referrer-when-downgrade"
+                        allowfullscreen
+                    ></iframe>
+                </section>
             </div>
         </section>
 
@@ -142,7 +165,7 @@
                 <section id="testimonial-form" class="scroll-mt-28">
                     <p class="text-xs font-semibold uppercase tracking-[0.18em] text-amber-400">Punya pengalaman belanja?</p>
                     <h2 class="mt-2 text-xl font-semibold tracking-tight text-white">Bagikan ceritamu</h2>
-                    <p class="mt-2 text-sm leading-6 text-slate-400">Punya cerita seru? Bagikan pengalamanmu dengan kami.</p>
+                    <p class="mt-2 text-sm leading-6 text-slate-400">Sudah pernah belanja di Sinergi Store? Ceritakan pengalamanmu.</p>
                     <button type="button" aria-haspopup="dialog" aria-controls="testimonial-modal" data-testimonial-modal-open class="mt-4 inline-flex min-h-10 items-center justify-center rounded-lg border border-amber-400/50 px-4 py-2.5 text-sm font-semibold text-amber-300 transition hover:border-amber-300 hover:bg-white/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950">
                         Kirim testimoni
                     </button>
@@ -152,7 +175,7 @@
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">Cerita pelanggan</p>
                                 <h3 id="testimonial-modal-title" class="mt-1 text-xl font-semibold tracking-tight text-slate-950">Bagikan testimoni</h3>
-                                <p id="testimonial-modal-description" class="mt-2 text-sm leading-6 text-slate-600">Ceritakan pengalamanmu bersama Sinergi Store. Testimoni ditinjau admin sebelum ditampilkan.</p>
+                                <p id="testimonial-modal-description" class="mt-2 text-sm leading-6 text-slate-600">Pesanmu akan ditinjau admin sebelum ditampilkan di website.</p>
                             </div>
                             <button type="button" aria-label="Tutup form testimoni" data-testimonial-modal-close class="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500">
                                 <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
@@ -202,7 +225,7 @@
 
                 <div>
                     <p class="font-bold uppercase tracking-[0.2em] text-amber-400">Sinergi Store</p>
-                    <p class="mt-3 text-sm leading-6 text-slate-400">Produk pilihan untuk mendukung kebutuhan dan perkembanganmu.</p>
+                    <p class="mt-3 text-sm leading-6 text-slate-400">Merchandise Sinergi Store dan jasa kreatif dari Sinergi Creative.</p>
                 </div>
                 <div id="contact" class="md:justify-self-end">
                     <h2 class="font-semibold text-white">Kontak</h2>
