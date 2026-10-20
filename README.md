@@ -1,15 +1,38 @@
-# Sinergi Store
+<p align="center">
+  <img src="public/images/logo-sinergi.png" alt="Logo Sinergi Store" width="120">
+</p>
 
-Aplikasi katalog dan pemesanan Sinergi Store yang dibangun dengan Laravel, Blade, Tailwind CSS, dan Vite. Aplikasi menyediakan halaman publik, pengelolaan produk dan kategori, pesanan, testimoni, serta dashboard admin.
+<h1 align="center">Sinergi Store</h1>
 
-## Persyaratan
+<p align="center"><strong>Katalog dan pemesanan, dikelola lebih mudah.</strong></p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Laravel-13-FF2D20?style=for-the-badge&logo=laravel&logoColor=white" alt="Laravel 13">
+  <img src="https://img.shields.io/badge/PHP-8.3%2B-777BB4?style=for-the-badge&logo=php&logoColor=white" alt="PHP 8.3 atau lebih baru">
+  <img src="https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" alt="Tailwind CSS 4">
+  <img src="https://img.shields.io/badge/Vite-build-646CFF?style=for-the-badge&logo=vite&logoColor=white" alt="Vite">
+</p>
+
+<p align="center">
+  Halaman publik · Katalog produk · Pemesanan · Dashboard admin · Ekspor XLSX · Testimoni
+</p>
+
+<p align="center">
+  <a href="#instalasi-setelah-clone">Mulai instalasi</a> ·
+  <a href="#menjalankan-aplikasi-lokal">Jalankan lokal</a> ·
+  <a href="#catatan-deployment">Catatan deployment</a>
+</p>
+
+---
+
+## 🧰 Persyaratan
 
 - PHP **8.3** atau lebih baru sesuai batas versi project (`^8.3`), dengan ekstensi yang diperlukan Laravel dan Composer.
 - Composer.
 - Node.js dan npm.
 - SQLite untuk setup lokal bawaan, atau database lain yang didukung Laravel.
 
-## Instalasi setelah clone
+## 🚀 Instalasi setelah clone
 
 Jalankan perintah dari root project.
 
@@ -74,7 +97,7 @@ Jalankan perintah dari root project.
    php artisan storage:link
    ```
 
-## Menjalankan aplikasi lokal
+## 💻 Menjalankan aplikasi lokal
 
 Jalankan server Laravel:
 
@@ -90,14 +113,14 @@ npm run dev
 
 Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 
-## Catatan database dan data awal
+## 🗃️ Catatan database dan data awal
 
 - `php artisan migrate` menerapkan migrasi yang belum dijalankan tanpa menghapus data.
 - `php artisan migrate:fresh --seed` menghapus semua tabel lalu membuatnya ulang. Gunakan hanya pada database lokal yang boleh dikosongkan.
 - Jika mengganti database, pastikan database telah dibuat dan dapat diakses sebelum migrasi.
 - Dependency ekspor XLSX (`maatwebsite/excel`) sudah tercantum di `composer.json` dan akan dipasang oleh `composer install`.
 
-## Catatan deployment
+## ☁️ Catatan deployment
 
 - Jangan unggah atau commit `.env`. Atur environment variables dan `APP_KEY` melalui penyedia hosting.
 - Untuk produksi, gunakan database persisten dan atur setidaknya `APP_ENV=production`, `APP_DEBUG=false`, serta `APP_URL` ke domain website.
@@ -105,7 +128,7 @@ Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 - Upload foto produk menggunakan disk publik Laravel. Hosting perlu menyediakan storage persisten atau object storage; filesystem sementara/serverless bukan tempat permanen untuk upload.
 - Cara deploy bergantung pada penyedia hosting. Panduan instalasi lokal ini bukan konfigurasi deploy Vercel.
 
-## Teknologi
+## 🛠️ Teknologi
 
 - Laravel 13
 - PHP 8.3+
