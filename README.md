@@ -30,7 +30,7 @@
 - PHP **8.3** atau lebih baru sesuai batas versi project (`^8.3`), dengan ekstensi yang diperlukan Laravel dan Composer.
 - Composer.
 - Node.js dan npm.
-- SQLite untuk setup lokal bawaan, atau database lain yang didukung Laravel.
+- MySQL Server dan client/GUI untuk mengelola database (contoh: MySQL Workbench).
 
 ## 🚀 Instalasi setelah clone
 
@@ -63,13 +63,18 @@ Jalankan perintah dari root project.
    php artisan key:generate
    ```
 
-4. Buat file database SQLite lokal (default pada `.env.example`):
+4. Buat database MySQL kosong, misalnya `sinergi_store`, melalui MySQL Workbench atau client MySQL. Lalu sesuaikan bagian database di `.env`:
 
-   ```bash
-   php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+   ```dotenv
+   DB_CONNECTION=mysql
+   DB_HOST=127.0.0.1
+   DB_PORT=3306
+   DB_DATABASE=sinergi_store
+   DB_USERNAME=root
+   DB_PASSWORD=
    ```
 
-   Jika memilih MySQL atau PostgreSQL, buat database lalu isi variabel `DB_*` di `.env`. Jangan commit `.env`.
+   Ganti username dan password sesuai akun MySQL lokalmu. Template `.env.example` saat ini masih mencontohkan SQLite, jadi pastikan nilai `DB_*` di `.env` sudah diubah ke MySQL sebelum menjalankan migrasi. Jangan commit `.env`.
 
 5. Buat tabel dan data awal:
 
@@ -117,7 +122,7 @@ Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 
 - `php artisan migrate` menerapkan migrasi yang belum dijalankan tanpa menghapus data.
 - `php artisan migrate:fresh --seed` menghapus semua tabel lalu membuatnya ulang. Gunakan hanya pada database lokal yang boleh dikosongkan.
-- Jika mengganti database, pastikan database telah dibuat dan dapat diakses sebelum migrasi.
+- Pastikan server MySQL aktif dan database yang dipilih sudah dibuat serta dapat diakses sebelum migrasi.
 - Dependency ekspor XLSX (`maatwebsite/excel`) sudah tercantum di `composer.json` dan akan dipasang oleh `composer install`.
 
 ## ☁️ Catatan deployment
