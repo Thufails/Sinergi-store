@@ -1,6 +1,8 @@
 @extends('layouts.store')
 
 @section('title', 'Produk - Sinergi Store')
+@section('meta_description', 'Jelajahi katalog merchandise Sinergi Store. Cari produk berdasarkan nama atau kategori, lalu pesan langsung melalui website.')
+@section('meta_image', asset('images/logo-sinergi.png'))
 
 @section('content')
     <section class="bg-slate-50">

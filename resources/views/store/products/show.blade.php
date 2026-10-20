@@ -1,6 +1,15 @@
 @extends('layouts.store')
 
 @section('title', $product->name . ' - Sinergi Store')
+@php
+    $productMetaSummary = trim(strip_tags($product->description ?? '')) ?: 'Pesan produk ini melalui katalog Sinergi Store.';
+    $productMetaDescription = \Illuminate\Support\Str::limit($productMetaSummary, 105)
+        . ' Harga Rp ' . number_format($product->final_price, 0, ',', '.') . ' di Sinergi Store.';
+@endphp
+@section('meta_description', $productMetaDescription)
+@section('meta_image', $product->image ? asset('storage/' . $product->image) : asset('images/logo-sinergi.png'))
+@section('meta_image_alt', $product->name)
+@section('twitter_card', 'summary_large_image')
 
 @section('content')
     <section class="mx-auto max-w-7xl px-6 py-12 lg:px-8">
@@ -29,12 +38,22 @@
                 </div>
 
                 <p class="mt-6 leading-7 text-slate-600">{{ $product->description ?: 'Belum ada deskripsi produk.' }}</p>
-                <div class="mt-8 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
+                <div class="mt-8 max-w-md rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5">
                     <h2 class="text-lg font-semibold text-slate-900">Tertarik dengan produk ini?</h2>
                     <p class="mt-1 text-sm text-slate-500">Isi detail pesanan dan lanjutkan konfirmasi melalui WhatsApp.</p>
-                    <button type="button" data-open-order-dialog @disabled(! $hasAvailableStock) class="mt-5 inline-flex w-full items-center justify-center rounded-xl bg-amber-500 px-5 py-3 font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
+                    <button type="button" data-open-order-dialog @disabled(! $hasAvailableStock) class="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-lg bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500">
                         {{ $hasAvailableStock ? 'Pesan produk' : 'Stok sedang habis' }}
                     </button>
+                    <button type="button" data-share-product class="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
+                        <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <circle cx="18" cy="5" r="3" />
+                            <circle cx="6" cy="12" r="3" />
+                            <circle cx="18" cy="19" r="3" />
+                            <path d="m8.7 10.7 6.6-4.4M8.7 13.3l6.6 4.4" />
+                        </svg>
+                        Bagikan produk
+                    </button>
+                    <p data-share-feedback class="mt-1 hidden text-center text-xs text-slate-500" role="status" aria-live="polite"></p>
                     @if (! $hasAvailableStock)
                         <p class="mt-3 text-center text-xs text-slate-500">Produk ini sedang tidak tersedia.</p>
                     @endif
@@ -141,7 +160,18 @@
         const orderQuantityInput = document.getElementById('quantity');
         const orderStockMessage = document.querySelector('[data-available-stock]');
         const orderButton = document.querySelector('[data-order-button]');
+        const shareProductButton = document.querySelector('[data-share-product]');
+        const shareFeedback = document.querySelector('[data-share-feedback]');
         const productStock = @json((int) $availableProductStock);
+        const productShareData = {
+            title: @json($product->name . ' - Sinergi Store'),
+            text: 'Lihat produk ini di Sinergi Store.',
+            url: document.querySelector('link[rel="canonical"]')?.href || window.location.href,
+        };
+        const setShareFeedback = (message) => {
+            shareFeedback.textContent = message;
+            shareFeedback.classList.remove('hidden');
+        };
 
         openOrderDialogButton?.addEventListener('click', () => orderDialog?.showModal());
         closeOrderDialogButtons.forEach((button) => {
@@ -178,6 +208,45 @@
 
         orderVariantSelect?.addEventListener('change', updateOrderStock);
         updateOrderStock();
+
+        const copyProductLink = async () => {
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(productShareData.url);
+                } else {
+                    const copyField = document.createElement('textarea');
+                    copyField.value = productShareData.url;
+                    copyField.setAttribute('readonly', '');
+                    copyField.style.position = 'fixed';
+                    copyField.style.opacity = '0';
+                    document.body.appendChild(copyField);
+                    copyField.select();
+                    const copied = document.execCommand('copy');
+                    copyField.remove();
+                    if (!copied) throw new Error('Clipboard unavailable');
+                }
+                setShareFeedback('Tautan produk berhasil disalin.');
+            } catch {
+                window.prompt('Salin tautan produk ini:', productShareData.url);
+                setShareFeedback('Salin tautan di atas untuk membagikan produk.');
+            }
+        };
+
+        shareProductButton?.addEventListener('click', async () => {
+            shareFeedback.textContent = '';
+            shareFeedback.classList.add('hidden');
+
+            if (navigator.share) {
+                try {
+                    await navigator.share(productShareData);
+                    return;
+                } catch (error) {
+                    if (error.name === 'AbortError') return;
+                }
+            }
+
+            await copyProductLink();
+        });
 
         if (@json($errors->any())) orderDialog?.showModal();
     </script>

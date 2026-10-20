@@ -45,7 +45,27 @@
                 });
             })();
         </script>
-        <title>@yield('title', 'Sinergi Store')</title>
+        @php
+            $storePageTitle = trim($__env->yieldContent('title')) ?: 'Sinergi Store';
+            $storeMetaDescription = trim($__env->yieldContent('meta_description')) ?: 'Temukan merchandise Sinergi Store dan jasa kreatif dari Sinergi Creative.';
+            $storeMetaImage = trim($__env->yieldContent('meta_image')) ?: asset('images/logo-sinergi.png');
+            $storeMetaImageAlt = trim($__env->yieldContent('meta_image_alt')) ?: 'Logo Sinergi Store';
+            $storeTwitterCard = trim($__env->yieldContent('twitter_card')) ?: 'summary';
+        @endphp
+        <title>{{ $storePageTitle }}</title>
+        <meta name="description" content="{{ $storeMetaDescription }}">
+        <link rel="canonical" href="{{ url()->current() }}">
+        <meta property="og:type" content="website">
+        <meta property="og:site_name" content="Sinergi Store">
+        <meta property="og:title" content="{{ $storePageTitle }}">
+        <meta property="og:description" content="{{ $storeMetaDescription }}">
+        <meta property="og:url" content="{{ url()->current() }}">
+        <meta property="og:image" content="{{ $storeMetaImage }}">
+        <meta property="og:image:alt" content="{{ $storeMetaImageAlt }}">
+        <meta name="twitter:card" content="{{ $storeTwitterCard }}">
+        <meta name="twitter:title" content="{{ $storePageTitle }}">
+        <meta name="twitter:description" content="{{ $storeMetaDescription }}">
+        <meta name="twitter:image" content="{{ $storeMetaImage }}">
         <link rel="icon" type="image/png" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
         <link rel="apple-touch-icon" href="{{ asset('images/logo-sinergi.png') }}?v=20261015">
 

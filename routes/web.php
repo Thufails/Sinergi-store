@@ -91,6 +91,7 @@ Route::get('/products/{product:slug}', [StoreProductController::class, 'show'])
     ->name('store.products.show');
 
 Route::post('/products/{product:slug}/order', [StoreProductController::class, 'order'])
+    ->middleware('throttle:5,1')
     ->name('store.products.order');
 
 Route::post('/testimonials', [StoreTestimonialController::class, 'store'])

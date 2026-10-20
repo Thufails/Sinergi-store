@@ -1,6 +1,9 @@
 @extends('layouts.store')
 
 @section('title', 'Sinergi Store - Home')
+@section('meta_description', 'Belanja merchandise Sinergi Store dan lihat jasa foto produk, video, serta desain dari Sinergi Creative.')
+@section('meta_image', asset('images/logo-sinergi.png'))
+@section('meta_image_alt', 'Logo Sinergi Store')
 
 @section('content')
     <section id="home" class="bg-slate-50 px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
