@@ -1,58 +1,114 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Sinergi Store
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Aplikasi katalog dan pemesanan Sinergi Store yang dibangun dengan Laravel, Blade, Tailwind CSS, dan Vite. Aplikasi menyediakan halaman publik, pengelolaan produk dan kategori, pesanan, testimoni, serta dashboard admin.
 
-## About Laravel
+## Persyaratan
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP **8.3** atau lebih baru sesuai batas versi project (`^8.3`), dengan ekstensi yang diperlukan Laravel dan Composer.
+- Composer.
+- Node.js dan npm.
+- SQLite untuk setup lokal bawaan, atau database lain yang didukung Laravel.
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Instalasi setelah clone
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+Jalankan perintah dari root project.
 
-## Learning Laravel
+1. Pasang dependency PHP:
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+   ```bash
+   composer install
+   ```
 
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+2. Salin `.env.example` menjadi `.env`:
 
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
+   ```bash
+   # macOS / Linux / Git Bash
+   cp .env.example .env
+   ```
 
-## Agentic Development
+   Di PowerShell:
 
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+   ```powershell
+   Copy-Item .env.example .env
+   ```
+
+   Jika `.env` sudah ada, jangan ditimpa; gunakan konfigurasi lokal yang ada.
+
+3. Buat application key:
+
+   ```bash
+   php artisan key:generate
+   ```
+
+4. Buat file database SQLite lokal (default pada `.env.example`):
+
+   ```bash
+   php -r "file_exists('database/database.sqlite') || touch('database/database.sqlite');"
+   ```
+
+   Jika memilih MySQL atau PostgreSQL, buat database lalu isi variabel `DB_*` di `.env`. Jangan commit `.env`.
+
+5. Buat tabel dan data awal:
+
+   ```bash
+   php artisan migrate --seed
+   ```
+
+   Seeder membuat akun admin lokal:
+
+   - Email: `admin@gmail.com`
+   - Password: `1234`
+
+   Kredensial ini hanya untuk pengembangan lokal. Ganti password segera dan **jangan gunakan akun/sandi bawaan ini pada website publik**.
+
+6. Pasang dependency frontend dan buat aset:
+
+   ```bash
+   npm ci
+   npm run build
+   ```
+
+7. Buat symbolic link untuk file pada disk publik lokal:
+
+   ```bash
+   php artisan storage:link
+   ```
+
+## Menjalankan aplikasi lokal
+
+Jalankan server Laravel:
 
 ```bash
-composer require laravel/boost --dev
-
-php artisan boost:install
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+Untuk hot reload frontend, jalankan perintah berikut di terminal lain:
 
-## Contributing
+```bash
+npm run dev
+```
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 
-## Code of Conduct
+## Catatan database dan data awal
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+- `php artisan migrate` menerapkan migrasi yang belum dijalankan tanpa menghapus data.
+- `php artisan migrate:fresh --seed` menghapus semua tabel lalu membuatnya ulang. Gunakan hanya pada database lokal yang boleh dikosongkan.
+- Jika mengganti database, pastikan database telah dibuat dan dapat diakses sebelum migrasi.
+- Dependency ekspor XLSX (`maatwebsite/excel`) sudah tercantum di `composer.json` dan akan dipasang oleh `composer install`.
 
-## Security Vulnerabilities
+## Catatan deployment
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+- Jangan unggah atau commit `.env`. Atur environment variables dan `APP_KEY` melalui penyedia hosting.
+- Untuk produksi, gunakan database persisten dan atur setidaknya `APP_ENV=production`, `APP_DEBUG=false`, serta `APP_URL` ke domain website.
+- Seeder admin saat ini menggunakan kredensial tetap. Sebelum go-live, ubah cara pembuatan kredensial atau ganti password bawaan dengan aman; jangan jalankan seeder ini di database publik tanpa menanganinya.
+- Upload foto produk menggunakan disk publik Laravel. Hosting perlu menyediakan storage persisten atau object storage; filesystem sementara/serverless bukan tempat permanen untuk upload.
+- Cara deploy bergantung pada penyedia hosting. Panduan instalasi lokal ini bukan konfigurasi deploy Vercel.
 
-## License
+## Teknologi
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+- Laravel 13
+- PHP 8.3+
+- Blade
+- Tailwind CSS 4 dan Vite
+- Laravel Excel (`maatwebsite/excel`)
