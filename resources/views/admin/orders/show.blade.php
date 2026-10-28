@@ -28,7 +28,7 @@
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
             'cancelled' => 'bg-slate-200 text-slate-800 ring-1 ring-inset ring-slate-300',
-            'expired' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
+            'expired' => 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-300',
         ];
     @endphp
 
