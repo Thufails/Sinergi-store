@@ -16,6 +16,12 @@ class Order extends Model
 
     public const STATUS_PAID = 'paid';
 
+    public const STATUS_PACKING = 'packing';
+
+    public const STATUS_PROCESSING = self::STATUS_PACKING;
+
+    public const STATUS_SHIPPED = 'shipped';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     public const STATUS_EXPIRED = 'expired';
@@ -27,6 +33,9 @@ class Order extends Model
         'status',
         'total_amount',
         'payment_due_at',
+        'courier_name',
+        'tracking_number',
+        'shipped_at',
     ];
 
     protected function casts(): array
@@ -34,6 +43,7 @@ class Order extends Model
         return [
             'total_amount' => 'decimal:2',
             'payment_due_at' => 'datetime',
+            'shipped_at' => 'datetime',
         ];
     }
 

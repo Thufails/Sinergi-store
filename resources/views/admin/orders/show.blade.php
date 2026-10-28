@@ -5,10 +5,28 @@
 
 @section('content')
     @php
+        $shippingWhatsappNumber = preg_replace('/\D+/', '', (string) $order->customer_phone) ?? '';
+        if (str_starts_with($shippingWhatsappNumber, '0')) {
+            $shippingWhatsappNumber = '62' . substr($shippingWhatsappNumber, 1);
+        } elseif (str_starts_with($shippingWhatsappNumber, '8')) {
+            $shippingWhatsappNumber = '62' . $shippingWhatsappNumber;
+        }
+
+        $shippingWhatsappMessage = implode("\n", [
+            'Halo ' . $order->customer_name . ', pesananmu sudah dikirim dari Sinergi Store.',
+            'Nomor pesanan: ' . $order->order_number,
+            'Kurir: ' . ($order->courier_name ?: '-'),
+            'Nomor resi: ' . ($order->tracking_number ?: '-'),
+            '',
+            'Terima kasih sudah berbelanja di Sinergi Store.',
+        ]);
+
         $statusStyles = [
             'pending_confirmation' => 'bg-amber-100 text-amber-800',
             'awaiting_payment' => 'bg-sky-100 text-sky-800',
             'paid' => 'bg-emerald-100 text-emerald-800',
+            'packing' => 'bg-violet-100 text-violet-800',
+            'shipped' => 'bg-cyan-100 text-cyan-800',
             'cancelled' => 'bg-slate-200 text-slate-700',
             'expired' => 'bg-rose-100 text-rose-700',
         ];
@@ -70,13 +88,50 @@
                             Stok sedang di-hold sampai batas waktu ini.
                         @elseif ($order->status === 'paid')
                             Pembayaran sudah dikonfirmasi.
-                        @else
+                        @elseif ($order->status === 'packing')
+                            Pesanan sedang dikemas; batas pembayaran sudah tidak berlaku.
+                        @elseif ($order->status === 'shipped')
+                            Pesanan sudah dikirim; batas pembayaran sudah tidak berlaku.
+                        @elseif ($order->status === 'cancelled')
                             Pesanan dibatalkan; hold stok sudah dilepas.
+                        @else
+                            Batas pembayaran sudah tidak berlaku untuk status pesanan ini.
                         @endif
                     </p>
                 </div>
             @endif
         </div>
+
+        @if ($order->status === 'shipped' || $order->courier_name || $order->tracking_number)
+            <div class="border-b border-slate-200 bg-sky-50/70 px-6 py-5">
+                <h3 class="text-sm font-semibold text-slate-900">Informasi pengiriman</h3>
+                <div class="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Kurir</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-800">{{ $order->courier_name ?: 'Belum diisi' }}</p>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Nomor resi</p>
+                        <p class="mt-1 break-all text-sm font-semibold text-slate-800">{{ $order->tracking_number ?: 'Belum diisi' }}</p>
+                    </div>
+                    @if ($order->shipped_at)
+                        <div class="sm:col-span-2">
+                            <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Dikirim pada</p>
+                            <p class="mt-1 text-sm text-slate-700">{{ $order->shipped_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>
+                        </div>
+                    @endif
+                    @if ($order->status === 'shipped' && preg_match('/^62\d{8,13}$/', $shippingWhatsappNumber) === 1)
+                        <div class="sm:col-span-2">
+                            <a href="https://wa.me/{{ $shippingWhatsappNumber }}?text={{ rawurlencode($shippingWhatsappMessage) }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400 focus-visible:ring-offset-2">
+                                <svg class="h-4 w-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.52 3.48A11.8 11.8 0 0 0 12.12 0C5.57 0 .23 5.33.23 11.89c0 2.1.55 4.15 1.6 5.96L.13 24l6.31-1.65a11.9 11.9 0 0 0 5.68 1.45h.01c6.55 0 11.89-5.33 11.89-11.89 0-3.17-1.24-6.15-3.5-8.43ZM12.13 21.8h-.01a9.9 9.9 0 0 1-5.04-1.38l-.36-.21-3.75.98 1-3.66-.24-.38a9.86 9.86 0 0 1-1.52-5.26c0-5.47 4.45-9.92 9.92-9.92 2.65 0 5.14 1.03 7.01 2.91a9.86 9.86 0 0 1 2.9 7.02c0 5.47-4.44 9.9-9.91 9.9Zm5.44-7.42c-.3-.15-1.77-.87-2.05-.97-.27-.1-.47-.15-.67.15-.2.3-.77.97-.95 1.17-.17.2-.35.22-.65.07-.3-.15-1.26-.46-2.4-1.47-.89-.79-1.49-1.77-1.67-2.07-.17-.3-.02-.46.13-.61.14-.14.3-.35.45-.52.15-.17.2-.3.3-.5.1-.2.05-.37-.02-.52-.08-.15-.67-1.62-.92-2.22-.24-.58-.49-.5-.67-.51h-.57c-.2 0-.52.07-.8.37-.27.3-1.04 1.02-1.04 2.49s1.07 2.89 1.22 3.09c.15.2 2.1 3.2 5.08 4.49.71.31 1.27.49 1.7.63.71.23 1.36.2 1.87.12.57-.08 1.77-.72 2.02-1.42.25-.7.25-1.3.18-1.42-.08-.13-.28-.2-.58-.35Z" /></svg>
+                                Kirim info pengiriman via WhatsApp
+                            </a>
+                            <p class="mt-2 text-xs text-slate-500">Pesan akan terbuka di WhatsApp untuk ditinjau sebelum dikirim.</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
+        @endif
 
         <div class="overflow-x-auto">
             <table class="min-w-full divide-y divide-slate-200 text-left text-sm">
@@ -152,6 +207,16 @@
                         <input type="hidden" name="status" value="cancelled">
                         <button type="submit" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white">Batalkan pesanan</button>
                     </form>
+                @elseif ($order->status === 'paid')
+                    <form method="POST" action="{{ route('admin.orders.status', $order) }}">
+                        @csrf
+                        @method('PATCH')
+                        <input type="hidden" name="status" value="packing">
+                        <button type="submit" class="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Mulai pengemasan</button>
+                    </form>
+                @elseif ($order->status === 'packing')
+                    <button type="button" data-open-shipping-dialog class="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Input kurir &amp; nomor resi</button>
+                    <p class="self-center text-sm text-slate-500">Simpan detail pengiriman untuk mengubah status menjadi Dikirim.</p>
                 @else
                     <p class="rounded-xl bg-white px-4 py-3 text-sm text-slate-500">Tidak ada tindakan lanjutan untuk status ini.</p>
                 @endif
@@ -335,6 +400,71 @@
                 paymentDialog.addEventListener('click', (event) => {
                     if (event.target === paymentDialog) paymentDialog.close();
                 });
+            })();
+        </script>
+    @endif
+
+    @if ($order->status === 'packing')
+        <dialog data-shipping-dialog aria-labelledby="shipping-dialog-title" aria-describedby="shipping-dialog-description" class="m-auto w-[calc(100%-2rem)] max-w-lg overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
+            <div class="bg-white p-6 sm:p-7">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="text-sm font-semibold text-amber-700">Detail pengiriman</p>
+                        <h2 id="shipping-dialog-title" class="mt-1 text-xl font-semibold text-slate-900">Pesanan siap dikirim?</h2>
+                    </div>
+                    <button type="button" data-close-shipping-dialog aria-label="Tutup form pengiriman" class="rounded-lg p-2 text-2xl leading-none text-slate-400 transition hover:bg-slate-100 hover:text-slate-700">&times;</button>
+                </div>
+                <p id="shipping-dialog-description" class="mt-3 text-sm leading-6 text-slate-600">
+                    Isi nama kurir dan nomor resi. Setelah disimpan, status pesanan berubah menjadi <span class="font-semibold text-cyan-700">Dikirim</span>.
+                </p>
+
+                <form id="shipping-form" method="POST" action="{{ route('admin.orders.shipping', $order) }}" class="mt-6 space-y-5">
+                    @csrf
+                    @method('PATCH')
+                    <div>
+                        <label for="courier_name" class="mb-2 block text-sm font-medium text-slate-700">Nama kurir</label>
+                        <input id="courier_name" name="courier_name" type="text" value="{{ old('courier_name', $order->courier_name) }}" maxlength="100" required autofocus placeholder="Contoh: JNE, J&T, SiCepat" @class(['w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-amber-200', 'border-rose-400 focus:border-rose-500' => $errors->has('courier_name'), 'border-slate-300 focus:border-amber-500' => ! $errors->has('courier_name')]) @if ($errors->has('courier_name')) aria-invalid="true" aria-describedby="courier-name-error" @endif>
+                        @error('courier_name')
+                            <p id="courier-name-error" class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div>
+                        <label for="tracking_number" class="mb-2 block text-sm font-medium text-slate-700">Nomor resi</label>
+                        <input id="tracking_number" name="tracking_number" type="text" value="{{ old('tracking_number', $order->tracking_number) }}" maxlength="100" required placeholder="Masukkan nomor resi" @class(['w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-amber-200', 'border-rose-400 focus:border-rose-500' => $errors->has('tracking_number'), 'border-slate-300 focus:border-amber-500' => ! $errors->has('tracking_number')]) @if ($errors->has('tracking_number')) aria-invalid="true" aria-describedby="tracking-number-error" @endif>
+                        @error('tracking_number')
+                            <p id="tracking-number-error" class="mt-2 text-sm text-rose-600">{{ $message }}</p>
+                        @enderror
+                    </div>
+                    <div class="rounded-xl bg-amber-50 px-4 py-3 text-xs leading-5 text-amber-900">
+                        Pastikan nomor resi benar. Penyimpanan akan mencatat waktu pengiriman dan memperbarui riwayat pesanan.
+                    </div>
+                </form>
+
+                <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button type="button" data-close-shipping-dialog class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Batal</button>
+                    <button type="submit" form="shipping-form" class="rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Simpan &amp; tandai dikirim</button>
+                </div>
+            </div>
+        </dialog>
+
+        <script>
+            (() => {
+                const shippingDialog = document.querySelector('[data-shipping-dialog]');
+                const openShippingButton = document.querySelector('[data-open-shipping-dialog]');
+
+                if (!shippingDialog) return;
+
+                openShippingButton?.addEventListener('click', () => shippingDialog.showModal());
+                document.querySelectorAll('[data-close-shipping-dialog]').forEach((button) => {
+                    button.addEventListener('click', () => shippingDialog.close());
+                });
+                shippingDialog.addEventListener('click', (event) => {
+                    if (event.target === shippingDialog) shippingDialog.close();
+                });
+
+                @if ($errors->has('courier_name') || $errors->has('tracking_number'))
+                    shippingDialog.showModal();
+                @endif
             })();
         </script>
     @endif

@@ -29,6 +29,8 @@ class OrderController extends Controller
         Order::STATUS_PENDING_CONFIRMATION => 'Menunggu konfirmasi',
         Order::STATUS_AWAITING_PAYMENT => 'Menunggu pembayaran',
         Order::STATUS_PAID => 'Dibayar',
+        Order::STATUS_PROCESSING => 'Sedang dikemas',
+        Order::STATUS_SHIPPED => 'Dikirim',
         Order::STATUS_CANCELLED => 'Dibatalkan',
         Order::STATUS_EXPIRED => 'Kedaluwarsa',
     ];
@@ -192,6 +194,7 @@ class OrderController extends Controller
                 Rule::in([
                     Order::STATUS_AWAITING_PAYMENT,
                     Order::STATUS_PAID,
+                    Order::STATUS_PROCESSING,
                     Order::STATUS_CANCELLED,
                     Order::STATUS_EXPIRED,
                 ]),
@@ -257,6 +260,23 @@ class OrderController extends Controller
                 return null;
             }
 
+            if ($targetStatus === Order::STATUS_PROCESSING) {
+                if ($lockedOrder->status !== Order::STATUS_PAID) {
+                    return 'Hanya pesanan yang sudah dibayar yang bisa mulai diproses.';
+                }
+
+                $lockedOrder->update(['status' => Order::STATUS_PROCESSING]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    Order::STATUS_PAID,
+                    Order::STATUS_PROCESSING,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
+
+                return null;
+            }
+
             if ($targetStatus === Order::STATUS_CANCELLED) {
                 if (! in_array($lockedOrder->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_AWAITING_PAYMENT], true)) {
                     return 'Pesanan yang sudah dibayar atau selesai tidak dapat dibatalkan dari alur ini.';
@@ -306,6 +326,50 @@ class OrderController extends Controller
         return redirect()
             ->route('admin.orders.show', $order)
             ->with('success', 'Status pesanan berhasil diperbarui.');
+    }
+
+    public function updateShipping(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'courier_name' => ['required', 'string', 'max:100'],
+            'tracking_number' => ['required', 'string', 'max:100'],
+        ]);
+
+        $admin = $request->user();
+        $message = DB::transaction(function () use ($order, $validated, $admin): ?string {
+            $lockedOrder = Order::query()
+                ->lockForUpdate()
+                ->findOrFail($order->id);
+
+            if ($lockedOrder->status !== Order::STATUS_PROCESSING) {
+                return 'Detail pengiriman hanya bisa diisi untuk pesanan yang sedang diproses.';
+            }
+
+            $lockedOrder->update([
+                'courier_name' => trim($validated['courier_name']),
+                'tracking_number' => trim($validated['tracking_number']),
+                'shipped_at' => now(),
+                'status' => Order::STATUS_SHIPPED,
+            ]);
+
+            $this->recordStatusChange(
+                $lockedOrder,
+                Order::STATUS_PROCESSING,
+                Order::STATUS_SHIPPED,
+                (int) $admin->getAuthIdentifier(),
+                (string) $admin->name,
+            );
+
+            return null;
+        });
+
+        if ($message !== null) {
+            return back()->with('error', $message);
+        }
+
+        return redirect()
+            ->route('admin.orders.show', $order)
+            ->with('success', 'Detail pengiriman tersimpan dan status pesanan menjadi Dikirim.');
     }
 
     private function filteredOrdersQuery(Request $request): Builder

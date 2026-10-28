@@ -64,6 +64,8 @@ Route::middleware('auth')
             ->name('admin.orders.show');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
             ->name('admin.orders.status');
+        Route::patch('/orders/{order}/shipping', [OrderController::class, 'updateShipping'])
+            ->name('admin.orders.shipping');
 
         // CRUD testimoni dalam satu halaman
         Route::get('/testimonials', [TestimoniController::class, 'index'])
