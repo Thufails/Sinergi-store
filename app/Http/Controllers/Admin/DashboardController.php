@@ -59,15 +59,15 @@ class DashboardController extends Controller
         $dateTo = $periodEnd->toDateString();
 
         $monthlyPaidOrders = fn () => Order::query()
-            ->where('status', Order::STATUS_PAID)
-            ->whereBetween('updated_at', [$monthStartUtc, $monthEndUtc]);
+            ->whereNotNull('paid_at')
+            ->whereBetween('paid_at', [$monthStartUtc, $monthEndUtc]);
 
         $monthlyRevenue = (float) $monthlyPaidOrders()->sum('total_amount');
         $paidOrdersThisMonth = $monthlyPaidOrders()->count();
         $productsSoldInPeriod = (int) OrderItem::query()
             ->whereHas('order', fn ($query) => $query
-                ->where('status', Order::STATUS_PAID)
-                ->whereBetween('updated_at', [$periodStartUtc, $periodEndUtc]))
+                ->whereNotNull('paid_at')
+                ->whereBetween('paid_at', [$periodStartUtc, $periodEndUtc]))
             ->sum('quantity');
         $ordersAwaitingConfirmation = Order::query()
             ->where('status', Order::STATUS_PENDING_CONFIRMATION)
@@ -82,8 +82,8 @@ class DashboardController extends Controller
 
         $topSellingProducts = OrderItem::query()
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.status', Order::STATUS_PAID)
-            ->whereBetween('orders.updated_at', [$periodStartUtc, $periodEndUtc])
+            ->whereNotNull('orders.paid_at')
+            ->whereBetween('orders.paid_at', [$periodStartUtc, $periodEndUtc])
             ->selectRaw('order_items.product_name, SUM(order_items.quantity) as units_sold')
             ->groupBy('order_items.product_name')
             ->orderByDesc('units_sold')
@@ -94,9 +94,9 @@ class DashboardController extends Controller
         $daysInPeriod = $periodStart->copy()->startOfDay()->diffInDays($periodEnd->copy()->startOfDay()) + 1;
         $dailyPaidItems = OrderItem::query()
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
-            ->where('orders.status', Order::STATUS_PAID)
-            ->whereBetween('orders.updated_at', [$periodStartUtc, $periodEndUtc])
-            ->selectRaw('orders.updated_at as paid_at, order_items.quantity')
+            ->whereNotNull('orders.paid_at')
+            ->whereBetween('orders.paid_at', [$periodStartUtc, $periodEndUtc])
+            ->selectRaw('orders.paid_at, order_items.quantity')
             ->get();
         $dailySalesByDate = $dailyPaidItems
             ->groupBy(fn ($item) => Carbon::parse($item->paid_at, 'UTC')->timezone('Asia/Jakarta')->format('Y-m-d'))

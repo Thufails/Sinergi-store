@@ -32,6 +32,7 @@ class Order extends Model
         'customer_phone',
         'status',
         'total_amount',
+        'paid_at',
         'payment_due_at',
         'courier_name',
         'tracking_number',
@@ -42,6 +43,7 @@ class Order extends Model
     {
         return [
             'total_amount' => 'decimal:2',
+            'paid_at' => 'datetime',
             'payment_due_at' => 'datetime',
             'shipped_at' => 'datetime',
         ];

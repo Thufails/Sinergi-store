@@ -251,7 +251,10 @@ class OrderController extends Controller
                     return $inventoryError;
                 }
 
-                $lockedOrder->update(['status' => Order::STATUS_PAID]);
+                $lockedOrder->update([
+                    'status' => Order::STATUS_PAID,
+                    'paid_at' => now(),
+                ]);
                 $this->recordStatusChange(
                     $lockedOrder,
                     Order::STATUS_AWAITING_PAYMENT,
