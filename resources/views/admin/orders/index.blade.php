@@ -6,11 +6,13 @@
 @section('content')
     @php
         $statusStyles = [
-            'pending_confirmation' => 'bg-amber-100 text-amber-800',
-            'awaiting_payment' => 'bg-sky-100 text-sky-800',
-            'paid' => 'bg-emerald-100 text-emerald-800',
-            'cancelled' => 'bg-slate-200 text-slate-700',
-            'expired' => 'bg-rose-100 text-rose-700',
+            'pending_confirmation' => 'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300',
+            'awaiting_payment' => 'bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300',
+            'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
+            'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
+            'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
+            'cancelled' => 'bg-slate-200 text-slate-800 ring-1 ring-inset ring-slate-300',
+            'expired' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
         ];
     @endphp
 
@@ -102,7 +104,14 @@
                                 </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-slate-600">{{ $order->items->sum('quantity') }} unit · {{ $order->items->count() }} jenis</td>
                                 <td class="whitespace-nowrap px-6 py-4 font-medium text-slate-800">Rp {{ number_format((float) $order->total_amount, 0, ',', '.') }}</td>
-                                <td class="whitespace-nowrap px-6 py-4"><span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyles[$order->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $statusLabels[$order->status] ?? $order->status }}</span></td>
+                                <td class="px-6 py-4">
+                                    <div class="flex flex-col items-start gap-2">
+                                        <span class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyles[$order->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $statusLabels[$order->status] ?? $order->status }}</span>
+                                        @if ($order->status === 'shipped' && $order->tracking_number)
+                                            <span class="whitespace-nowrap text-xs text-slate-500">Resi · <strong class="font-semibold text-slate-800">{{ $order->tracking_number }}</strong></span>
+                                        @endif
+                                    </div>
+                                </td>
                                 <td class="whitespace-nowrap px-6 py-4 text-slate-500">{{ $order->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</td>
                                 <td class="whitespace-nowrap px-6 py-4 text-right"><a href="{{ route('admin.orders.show', $order) }}" class="font-semibold text-amber-700 hover:text-amber-800">Lihat detail</a></td>
                             </tr>

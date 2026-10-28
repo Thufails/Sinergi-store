@@ -39,8 +39,11 @@ class OrderController extends Controller
     {
         $orders = $this->filteredOrdersQuery($request)
             ->with('items')
-            ->latest()
-            ->paginate(12)
+            ->withMax('statusHistories as latest_status_update_at', 'created_at')
+            ->orderByDesc('latest_status_update_at')
+            ->orderByDesc('orders.created_at')
+            ->orderByDesc('orders.id')
+            ->paginate(10)
             ->withQueryString();
 
         return view('admin.orders.index', [

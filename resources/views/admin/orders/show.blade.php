@@ -22,13 +22,13 @@
         ]);
 
         $statusStyles = [
-            'pending_confirmation' => 'bg-amber-100 text-amber-800',
-            'awaiting_payment' => 'bg-sky-100 text-sky-800',
-            'paid' => 'bg-emerald-100 text-emerald-800',
-            'packing' => 'bg-violet-100 text-violet-800',
-            'shipped' => 'bg-cyan-100 text-cyan-800',
-            'cancelled' => 'bg-slate-200 text-slate-700',
-            'expired' => 'bg-rose-100 text-rose-700',
+            'pending_confirmation' => 'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300',
+            'awaiting_payment' => 'bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300',
+            'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
+            'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
+            'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
+            'cancelled' => 'bg-slate-200 text-slate-800 ring-1 ring-inset ring-slate-300',
+            'expired' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
         ];
     @endphp
 
