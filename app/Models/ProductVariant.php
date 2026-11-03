@@ -17,12 +17,14 @@ class ProductVariant extends Model
         'color',
         'sku',
         'stock',
+        'weight_grams',
     ];
 
     protected function casts(): array
     {
         return [
             'stock' => 'integer',
+            'weight_grams' => 'integer',
         ];
     }
 

@@ -15,13 +15,13 @@ return new class extends Migration
             $table->string('recipient_name', 150);
             $table->string('recipient_phone', 30);
             $table->string('province', 100);
-            $table->string('rajaongkir_province_id', 30);
+            $table->string('province_code', 20)->nullable();
             $table->string('city', 100);
-            $table->string('rajaongkir_city_id', 30);
+            $table->string('regency_code', 20)->nullable();
             $table->string('district', 100);
-            $table->string('rajaongkir_district_id', 30);
+            $table->string('district_code', 20)->nullable();
             $table->string('subdistrict', 100)->nullable();
-            $table->string('rajaongkir_subdistrict_id', 30)->nullable();
+            $table->string('village_code', 20)->nullable();
             $table->string('postal_code', 10);
             $table->text('address_line');
             $table->text('notes')->nullable();

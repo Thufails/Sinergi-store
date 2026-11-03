@@ -22,6 +22,7 @@ class Product extends Model
         'discount_type',
         'discount_value',
         'stock',
+        'weight_grams',
         'image',
         'is_active',
     ];
@@ -33,6 +34,7 @@ class Product extends Model
             'price' => 'decimal:2',
             'discount_value' => 'decimal:2',
             'stock' => 'integer',
+            'weight_grams' => 'integer',
             'is_active' => 'boolean',
         ];
     }
