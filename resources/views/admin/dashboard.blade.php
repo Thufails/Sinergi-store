@@ -29,7 +29,7 @@
             <p class="mt-1 text-sm text-slate-500">Pengingat untuk admin. Perubahan status tetap dilakukan secara manual.</p>
         </div>
         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-            <a href="{{ route('admin.orders.index', ['status' => 'pending_confirmation']) }}" class="admin-dashboard-card group rounded-2xl border border-amber-300 bg-white p-5 shadow-sm transition hover:border-amber-500 hover:shadow-md">
+            <a href="{{ route('admin.orders.index', ['status' => 'pending_confirmation']) }}" class="admin-dashboard-card group flex h-full flex-col rounded-2xl border border-amber-300 bg-white p-5 shadow-sm transition hover:border-amber-500 hover:shadow-md">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -45,10 +45,10 @@
                     </div>
                     <span class="rounded-xl bg-amber-100 px-3 py-1.5 text-lg font-bold text-amber-900">{{ number_format($ordersAwaitingConfirmation, 0, ',', '.') }}</span>
                 </div>
-                <p class="mt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">Lihat pesanan <span aria-hidden="true">→</span></p>
+                <p class="mt-auto pt-4 text-sm font-semibold text-amber-700 group-hover:text-amber-800">Lihat pesanan <span aria-hidden="true">→</span></p>
             </a>
 
-            <a href="{{ route('admin.orders.index', ['status' => 'awaiting_payment']) }}" class="admin-dashboard-card group rounded-2xl border border-sky-300 bg-white p-5 shadow-sm transition hover:border-sky-500 hover:shadow-md">
+            <a href="{{ route('admin.orders.index', ['status' => 'awaiting_payment']) }}" class="admin-dashboard-card group flex h-full flex-col rounded-2xl border border-sky-300 bg-white p-5 shadow-sm transition hover:border-sky-500 hover:shadow-md">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -68,10 +68,10 @@
                     </div>
                     <span class="rounded-xl bg-sky-100 px-3 py-1.5 text-lg font-bold text-sky-900">{{ number_format($ordersAwaitingPayment, 0, ',', '.') }}</span>
                 </div>
-                <p class="mt-4 text-sm font-semibold text-sky-700 group-hover:text-sky-800">Lihat pesanan <span aria-hidden="true">→</span></p>
+                <p class="mt-auto pt-4 text-sm font-semibold text-sky-700 group-hover:text-sky-800">Lihat pesanan <span aria-hidden="true">→</span></p>
             </a>
 
-            <a href="{{ route('admin.orders.index', ['status' => 'payment_review']) }}" class="admin-dashboard-card group rounded-2xl border border-rose-300 bg-white p-5 shadow-sm transition hover:border-rose-500 hover:shadow-md">
+            <a href="{{ route('admin.orders.index', ['status' => 'payment_review']) }}" class="admin-dashboard-card group flex h-full flex-col rounded-2xl border border-rose-300 bg-white p-5 shadow-sm transition hover:border-rose-500 hover:shadow-md">
                 <div class="flex items-start justify-between gap-4">
                     <div>
                         <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
@@ -87,7 +87,7 @@
                     </div>
                     <span class="rounded-xl bg-rose-100 px-3 py-1.5 text-lg font-bold text-rose-900">{{ number_format($ordersAwaitingPaymentReview, 0, ',', '.') }}</span>
                 </div>
-                <p class="mt-4 text-sm font-semibold text-rose-700 group-hover:text-rose-800">Periksa bukti <span aria-hidden="true">→</span></p>
+                <p class="mt-auto pt-4 text-sm font-semibold text-rose-700 group-hover:text-rose-800">Periksa bukti <span aria-hidden="true">→</span></p>
             </a>
         </div>
     </section>
