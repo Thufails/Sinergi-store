@@ -26,7 +26,9 @@ class CustomerAuthController extends Controller
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:customers,email'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+().\\s-]{8,30}$/'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'regex:/^\\S+$/', 'confirmed'],
+        ], [
+            'password.regex' => 'Password tidak boleh mengandung spasi.',
         ]);
 
         $customer = Customer::query()->create([
@@ -39,7 +41,7 @@ class CustomerAuthController extends Controller
         Auth::guard('customer')->login($customer);
         $request->session()->regenerate();
 
-        return redirect()->intended(route('account.orders'))
+        return redirect()->route('store.home')
             ->with('success', 'Akun berhasil dibuat.');
     }
 
@@ -63,7 +65,7 @@ class CustomerAuthController extends Controller
 
         $request->session()->regenerate();
 
-        return redirect()->intended(route('account.orders'));
+        return redirect()->route('store.home');
     }
 
     public function logout(Request $request): RedirectResponse
@@ -113,8 +115,10 @@ class CustomerAuthController extends Controller
         $validated = $request->validate([
             'token' => ['required', 'string'],
             'email' => ['required', 'email'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'regex:/^\\S+$/', 'confirmed'],
             'password_confirmation' => ['required', 'string', 'same:password'],
+        ], [
+            'password.regex' => 'Password tidak boleh mengandung spasi.',
         ]);
 
         $status = Password::broker('customers')->reset(

@@ -29,6 +29,11 @@ class Customer extends Authenticatable
         return $this->hasMany(Order::class);
     }
 
+    public function addresses(): HasMany
+    {
+        return $this->hasMany(CustomerAddress::class);
+    }
+
     /**
      * Send the customer-specific password reset notification.
      *

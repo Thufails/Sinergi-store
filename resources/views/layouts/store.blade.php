@@ -144,6 +144,7 @@
             @yield('content')
         </main>
 
+        @guest('customer')
         @php
             $storeLocationName = 'PEUBA Usman Bin Affan';
             $storeLocation = 'Jl Terusan Nusa Indah No.21, Dusun Durek, Giripurno, Kec. Bumiaji, Kota Batu, Jawa Timur 65333, Indonesia';
@@ -188,6 +189,7 @@
                 </section>
             </div>
         </section>
+        @endguest
 
         <footer class="w-full bg-slate-950 text-slate-300">
             <div class="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-10 pt-7 md:grid-cols-2 lg:grid-cols-[1.15fr_0.75fr_0.85fr] lg:gap-12 lg:px-8">

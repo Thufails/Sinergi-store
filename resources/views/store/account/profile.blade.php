@@ -47,7 +47,7 @@
 
             <section class="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
                 <h2 class="text-lg font-semibold text-slate-900">Ubah password</h2>
-                <p class="mt-1 text-sm text-slate-500">Gunakan minimal 8 karakter untuk password baru.</p>
+                <p class="mt-1 text-sm text-slate-500">Gunakan minimal 8 karakter tanpa spasi. Kombinasi huruf, angka, dan simbol bebas.</p>
                 <form method="POST" action="{{ route('account.profile.password.update') }}" class="mt-6 grid gap-5 sm:grid-cols-2">
                     @csrf
                     @method('PUT')
@@ -58,12 +58,12 @@
                     </div>
                     <div>
                         <label for="password" class="mb-2 block text-sm font-medium text-slate-700">Password baru</label>
-                        <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                        <input id="password" name="password" type="password" required minlength="8" pattern="\S+" title="Password minimal 8 karakter dan tidak boleh mengandung spasi." autocomplete="new-password" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
                         @error('password')<p class="mt-2 text-sm text-rose-700">{{ $message }}</p>@enderror
                     </div>
                     <div>
                         <label for="password_confirmation" class="mb-2 block text-sm font-medium text-slate-700">Ulangi password baru</label>
-                        <input id="password_confirmation" name="password_confirmation" type="password" required minlength="8" autocomplete="new-password" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                        <input id="password_confirmation" name="password_confirmation" type="password" required minlength="8" pattern="\S+" title="Password minimal 8 karakter dan tidak boleh mengandung spasi." autocomplete="new-password" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
                     </div>
                     <div class="sm:col-span-2">
                         <button type="submit" class="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-slate-900">Perbarui password</button>

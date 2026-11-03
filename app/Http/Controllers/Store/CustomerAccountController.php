@@ -71,7 +71,9 @@ class CustomerAccountController extends Controller
 
         $validated = $request->validate([
             'current_password' => ['required', 'current_password:customer'],
-            'password' => ['required', 'string', 'min:8', 'confirmed'],
+            'password' => ['required', 'string', 'min:8', 'regex:/^\\S+$/', 'confirmed'],
+        ], [
+            'password.regex' => 'Password tidak boleh mengandung spasi.',
         ]);
 
         $customer->forceFill([
