@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'rajaongkir' => [
+        'base_url' => env('RAJAONGKIR_BASE_URL', 'https://rajaongkir.komerce.id/api/v1'),
+        'api_key' => env('RAJAONGKIR_API_KEY'),
+        'origin' => [
+            'search' => env('RAJAONGKIR_ORIGIN_SEARCH', 'Giripurno'),
+            'province' => env('RAJAONGKIR_ORIGIN_PROVINCE', 'Jawa Timur'),
+            'city' => env('RAJAONGKIR_ORIGIN_CITY', 'Kota Batu'),
+            'district' => env('RAJAONGKIR_ORIGIN_DISTRICT', 'Bumiaji'),
+            'subdistrict' => env('RAJAONGKIR_ORIGIN_SUBDISTRICT', 'Giripurno'),
+            'postal_code' => env('RAJAONGKIR_ORIGIN_POSTAL_CODE', '65333'),
+        ],
+    ],
+
 ];

@@ -67,6 +67,8 @@ Route::middleware('auth')
             ->name('admin.orders.show');
         Route::get('/orders/{order}/payment-proof', [OrderController::class, 'showPaymentProof'])
             ->name('admin.orders.payment-proof');
+        Route::post('/orders/{order}/shipping-rates', [OrderController::class, 'calculateShippingRates'])
+            ->name('admin.orders.shipping-rates');
         Route::patch('/orders/{order}/shipping-quote', [OrderController::class, 'quoteShipping'])
             ->name('admin.orders.shipping-quote');
         Route::patch('/orders/{order}/payment-review', [OrderController::class, 'reviewPayment'])

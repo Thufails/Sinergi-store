@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\RajaOngkirShippingService;
 use Carbon\CarbonImmutable;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -17,10 +18,13 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection as EloquentCollection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -181,13 +185,14 @@ class OrderController extends Controller
         });
     }
 
-    public function show(Order $order): View
+    public function show(Order $order, RajaOngkirShippingService $shippingService): View
     {
         $order->load(['items.product', 'items.variant', 'statusHistories', 'customerAddress']);
 
         return view('admin.orders.show', [
             'order' => $order,
             'statusLabels' => self::STATUS_LABELS,
+            'courierOptions' => $shippingService->courierOptions(),
         ]);
     }
 
@@ -206,14 +211,29 @@ class OrderController extends Controller
     public function quoteShipping(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'courier_name' => ['required', 'string', 'max:100'],
-            'courier_service' => ['nullable', 'string', 'max:150'],
-            'shipping_fee' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
-            'shipping_estimated_delivery' => ['nullable', 'string', 'max:80'],
+            'shipping_rate_token' => ['required', 'string', 'max:5000'],
         ]);
 
+        try {
+            $rate = json_decode(Crypt::decryptString($validated['shipping_rate_token']), true, 512, JSON_THROW_ON_ERROR);
+        } catch (\Throwable) {
+            throw ValidationException::withMessages([
+                'shipping_rate_token' => 'Tarif ongkir tidak valid. Hitung ulang dan pilih salah satu layanan.',
+            ]);
+        }
+
+        if (! is_array($rate)
+            || (int) ($rate['order_id'] ?? 0) !== (int) $order->id
+            || (int) ($rate['expires_at'] ?? 0) < now()->timestamp
+            || ! isset($rate['courier_name'], $rate['service'], $rate['cost'], $rate['etd'])
+            || ! is_numeric($rate['cost'])) {
+            throw ValidationException::withMessages([
+                'shipping_rate_token' => 'Tarif ongkir sudah kedaluwarsa atau tidak cocok. Hitung ulang ongkir sebelum menyimpan.',
+            ]);
+        }
+
         $admin = $request->user();
-        $message = DB::transaction(function () use ($order, $validated, $admin): ?string {
+        $message = DB::transaction(function () use ($order, $rate, $admin): ?string {
             $lockedOrder = Order::query()->with('items')->lockForUpdate()->findOrFail($order->id);
 
             if ($lockedOrder->status !== Order::STATUS_PENDING_CONFIRMATION) {
@@ -230,13 +250,13 @@ class OrderController extends Controller
             }
 
             $previousStatus = $lockedOrder->status;
-            $shippingFee = round((float) $validated['shipping_fee'], 2);
+            $shippingFee = round((float) $rate['cost'], 2);
             $lockedOrder->update([
-                'courier_name' => trim($validated['courier_name']),
-                'courier_service' => filled($validated['courier_service'] ?? null) ? trim($validated['courier_service']) : null,
+                'courier_name' => trim((string) $rate['courier_name']),
+                'courier_service' => filled($rate['service']) ? trim((string) $rate['service']) : null,
                 'shipping_fee' => $shippingFee,
-                'shipping_estimated_delivery' => filled($validated['shipping_estimated_delivery'] ?? null)
-                    ? trim($validated['shipping_estimated_delivery'])
+                'shipping_estimated_delivery' => filled($rate['etd'])
+                    ? trim((string) $rate['etd'])
                     : null,
                 'total_amount' => round((float) $lockedOrder->subtotal_amount + $shippingFee, 2),
                 'status' => Order::STATUS_AWAITING_PAYMENT,
@@ -260,6 +280,42 @@ class OrderController extends Controller
 
         return redirect()->route('admin.orders.show', $order)
             ->with('success', 'Ongkir tersimpan, total pembayaran sudah dihitung, dan pesanan menunggu pembayaran.');
+    }
+
+    public function calculateShippingRates(Request $request, Order $order, RajaOngkirShippingService $shippingService): JsonResponse
+    {
+        $validated = $request->validate([
+            'courier_code' => ['required', 'string', Rule::in(array_keys($shippingService->courierOptions()))],
+        ]);
+
+        if ($order->status !== Order::STATUS_PENDING_CONFIRMATION) {
+            return response()->json(['message' => 'Ongkir hanya bisa dihitung untuk pesanan yang menunggu konfirmasi.'], 422);
+        }
+
+        try {
+            $rates = $shippingService->calculateRates($order, $validated['courier_code']);
+        } catch (\RuntimeException $exception) {
+            return response()->json(['message' => $exception->getMessage()], 422);
+        }
+
+        $options = collect($rates)->map(function (array $rate) use ($order, $validated): array {
+            $token = Crypt::encryptString(json_encode([
+                'order_id' => $order->id,
+                'courier_name' => $rate['name'],
+                'service' => $rate['service'],
+                'cost' => $rate['cost'],
+                'etd' => $rate['etd'],
+                'courier_code' => $validated['courier_code'],
+                'expires_at' => now()->addMinutes(10)->timestamp,
+            ], JSON_THROW_ON_ERROR));
+
+            return [
+                ...$rate,
+                'rate_token' => $token,
+            ];
+        });
+
+        return response()->json(['rates' => $options]);
     }
 
     public function reviewPayment(Request $request, Order $order): RedirectResponse

@@ -184,16 +184,29 @@
             <p class="mt-1 text-sm text-slate-500">Ongkir dikonfirmasi admin; stok baru dikurangi setelah pembayaran disetujui.</p>
             <div class="mt-4 flex flex-wrap gap-3">
                 @if ($order->status === 'pending_confirmation')
-                    <form method="POST" action="{{ route('admin.orders.shipping-quote', $order) }}" class="grid w-full gap-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:grid-cols-2">
+                    <form id="shipping-quote-form" method="POST" action="{{ route('admin.orders.shipping-quote', $order) }}" data-rate-endpoint="{{ route('admin.orders.shipping-rates', $order) }}" class="grid w-full gap-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:grid-cols-2">
                         @csrf
                         @method('PATCH')
-                        <div><label for="courier_name" class="mb-1.5 block text-sm font-medium text-slate-700">Ekspedisi / kurir</label><input id="courier_name" name="courier_name" value="{{ old('courier_name', $order->courier_name) }}" required maxlength="100" placeholder="Contoh: J&amp;T Express" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
-                        <div><label for="courier_service" class="mb-1.5 block text-sm font-medium text-slate-700">Layanan</label><input id="courier_service" name="courier_service" value="{{ old('courier_service', $order->courier_service) }}" required maxlength="100" placeholder="Contoh: Reguler" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
-                        <div><label for="shipping_fee" class="mb-1.5 block text-sm font-medium text-slate-700">Ongkir (Rp)</label><input id="shipping_fee" name="shipping_fee" type="number" min="0" step="1" value="{{ old('shipping_fee', $order->shipping_fee) }}" required class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
-                        <div><label for="shipping_estimated_delivery" class="mb-1.5 block text-sm font-medium text-slate-700">Estimasi pengiriman <span class="font-normal text-slate-500">(opsional)</span></label><input id="shipping_estimated_delivery" name="shipping_estimated_delivery" value="{{ old('shipping_estimated_delivery', $order->shipping_estimated_delivery) }}" maxlength="100" placeholder="Contoh: 2–3 hari kerja" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
-                        @if ($errors->any())<div class="sm:col-span-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
-                        <p class="text-sm leading-5 text-slate-600 sm:col-span-2">Setelah disimpan, ongkir ditambahkan ke subtotal, stok di-hold selama 24 jam, dan pembeli dapat melihat total serta mengunggah bukti pembayaran.</p>
-                        <button type="submit" class="justify-self-start rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 sm:col-span-2">Simpan ongkir &amp; minta pembayaran</button>
+                        <div>
+                            <label for="courier_code" class="mb-1.5 block text-sm font-medium text-slate-700">Ekspedisi / kurir</label>
+                            @php($selectedCourier = old('courier_code'))
+                            <select id="courier_code" name="courier_code" required class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                                <option value="">Pilih ekspedisi</option>
+                                @foreach ($courierOptions as $courierCode => $courierLabel)
+                                    <option value="{{ $courierCode }}" @selected($selectedCourier === $courierCode)>{{ $courierLabel }}</option>
+                                @endforeach
+                            </select>
+                            <p class="mt-1 text-xs text-slate-500">Tarif dan layanan akan diminta langsung dari RajaOngkir.</p>
+                        </div>
+                        <div class="flex items-end">
+                            <button id="calculate-shipping-rates" type="button" class="rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">Cek tarif ongkir</button>
+                        </div>
+                        <div id="shipping-rate-results" class="hidden space-y-2 sm:col-span-2" aria-live="polite"></div>
+                        <p id="shipping-rate-error" class="hidden rounded-lg bg-rose-50 p-3 text-sm text-rose-700 sm:col-span-2" role="alert"></p>
+                        @error('shipping_rate_token')<p class="rounded-lg bg-rose-50 p-3 text-sm text-rose-700 sm:col-span-2">{{ $message }}</p>@enderror
+                        <input id="shipping-rate-token" type="hidden" name="shipping_rate_token" value="{{ old('shipping_rate_token') }}">
+                        <p class="text-sm leading-5 text-slate-600 sm:col-span-2">Setelah memilih layanan, ongkir dari RajaOngkir ditambahkan ke subtotal, stok di-hold selama 24 jam, dan pembeli dapat melihat total serta mengunggah bukti pembayaran.</p>
+                        <button id="save-shipping-rate" type="submit" disabled class="justify-self-start rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-50 sm:col-span-2">Simpan ongkir &amp; minta pembayaran</button>
                     </form>
                     <form method="POST" action="{{ route('admin.orders.status', $order) }}" data-confirm-title="Batalkan pesanan ini?" data-confirm-description="Pesanan {{ $order->order_number }} akan dibatalkan. Tindakan ini tidak bisa dibatalkan." data-confirm-button="Ya, batalkan pesanan" data-confirm-tone="danger">
                         @csrf
@@ -450,7 +463,16 @@
                     @method('PATCH')
                     <div>
                         <label for="courier_name" class="mb-2 block text-sm font-medium text-slate-700">Nama kurir</label>
-                        <input id="courier_name" name="courier_name" type="text" value="{{ old('courier_name', $order->courier_name) }}" maxlength="100" required autofocus placeholder="Contoh: JNE, J&T, SiCepat" @class(['w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-amber-200', 'border-rose-400 focus:border-rose-500' => $errors->has('courier_name'), 'border-slate-300 focus:border-amber-500' => ! $errors->has('courier_name')]) @if ($errors->has('courier_name')) aria-invalid="true" aria-describedby="courier-name-error" @endif>
+                        @php($selectedCourier = old('courier_name', $order->courier_name))
+                        <select id="courier_name" name="courier_name" required autofocus @class(['w-full rounded-xl border px-4 py-3 text-sm outline-none transition focus:ring-2 focus:ring-amber-200', 'border-rose-400 focus:border-rose-500' => $errors->has('courier_name'), 'border-slate-300 focus:border-amber-500' => ! $errors->has('courier_name')]) @if ($errors->has('courier_name')) aria-invalid="true" aria-describedby="courier-name-error" @endif>
+                            <option value="">Pilih ekspedisi</option>
+                            @if ($selectedCourier && ! in_array($selectedCourier, $courierOptions, true))
+                                <option value="{{ $selectedCourier }}" selected>{{ $selectedCourier }} (tersimpan)</option>
+                            @endif
+                            @foreach ($courierOptions as $courierCode => $courierLabel)
+                                <option value="{{ $courierLabel }}" @selected($selectedCourier === $courierLabel)>{{ $courierLabel }}</option>
+                            @endforeach
+                        </select>
                         @error('courier_name')
                             <p id="courier-name-error" class="mt-2 text-sm text-rose-600">{{ $message }}</p>
                         @enderror
@@ -492,6 +514,107 @@
                 @if ($errors->has('courier_name') || $errors->has('tracking_number'))
                     shippingDialog.showModal();
                 @endif
+            })();
+        </script>
+    @endif
+    @if ($order->status === 'pending_confirmation')
+        <script>
+            (() => {
+                const form = document.querySelector('#shipping-quote-form');
+                const courierSelect = document.querySelector('#courier_code');
+                const calculateButton = document.querySelector('#calculate-shipping-rates');
+                const results = document.querySelector('#shipping-rate-results');
+                const errorMessage = document.querySelector('#shipping-rate-error');
+                const rateToken = document.querySelector('#shipping-rate-token');
+                const saveButton = document.querySelector('#save-shipping-rate');
+
+                if (!form || !courierSelect || !calculateButton || !results || !rateToken || !saveButton) return;
+
+                const resetSelection = () => {
+                    rateToken.value = '';
+                    saveButton.disabled = true;
+                };
+
+                courierSelect.addEventListener('change', () => {
+                    resetSelection();
+                    results.replaceChildren();
+                    results.classList.add('hidden');
+                    errorMessage.classList.add('hidden');
+                });
+
+                calculateButton.addEventListener('click', async () => {
+                    resetSelection();
+                    results.replaceChildren();
+                    errorMessage.classList.add('hidden');
+
+                    if (!courierSelect.value) {
+                        errorMessage.textContent = 'Pilih ekspedisi terlebih dahulu.';
+                        errorMessage.classList.remove('hidden');
+                        return;
+                    }
+
+                    calculateButton.disabled = true;
+                    calculateButton.textContent = 'Menghitung tarif...';
+
+                    try {
+                        const response = await fetch(form.dataset.rateEndpoint, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': form.querySelector('input[name="_token"]').value,
+                            },
+                            body: JSON.stringify({ courier_code: courierSelect.value }),
+                        });
+                        const payload = await response.json();
+
+                        if (!response.ok) throw new Error(payload.message || 'Tarif ongkir gagal dihitung.');
+                        if (!Array.isArray(payload.rates) || payload.rates.length === 0) {
+                            throw new Error('Tidak ada layanan untuk ekspedisi dan alamat tujuan ini.');
+                        }
+
+                        results.classList.remove('hidden');
+                        const heading = document.createElement('p');
+                        heading.className = 'text-sm font-semibold text-slate-800';
+                        heading.textContent = 'Pilih layanan dan tarif';
+                        results.append(heading);
+
+                        payload.rates.forEach((rate) => {
+                            const option = document.createElement('button');
+                            option.type = 'button';
+                            option.className = 'flex w-full flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-left transition hover:border-amber-500 hover:bg-amber-50';
+
+                            const service = document.createElement('span');
+                            service.className = 'font-medium text-slate-800';
+                            service.textContent = `${rate.name} · ${rate.service}${rate.description ? ` — ${rate.description}` : ''}`;
+
+                            const price = document.createElement('span');
+                            price.className = 'font-semibold text-slate-900';
+                            price.textContent = `Rp ${new Intl.NumberFormat('id-ID').format(rate.cost)}`;
+
+                            const etd = document.createElement('span');
+                            etd.className = 'w-full text-xs text-slate-500';
+                            etd.textContent = rate.etd ? `Estimasi: ${rate.etd}` : 'Estimasi belum tersedia';
+
+                            option.append(service, price, etd);
+                            option.addEventListener('click', () => {
+                                rateToken.value = rate.rate_token;
+                                saveButton.disabled = false;
+                                results.querySelectorAll('button').forEach((button) => {
+                                    button.classList.remove('border-amber-500', 'bg-amber-50', 'ring-2', 'ring-amber-200');
+                                });
+                                option.classList.add('border-amber-500', 'bg-amber-50', 'ring-2', 'ring-amber-200');
+                            });
+                            results.append(option);
+                        });
+                    } catch (error) {
+                        errorMessage.textContent = error.message || 'Terjadi kendala saat menghitung ongkir.';
+                        errorMessage.classList.remove('hidden');
+                    } finally {
+                        calculateButton.disabled = false;
+                        calculateButton.textContent = 'Cek tarif ongkir';
+                    }
+                });
             })();
         </script>
     @endif

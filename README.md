@@ -129,7 +129,11 @@ Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 
 - Pilihan provinsi, kabupaten/kota, kecamatan, dan desa/kelurahan diambil langsung dari [static API Emsifa](https://github.com/emsifa/api-wilayah-indonesia); tidak perlu mengimpor dataset wilayah ke database atau menyiapkan API key.
 - Kode dan nama wilayah pilihan disimpan bersama alamat pelanggan. Polygon peta dimuat dari API Emsifa hanya saat diperlukan, sehingga fitur pilihan wilayah dan peta membutuhkan koneksi internet.
-- Pada tahap awal, admin mengecek ongkir melalui widget CekPengiriman lalu mencatat layanan dan biaya kirim pada pesanan. Perhitungan ongkir belum terhubung otomatis ke checkout.
+- Admin menghitung ongkir dari detail pesanan melalui RajaOngkir Shipping Cost API. Pilihan wilayah Emsifa dicocokkan dengan ID tujuan RajaOngkir oleh server; API key tidak dikirim ke browser.
+- Isi `RAJAONGKIR_API_KEY` di `.env` dengan API key layanan **Shipping Cost**. Jangan commit atau membagikan `.env`.
+- Origin toko pada `.env` memakai Giripurno, Bumiaji, Kota Batu, Jawa Timur 65333. Jika alamat asal toko berubah, sesuaikan `RAJAONGKIR_ORIGIN_SEARCH`, `RAJAONGKIR_ORIGIN_PROVINCE`, `RAJAONGKIR_ORIGIN_CITY`, `RAJAONGKIR_ORIGIN_DISTRICT`, `RAJAONGKIR_ORIGIN_SUBDISTRICT`, dan `RAJAONGKIR_ORIGIN_POSTAL_CODE`.
+- Setelah mengubah konfigurasi lokal, jalankan `php artisan config:clear`. Tarif diperoleh saat admin memilih ekspedisi dan menekan **Cek tarif ongkir**; admin kemudian memilih layanan sebelum sistem menyimpan ongkir dan menghitung total pesanan.
+- Pencarian wilayah dan tarif memerlukan koneksi internet dan mengikuti kuota serta batas penggunaan akun RajaOngkir. Hasil pencarian wilayah dan tarif disimpan sementara di cache untuk mengurangi request berulang.
 
 ## ☁️ Catatan deployment
 
