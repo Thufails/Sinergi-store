@@ -8,6 +8,7 @@ use App\Models\CustomerAddress;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
 
 class CustomerAddressController extends Controller
@@ -113,13 +114,13 @@ class CustomerAddressController extends Controller
      *     recipient_name: string,
      *     recipient_phone: string,
      *     province: string,
-     *     rajaongkir_province_id: string,
+     *     province_code: string,
      *     city: string,
-     *     rajaongkir_city_id: string,
+     *     regency_code: string,
      *     district: string,
-     *     rajaongkir_district_id: string,
+     *     district_code: string,
      *     subdistrict: string|null,
-     *     rajaongkir_subdistrict_id: string|null,
+     *     village_code: string|null,
      *     postal_code: string,
      *     address_line: string,
      *     notes: string|null,
@@ -130,9 +131,9 @@ class CustomerAddressController extends Controller
      */
     private function validateAddress(Request $request): array
     {
-        return array_merge([
+        $validated = array_merge([
             'subdistrict' => null,
-            'rajaongkir_subdistrict_id' => null,
+            'village_code' => null,
             'notes' => null,
             'latitude' => null,
             'longitude' => null,
@@ -142,13 +143,13 @@ class CustomerAddressController extends Controller
             'recipient_name' => ['required', 'string', 'max:150'],
             'recipient_phone' => ['required', 'string', 'max:30', 'regex:/^[0-9+().\\s-]{8,30}$/'],
             'province' => ['required', 'string', 'max:100'],
-            'rajaongkir_province_id' => ['required', 'string', 'max:30'],
+            'province_code' => ['required', 'string', 'regex:/^\\d{2}$/'],
             'city' => ['required', 'string', 'max:100'],
-            'rajaongkir_city_id' => ['required', 'string', 'max:30'],
+            'regency_code' => ['required', 'string', 'regex:/^\\d{2}\\.\\d{2}$/'],
             'district' => ['required', 'string', 'max:100'],
-            'rajaongkir_district_id' => ['required', 'string', 'max:30'],
-            'subdistrict' => ['nullable', 'required_with:rajaongkir_subdistrict_id', 'string', 'max:100'],
-            'rajaongkir_subdistrict_id' => ['nullable', 'required_with:subdistrict', 'string', 'max:30'],
+            'district_code' => ['required', 'string', 'regex:/^\\d{2}\\.\\d{2}\\.\\d{2}$/'],
+            'subdistrict' => ['nullable', 'required_with:village_code', 'string', 'max:150'],
+            'village_code' => ['nullable', 'required_with:subdistrict', 'string', 'regex:/^\\d{2}\\.\\d{2}\\.\\d{2}\\.\\d{4}$/'],
             'postal_code' => ['required', 'string', 'regex:/^\\d{5}$/'],
             'address_line' => ['required', 'string', 'max:2000'],
             'notes' => ['nullable', 'string', 'max:1000'],
@@ -157,7 +158,32 @@ class CustomerAddressController extends Controller
             'is_default' => ['sometimes', 'boolean'],
         ], [
             'recipient_phone.regex' => 'Nomor penerima harus berupa nomor telepon yang valid.',
+            'province_code.regex' => 'Kode provinsi tidak valid.',
+            'regency_code.regex' => 'Kode kabupaten/kota tidak valid.',
+            'district_code.regex' => 'Kode kecamatan tidak valid.',
+            'village_code.regex' => 'Kode desa/kelurahan tidak valid.',
             'postal_code.regex' => 'Kode pos harus terdiri dari 5 angka.',
         ]));
+
+        if (! str_starts_with($validated['regency_code'], $validated['province_code'].'.')) {
+            throw ValidationException::withMessages([
+                'regency_code' => 'Kabupaten/kota harus berasal dari provinsi yang dipilih.',
+            ]);
+        }
+
+        if (! str_starts_with($validated['district_code'], $validated['regency_code'].'.')) {
+            throw ValidationException::withMessages([
+                'district_code' => 'Kecamatan harus berasal dari kabupaten/kota yang dipilih.',
+            ]);
+        }
+
+        if (filled($validated['village_code'] ?? null)
+            && ! str_starts_with($validated['village_code'], $validated['district_code'].'.')) {
+            throw ValidationException::withMessages([
+                'village_code' => 'Desa/kelurahan harus berasal dari kecamatan yang dipilih.',
+            ]);
+        }
+
+        return $validated;
     }
 }

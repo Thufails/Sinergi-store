@@ -127,10 +127,9 @@ Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 
 ### Alamat pelanggan dan ongkir
 
-- Fitur alamat dirancang memakai kode wilayah Emsifa yang disimpan di tabel lokal `regions`; fitur ini tidak memerlukan API key RajaOngkir.
-- Batas polygon wilayah akan dimuat dari [static API Emsifa](https://github.com/emsifa/api-wilayah-indonesia) saat wilayah dipilih, sehingga koneksi internet diperlukan untuk menampilkan peta.
+- Pilihan provinsi, kabupaten/kota, kecamatan, dan desa/kelurahan diambil langsung dari [static API Emsifa](https://github.com/emsifa/api-wilayah-indonesia); tidak perlu mengimpor dataset wilayah ke database atau menyiapkan API key.
+- Kode dan nama wilayah pilihan disimpan bersama alamat pelanggan. Polygon peta dimuat dari API Emsifa hanya saat diperlukan, sehingga fitur pilihan wilayah dan peta membutuhkan koneksi internet.
 - Pada tahap awal, admin mengecek ongkir melalui widget CekPengiriman lalu mencatat layanan dan biaya kirim pada pesanan. Perhitungan ongkir belum terhubung otomatis ke checkout.
-- Petunjuk impor dataset wilayah akan ditambahkan setelah mekanisme impor tersedia.
 
 ## ☁️ Catatan deployment
 
