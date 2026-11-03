@@ -60,7 +60,15 @@
                     <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Informasi pengiriman</p>
                     @if ($order->courier_name || $order->tracking_number)
                         <p class="mt-3 font-medium text-slate-900">{{ $order->courier_name ?: 'Kurir belum diisi' }}{{ $order->courier_service ? ' · ' . $order->courier_service : '' }}</p>
-                        <p class="mt-1 break-all text-sm text-slate-600">Resi · {{ $order->tracking_number ?: 'Belum tersedia' }}</p>
+                        <div class="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-slate-600">
+                            <p class="break-all">Resi · {{ $order->tracking_number ?: 'Belum tersedia' }}</p>
+                            @if ($order->tracking_number)
+                                <button type="button" data-copy-tracking-number="{{ $order->tracking_number }}" class="inline-flex h-7 w-7 items-center justify-center rounded-lg text-slate-500 transition hover:bg-white hover:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-400" aria-label="Salin nomor resi" title="Salin nomor resi">
+                                    <svg class="h-4 w-4" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><rect x="7" y="6" width="9" height="11" rx="1.5"/><path d="M13 6V4.5A1.5 1.5 0 0 0 11.5 3h-7A1.5 1.5 0 0 0 3 4.5v9A1.5 1.5 0 0 0 4.5 15H7"/></svg>
+                                </button>
+                                <span data-copy-tracking-feedback role="status" aria-live="polite" class="text-xs text-emerald-700"></span>
+                            @endif
+                        </div>
                         @if ($order->shipping_estimated_delivery)<p class="mt-1 text-sm text-slate-600">Estimasi tiba · {{ $order->shipping_estimated_delivery }}</p>@endif
                         @if ($order->shipped_at)<p class="mt-2 text-xs text-slate-500">Dikirim {{ $order->shipped_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>@endif
                     @else
@@ -202,4 +210,36 @@
             </div>
         </div>
     </section>
+
+    <script>
+        document.querySelectorAll('[data-copy-tracking-number]').forEach((button) => {
+            button.addEventListener('click', async () => {
+                const trackingNumber = button.dataset.copyTrackingNumber;
+                const feedback = button.parentElement.querySelector('[data-copy-tracking-feedback]');
+
+                try {
+                    if (navigator.clipboard?.writeText) {
+                        await navigator.clipboard.writeText(trackingNumber);
+                    } else {
+                        const copyField = document.createElement('textarea');
+                        copyField.value = trackingNumber;
+                        copyField.setAttribute('readonly', '');
+                        copyField.style.position = 'fixed';
+                        copyField.style.opacity = '0';
+                        document.body.appendChild(copyField);
+                        copyField.select();
+                        const copied = document.execCommand('copy');
+                        copyField.remove();
+                        if (!copied) throw new Error('Clipboard unavailable');
+                    }
+
+                    feedback.textContent = 'Tersalin';
+                    window.setTimeout(() => feedback.textContent = '', 2000);
+                } catch {
+                    feedback.textContent = 'Gagal menyalin';
+                    window.setTimeout(() => feedback.textContent = '', 2500);
+                }
+            });
+        });
+    </script>
 @endsection
