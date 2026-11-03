@@ -88,12 +88,24 @@
                     <a href="{{ route('store.home') }}#about" class="store-nav-link" data-store-nav="about">Tentang Kami</a>
                     <a href="{{ route('store.home') }}#services" class="store-nav-link" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-nav-link" data-store-nav="contact">Kontak</a>
+                    @auth('customer')
+                        <a href="{{ route('account.orders') }}" class="store-nav-link" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
+                    @endauth
                 </nav>
 
                 <div class="flex shrink-0 items-center gap-2">
-                    <a href="{{ auth('customer')->check() ? route('account.orders') : route('account.login') }}" class="hidden min-h-10 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex">
-                        {{ auth('customer')->check() ? 'Akun Saya' : 'Masuk' }}
-                    </a>
+                    @auth('customer')
+                        <a href="{{ route('account.profile') }}" aria-label="Profil saya" title="Profil saya" class="hidden h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex">
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <circle cx="12" cy="8" r="3.25" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 20a6.5 6.5 0 0 1 13 0" />
+                            </svg>
+                        </a>
+                    @else
+                        <a href="{{ route('account.login') }}" class="hidden min-h-10 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex">
+                            Masuk
+                        </a>
+                    @endauth
 
                     <details class="store-theme-menu relative">
                         <summary aria-label="Pengaturan tema" class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 text-slate-700 outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-amber-400 [&::-webkit-details-marker]:hidden">
@@ -134,9 +146,12 @@
                     <a href="{{ route('store.home') }}#about" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="about">Tentang Kami</a>
                     <a href="{{ route('store.home') }}#services" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="contact">Kontak</a>
-                    <a href="{{ auth('customer')->check() ? route('account.orders') : route('account.login') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" @if (request()->routeIs('account.*')) aria-current="page" @endif>
-                        {{ auth('customer')->check() ? 'Akun Saya' : 'Masuk / Sign in' }}
-                    </a>
+                    @auth('customer')
+                        <a href="{{ route('account.orders') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
+                        <a href="{{ route('account.profile') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" @if (request()->routeIs('account.profile*')) aria-current="page" @endif>Profil saya</a>
+                    @else
+                        <a href="{{ route('account.login') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" @if (request()->routeIs('account.login')) aria-current="page" @endif>Masuk / Sign in</a>
+                    @endauth
                 </nav>
             </div>
         </header>

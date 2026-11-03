@@ -1,5 +1,12 @@
 const storeNavLinks = [...document.querySelectorAll('[data-store-nav]')];
-const routeNavKey = window.location.pathname.startsWith('/products') ? 'products' : 'home';
+const currentPath = window.location.pathname.replace(/\/+$/, '') || '/';
+const routeNavKey = currentPath.startsWith('/products')
+    ? 'products'
+    : currentPath.startsWith('/account/orders')
+        ? 'orders'
+        : currentPath === '/'
+            ? 'home'
+            : null;
 const navSections = ['home', 'about', 'services', 'contact']
     .map((key) => ({ key, element: document.getElementById(key) }))
     .filter(({ element }) => element);

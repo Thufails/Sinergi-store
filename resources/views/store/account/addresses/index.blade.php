@@ -12,7 +12,6 @@
                 <p class="mt-2 max-w-2xl text-sm leading-6 text-slate-600">Simpan alamat tujuan agar bisa dipilih saat melakukan pemesanan.</p>
             </div>
             <div class="flex flex-wrap gap-2">
-                <a href="{{ route('account.orders') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-800">Pesanan saya</a>
                 <a href="{{ route('account.addresses.create') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Tambah alamat</a>
             </div>
         </div>
