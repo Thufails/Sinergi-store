@@ -115,8 +115,12 @@ Route::prefix('account')->name('account.')->group(function () {
             ->name('logout');
         Route::get('/addresses', [CustomerAddressController::class, 'index'])
             ->name('addresses.index');
+        Route::get('/addresses/create', [CustomerAddressController::class, 'create'])
+            ->name('addresses.create');
         Route::post('/addresses', [CustomerAddressController::class, 'store'])
             ->name('addresses.store');
+        Route::get('/addresses/{address}/edit', [CustomerAddressController::class, 'edit'])
+            ->name('addresses.edit');
         Route::put('/addresses/{address}', [CustomerAddressController::class, 'update'])
             ->name('addresses.update');
         Route::delete('/addresses/{address}', [CustomerAddressController::class, 'destroy'])

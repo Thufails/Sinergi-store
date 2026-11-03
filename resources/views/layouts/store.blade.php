@@ -72,6 +72,7 @@
         @if (file_exists(public_path('build/manifest.json')) || file_exists(public_path('hot')))
             @vite(['resources/css/app.css', 'resources/js/app.js'])
         @endif
+        @stack('head')
     </head>
     <body class="store-app min-h-screen w-full bg-slate-50 text-slate-900 antialiased">
         <header class="store-header border-b border-slate-200/80 shadow-sm">
@@ -307,6 +308,8 @@
                 }
             });
         </script>
+
+        @stack('scripts')
 
     </body>
 </html>

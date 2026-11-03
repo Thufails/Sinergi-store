@@ -10,7 +10,10 @@
                 <h1 class="mt-2 text-3xl font-semibold tracking-tight text-slate-950 sm:text-4xl">Profil Saya</h1>
                 <p class="mt-2 text-sm leading-6 text-slate-600">Perbarui informasi kontak dan keamanan akunmu.</p>
             </div>
-            <a href="{{ route('account.orders') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-800">Pesanan saya</a>
+            <div class="flex flex-wrap gap-2">
+                <a href="{{ route('account.addresses.index') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-800">Alamat saya</a>
+                <a href="{{ route('account.orders') }}" class="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-amber-400 hover:text-amber-800">Pesanan saya</a>
+            </div>
         </div>
 
         @if (session('success'))

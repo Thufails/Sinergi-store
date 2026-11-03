@@ -23,7 +23,33 @@ class CustomerAddressController extends Controller
             ->orderBy('label')
             ->get();
 
-        return view('store.account.addresses.index', compact('addresses'));
+        return view('store.account.addresses.index', [
+            'addresses' => $addresses,
+            'addressForm' => false,
+            'address' => null,
+        ]);
+    }
+
+    public function create(): View
+    {
+        return view('store.account.addresses.index', [
+            'addressForm' => true,
+            'address' => null,
+            'addresses' => collect(),
+        ]);
+    }
+
+    public function edit(Request $request, CustomerAddress $address): View
+    {
+        /** @var Customer $customer */
+        $customer = $request->user('customer');
+        $address = $customer->addresses()->whereKey($address->getKey())->firstOrFail();
+
+        return view('store.account.addresses.index', [
+            'addressForm' => true,
+            'address' => $address,
+            'addresses' => collect(),
+        ]);
     }
 
     public function store(Request $request): RedirectResponse
