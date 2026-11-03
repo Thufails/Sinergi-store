@@ -125,6 +125,13 @@ Buka alamat lokal yang ditampilkan Laravel (umumnya `http://127.0.0.1:8000`).
 - Pastikan server MySQL aktif dan database yang dipilih sudah dibuat serta dapat diakses sebelum migrasi.
 - Dependency ekspor XLSX (`maatwebsite/excel`) sudah tercantum di `composer.json` dan akan dipasang oleh `composer install`.
 
+### Alamat pelanggan dan ongkir
+
+- Fitur alamat dirancang memakai kode wilayah Emsifa yang disimpan di tabel lokal `regions`; fitur ini tidak memerlukan API key RajaOngkir.
+- Batas polygon wilayah akan dimuat dari [static API Emsifa](https://github.com/emsifa/api-wilayah-indonesia) saat wilayah dipilih, sehingga koneksi internet diperlukan untuk menampilkan peta.
+- Pada tahap awal, admin mengecek ongkir melalui widget CekPengiriman lalu mencatat layanan dan biaya kirim pada pesanan. Perhitungan ongkir belum terhubung otomatis ke checkout.
+- Petunjuk impor dataset wilayah akan ditambahkan setelah mekanisme impor tersedia.
+
 ## ☁️ Catatan deployment
 
 - Jangan unggah atau commit `.env`. Atur environment variables dan `APP_KEY` melalui penyedia hosting.

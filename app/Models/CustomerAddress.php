@@ -12,13 +12,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
     'recipient_name',
     'recipient_phone',
     'province',
-    'rajaongkir_province_id',
+    'province_code',
     'city',
-    'rajaongkir_city_id',
+    'regency_code',
     'district',
-    'rajaongkir_district_id',
+    'district_code',
     'subdistrict',
-    'rajaongkir_subdistrict_id',
+    'village_code',
     'postal_code',
     'address_line',
     'notes',
@@ -42,5 +42,25 @@ class CustomerAddress extends Model
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function provinceRegion(): BelongsTo
+    {
+        return $this->belongsTo(Region::class, 'province_code', 'code');
+    }
+
+    public function regencyRegion(): BelongsTo
+    {
+        return $this->belongsTo(Region::class, 'regency_code', 'code');
+    }
+
+    public function districtRegion(): BelongsTo
+    {
+        return $this->belongsTo(Region::class, 'district_code', 'code');
+    }
+
+    public function villageRegion(): BelongsTo
+    {
+        return $this->belongsTo(Region::class, 'village_code', 'code');
     }
 }
