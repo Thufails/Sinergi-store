@@ -187,19 +187,19 @@
                     <form id="shipping-quote-form" method="POST" action="{{ route('admin.orders.shipping-quote', $order) }}" data-rate-endpoint="{{ route('admin.orders.shipping-rates', $order) }}" class="grid w-full gap-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:grid-cols-2">
                         @csrf
                         @method('PATCH')
-                        <div>
-                            <label for="courier_code" class="mb-1.5 block text-sm font-medium text-slate-700">Ekspedisi / kurir</label>
-                            @php($selectedCourier = old('courier_code'))
-                            <select id="courier_code" name="courier_code" required class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
-                                <option value="">Pilih ekspedisi</option>
-                                @foreach ($courierOptions as $courierCode => $courierLabel)
-                                    <option value="{{ $courierCode }}" @selected($selectedCourier === $courierCode)>{{ $courierLabel }}</option>
-                                @endforeach
-                            </select>
-                            <p class="mt-1 text-xs text-slate-500">Tarif dan layanan akan diminta langsung dari RajaOngkir.</p>
-                        </div>
-                        <div class="flex items-end">
-                            <button id="calculate-shipping-rates" type="button" class="rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">Cek tarif ongkir</button>
+                        <div class="grid gap-2 sm:col-span-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-end">
+                            <div>
+                                <label for="courier_code" class="mb-1.5 block text-sm font-medium text-slate-700">Ekspedisi / kurir</label>
+                                @php($selectedCourier = old('courier_code'))
+                                <select id="courier_code" name="courier_code" required class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm">
+                                    <option value="">Pilih ekspedisi</option>
+                                    @foreach ($courierOptions as $courierCode => $courierLabel)
+                                        <option value="{{ $courierCode }}" @selected($selectedCourier === $courierCode)>{{ $courierLabel }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <button id="calculate-shipping-rates" type="button" class="inline-flex min-h-[42px] items-center justify-center whitespace-nowrap rounded-xl border border-amber-500 px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-100">Cek tarif ongkir</button>
+                            <p class="text-xs text-slate-500 sm:col-span-2">Tarif dan layanan akan diminta langsung dari RajaOngkir.</p>
                         </div>
                         <div id="shipping-rate-results" class="hidden space-y-2 sm:col-span-2" aria-live="polite"></div>
                         <p id="shipping-rate-error" class="hidden rounded-lg bg-rose-50 p-3 text-sm text-rose-700 sm:col-span-2" role="alert"></p>

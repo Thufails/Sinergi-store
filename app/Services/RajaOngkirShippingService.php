@@ -91,7 +91,7 @@ class RajaOngkirShippingService
         $origin = config('services.rajaongkir.origin');
 
         return $this->findDestinationId(
-            (string) $origin['search'],
+            [(string) $origin['search']],
             [
                 'province_name' => (string) $origin['province'],
                 'city_name' => (string) $origin['city'],
@@ -105,63 +105,73 @@ class RajaOngkirShippingService
 
     private function resolveDestinationId(Order $order): int
     {
-        $search = filled($order->shipping_postal_code)
-            ? $order->shipping_postal_code
-            : ($order->shipping_village ?: $order->shipping_district);
+        $searchTerms = array_values(array_unique(array_filter([
+            $order->shipping_village,
+            $order->shipping_district,
+            $order->shipping_postal_code,
+        ], fn (mixed $term): bool => filled($term))));
 
-        return $this->findDestinationId((string) $search, [
+        return $this->findDestinationId($searchTerms, [
             'province_name' => (string) $order->shipping_province,
             'city_name' => (string) $order->shipping_city,
             'district_name' => (string) $order->shipping_district,
             'subdistrict_name' => (string) $order->shipping_village,
-            'zip_code' => (string) $order->shipping_postal_code,
         ], 'alamat tujuan pesanan');
     }
 
-    private function findDestinationId(string $search, array $expected, string $label): int
+    private function findDestinationId(array $searchTerms, array $expected, string $label): int
     {
-        $cacheKey = 'rajaongkir:destination:' . hash('sha256', mb_strtolower($search . '|' . implode('|', $expected)));
+        $cacheKey = 'rajaongkir:destination:' . hash('sha256', mb_strtolower(implode('|', $searchTerms) . '|' . implode('|', $expected)));
 
-        return Cache::remember($cacheKey, now()->addDays(30), function () use ($search, $expected, $label): int {
-            try {
-                $response = $this->client()->get('/destination/domestic-destination', [
-                    'search' => $search,
-                    'limit' => 100,
-                    'offset' => 0,
-                ]);
-            } catch (ConnectionException) {
-                throw new RuntimeException('Tidak dapat tersambung ke RajaOngkir. Periksa koneksi internet lalu coba lagi.');
-            }
-
-            if (! $response->successful()) {
-                throw new RuntimeException('RajaOngkir gagal mencari ' . $label . '. Periksa koneksi atau konfigurasi API.');
-            }
-
-            $locations = $response->json('data');
-            if (! is_array($locations)) {
-                throw new RuntimeException('Data ' . $label . ' tidak ditemukan di RajaOngkir.');
-            }
-
-            $matchedLocation = collect($locations)->first(function (array $location) use ($expected): bool {
-                foreach ($expected as $field => $value) {
-                    if ($value === '') {
-                        continue;
-                    }
-
-                    if ($this->normalize((string) ($location[$field] ?? '')) !== $this->normalize($value)) {
-                        return false;
-                    }
+        return Cache::remember($cacheKey, now()->addDays(30), function () use ($searchTerms, $expected, $label): int {
+            foreach ($searchTerms as $search) {
+                try {
+                    $response = $this->client()->get('/destination/domestic-destination', [
+                        'search' => $search,
+                        'limit' => 100,
+                        'offset' => 0,
+                    ]);
+                } catch (ConnectionException) {
+                    throw new RuntimeException('Tidak dapat tersambung ke RajaOngkir. Periksa koneksi internet lalu coba lagi.');
                 }
 
-                return true;
-            });
+                if (! $response->successful()) {
+                    throw new RuntimeException('RajaOngkir gagal mencari ' . $label . '. Periksa koneksi atau konfigurasi API.');
+                }
 
-            if (! is_array($matchedLocation) || ! isset($matchedLocation['id'])) {
-                throw new RuntimeException('Wilayah pada alamat ' . $label . ' belum cocok dengan data RajaOngkir. Periksa kabupaten, kecamatan, desa, dan kode pos.');
+                $locations = $response->json('data');
+                if (! is_array($locations)) {
+                    continue;
+                }
+
+                $matchedLocation = collect($locations)
+                    ->filter(fn (mixed $location): bool => is_array($location))
+                    ->first(fn (array $location): bool => $this->matchesLocation($location, $expected));
+
+                if (is_array($matchedLocation) && isset($matchedLocation['id'])) {
+                    return (int) $matchedLocation['id'];
+                }
             }
 
-            return (int) $matchedLocation['id'];
+            throw new RuntimeException('Wilayah pada ' . $label . ' belum cocok dengan data RajaOngkir. Periksa provinsi, kabupaten/kota, kecamatan, dan desa.');
         });
+    }
+
+    private function matchesLocation(array $location, array $expected): bool
+    {
+        foreach (['province_name', 'city_name', 'district_name'] as $field) {
+            $expectedValue = (string) ($expected[$field] ?? '');
+            $actualValue = (string) ($location[$field] ?? '');
+
+            if ($expectedValue === '' || $actualValue === '' || $this->normalize($actualValue) !== $this->normalize($expectedValue)) {
+                return false;
+            }
+        }
+
+        $expectedVillage = (string) ($expected['subdistrict_name'] ?? '');
+        $actualVillage = (string) ($location['subdistrict_name'] ?? '');
+
+        return $expectedVillage === '' || $actualVillage === '' || $this->normalize($actualVillage) === $this->normalize($expectedVillage);
     }
 
     private function client(): PendingRequest
@@ -177,8 +187,6 @@ class RajaOngkirShippingService
     {
         $value = mb_strtolower(trim($value));
         $value = preg_replace('/^(kabupaten|kab\.|kota administrasi|kota)\s+/u', '', $value) ?? $value;
-        $value = preg_replace('/[^\p{L}\p{N}]+/u', ' ', $value) ?? $value;
-
-        return trim(preg_replace('/\s+/u', ' ', $value) ?? $value);
+        return preg_replace('/[^\p{L}\p{N}]+/u', '', $value) ?? $value;
     }
 }
