@@ -16,6 +16,7 @@ class OrderStatusHistory extends Model
         'to_status',
         'changed_by',
         'actor_name',
+        'message',
     ];
 
     public function order(): BelongsTo

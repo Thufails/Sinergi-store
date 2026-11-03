@@ -77,11 +77,34 @@
                     @elseif ($order->status === 'payment_review')
                         <p class="mt-1 text-sm text-slate-700">Bukti pembayaran sudah dikirim dan menunggu verifikasi admin.</p>
                     @elseif ($order->status === 'awaiting_payment')
-                        <p class="mt-1 text-sm text-slate-700">Silakan bayar sesuai total di bawah sebelum batas waktu.</p>
+                        <p class="mt-1 text-sm text-slate-700">Silakan bayar sesuai total pesanan sebelum batas waktu.</p>
+                        @if ($paymentProofCanBeUploaded)
+                            <div class="mt-3 rounded-xl border border-rose-300 bg-rose-50 p-3" role="note">
+                                <p class="text-xs font-bold uppercase tracking-wide text-rose-800">Rekening simulasi — jangan transfer</p>
+                                <dl class="mt-2 grid gap-2 text-sm sm:grid-cols-2">
+                                    <div>
+                                        <dt class="text-xs text-slate-600">Bank</dt>
+                                        <dd class="font-semibold text-slate-900">Bank Contoh</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-slate-600">Nomor rekening</dt>
+                                        <dd class="font-semibold tracking-wide text-slate-900">0000 0000 0000</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-slate-600">Atas nama</dt>
+                                        <dd class="font-semibold text-slate-900">Sinergi Store (Simulasi)</dd>
+                                    </div>
+                                    <div>
+                                        <dt class="text-xs text-slate-600">Total transfer</dt>
+                                        <dd class="font-bold text-slate-950">Rp {{ number_format((float) $order->total_amount, 0, ',', '.') }}</dd>
+                                    </div>
+                                </dl>
+                                <p class="mt-2 text-xs leading-5 text-rose-800">Gunakan hanya untuk melihat tampilan. Ganti dengan rekening resmi sebelum menerima pembayaran sungguhan.</p>
+                            </div>
+                        @endif
                     @elseif ($order->status === 'expired')
                         <p class="mt-1 text-sm text-slate-700">Batas pembayaran telah terlewati dan pesanan kedaluwarsa.</p>
                     @endif
-                    @if ($order->payment_review_note)<p class="mt-3 rounded-lg bg-white/70 p-3 text-sm text-rose-800">Catatan admin: {{ $order->payment_review_note }}</p>@endif
                     @if ($order->payment_proof_path)
                         <a href="{{ route('account.orders.payment-proof', $order) }}" target="_blank" rel="noopener noreferrer" class="mt-3 inline-flex text-sm font-semibold text-amber-800 underline">Lihat bukti pembayaran yang dikirim</a>
                     @endif
@@ -91,6 +114,13 @@
             @if ($paymentProofCanBeUploaded)
                 <form method="POST" action="{{ route('account.orders.payment-proof.upload', $order) }}" enctype="multipart/form-data" class="border-b border-slate-200 bg-sky-50/60 px-5 py-5 sm:px-7">
                     @csrf
+                    @if ($order->payment_review_note)
+                        <div class="mb-4 rounded-xl border border-rose-300 bg-rose-50 p-4 text-sm text-rose-900" role="alert">
+                            <p class="font-semibold">Bukti pembayaran ditolak</p>
+                            <p class="mt-1">Silakan unggah ulang bukti pembayaran yang jelas dan sesuai dengan total pembayaran.</p>
+                            <p class="mt-2"><span class="font-semibold">Catatan admin:</span> {{ $order->payment_review_note }}</p>
+                        </div>
+                    @endif
                     <h2 class="font-semibold text-slate-900">Kirim bukti pembayaran</h2>
                     <p class="mt-1 text-sm text-slate-600">Pilih JPG, JPEG, PNG, WEBP, atau PDF dengan ukuran maksimal 5 MB.</p>
                     <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-end">
@@ -120,9 +150,51 @@
 
             <div class="border-t border-slate-200 px-5 py-5 sm:px-7">
                 <h2 class="font-semibold text-slate-900">Riwayat status</h2>
+                @php
+                    $allHistories = $order->statusHistories->values();
+                    $recentHistoryCount = min(3, $allHistories->count());
+                    $previousHistories = $allHistories->take($allHistories->count() - $recentHistoryCount);
+                    $recentHistories = $allHistories->slice($allHistories->count() - $recentHistoryCount);
+                @endphp
+                @if ($previousHistories->isNotEmpty())
+                    <details class="mt-4 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <summary class="cursor-pointer text-sm font-semibold text-amber-800 marker:text-amber-600">
+                            Lihat riwayat sebelumnya ({{ $previousHistories->count() }})
+                        </summary>
+                        <ol class="mt-4 space-y-4 border-t border-slate-200 pt-4">
+                            @foreach ($previousHistories as $history)
+                                @php($isPaymentProofRejected = $history->from_status === 'payment_review' && $history->to_status === 'awaiting_payment')
+                                <li class="flex gap-3">
+                                    <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full {{ $isPaymentProofRejected ? 'bg-rose-600' : 'bg-amber-500' }}" aria-hidden="true"></span>
+                                    <div>
+                                        <p class="text-sm font-medium {{ $isPaymentProofRejected ? 'text-rose-800' : 'text-slate-900' }}">{{ $isPaymentProofRejected ? 'Bukti pembayaran ditolak' : ($statusLabels[$history->to_status] ?? $history->to_status) }}</p>
+                                        @if ($history->message)
+                                            <p class="mt-1 text-sm text-slate-700">{{ $history->message }}</p>
+                                        @elseif ($isPaymentProofRejected)
+                                            <p class="mt-1 text-sm text-slate-700">Silakan unggah ulang bukti pembayaran yang jelas dan sesuai dengan total pembayaran.</p>
+                                        @endif
+                                        <p class="mt-1 text-xs text-slate-500">{{ $history->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>
+                                    </div>
+                                </li>
+                            @endforeach
+                        </ol>
+                    </details>
+                @endif
                 <ol class="mt-4 space-y-4">
-                    @forelse ($order->statusHistories as $history)
-                        <li class="flex gap-3"><span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true"></span><div><p class="text-sm font-medium text-slate-900">{{ $statusLabels[$history->to_status] ?? $history->to_status }}</p><p class="mt-1 text-xs text-slate-500">{{ $history->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p></div></li>
+                    @forelse ($recentHistories as $history)
+                        @php($isPaymentProofRejected = $history->from_status === 'payment_review' && $history->to_status === 'awaiting_payment')
+                        <li class="flex gap-3">
+                            <span class="mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full {{ $isPaymentProofRejected ? 'bg-rose-600' : 'bg-amber-500' }}" aria-hidden="true"></span>
+                            <div>
+                                <p class="text-sm font-medium {{ $isPaymentProofRejected ? 'text-rose-800' : 'text-slate-900' }}">{{ $isPaymentProofRejected ? 'Bukti pembayaran ditolak' : ($statusLabels[$history->to_status] ?? $history->to_status) }}</p>
+                                @if ($history->message)
+                                    <p class="mt-1 text-sm text-slate-700">{{ $history->message }}</p>
+                                @elseif ($isPaymentProofRejected)
+                                    <p class="mt-1 text-sm text-slate-700">Silakan unggah ulang bukti pembayaran yang jelas dan sesuai dengan total pembayaran.</p>
+                                @endif
+                                <p class="mt-1 text-xs text-slate-500">{{ $history->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>
+                            </div>
+                        </li>
                     @empty
                         <li class="text-sm text-slate-500">Belum ada riwayat status.</li>
                     @endforelse

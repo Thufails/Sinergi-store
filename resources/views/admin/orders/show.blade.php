@@ -273,8 +273,10 @@
             @if ($order->statusHistories->isNotEmpty())
                 <ol class="space-y-6">
                     @foreach ($order->statusHistories as $history)
+                        @php($isPaymentProofRejected = $history->from_status === 'payment_review' && $history->to_status === 'awaiting_payment')
+                        @php($historyStyle = $isPaymentProofRejected ? 'bg-rose-100 text-rose-700' : ($history->to_status === 'payment_review' ? 'bg-sky-100 text-sky-700' : ($statusStyles[$history->to_status] ?? 'bg-slate-100 text-slate-600')))
                         <li class="relative flex gap-4">
-                            <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $statusStyles[$history->to_status] ?? 'bg-slate-100 text-slate-600' }}" aria-hidden="true">
+                            <span class="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full {{ $historyStyle }}" aria-hidden="true">
                                 @if ($history->from_status === null)
                                     <svg class="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a.75.75 0 0 1 .75.75v5.5h5.5a.75.75 0 0 1 0 1.5h-5.5v5.5a.75.75 0 0 1-1.5 0v-5.5h-5.5a.75.75 0 0 1 0-1.5h5.5v-5.5A.75.75 0 0 1 10 3Z" clip-rule="evenodd" /></svg>
                                 @else
@@ -284,13 +286,17 @@
                             <div class="min-w-0 flex-1">
                                 <div class="flex flex-wrap items-center gap-2">
                                     <h3 class="text-sm font-semibold text-slate-900">
-                                        {{ $history->from_status === null ? 'Pesanan dibuat' : 'Status diperbarui' }}
+                                        {{ $history->from_status === null ? 'Pesanan dibuat' : ($isPaymentProofRejected ? 'Bukti pembayaran ditolak' : 'Status diperbarui') }}
                                     </h3>
-                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $statusStyles[$history->to_status] ?? 'bg-slate-100 text-slate-600' }}">
-                                        {{ $statusLabels[$history->to_status] ?? $history->to_status }}
+                                    <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $historyStyle }}">
+                                        {{ $isPaymentProofRejected ? 'Bukti ditolak' : ($statusLabels[$history->to_status] ?? $history->to_status) }}
                                     </span>
                                 </div>
-                                @if ($history->from_status !== null)
+                                @if ($history->message)
+                                    <p class="mt-1 text-sm text-slate-600">{{ $history->message }}</p>
+                                @elseif ($isPaymentProofRejected)
+                                    <p class="mt-1 text-sm text-slate-600">Silakan minta pembeli mengunggah ulang bukti pembayaran yang jelas dan sesuai dengan total pembayaran.</p>
+                                @elseif ($history->from_status !== null)
                                     <p class="mt-1 text-sm text-slate-600">
                                         Dari {{ $statusLabels[$history->from_status] ?? $history->from_status }} menjadi {{ $statusLabels[$history->to_status] ?? $history->to_status }}.
                                     </p>

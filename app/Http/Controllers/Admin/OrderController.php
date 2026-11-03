@@ -366,6 +366,7 @@ class OrderController extends Controller
                 Order::STATUS_AWAITING_PAYMENT,
                 (int) $admin->getAuthIdentifier(),
                 (string) $admin->name,
+                'Bukti pembayaran ditolak. Silakan unggah ulang bukti yang jelas dan sesuai dengan total pembayaran. Catatan admin: '.trim((string) $validated['review_note']),
             );
 
             return null;
@@ -705,12 +706,14 @@ class OrderController extends Controller
         string $toStatus,
         int $adminId,
         string $adminName,
+        ?string $message = null,
     ): void {
         $order->statusHistories()->create([
             'from_status' => $fromStatus,
             'to_status' => $toStatus,
             'changed_by' => $adminId,
             'actor_name' => $adminName,
+            'message' => $message,
         ]);
     }
 
