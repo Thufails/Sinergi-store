@@ -176,7 +176,7 @@
                     </div>
                     <span data-map-coordinates class="text-xs text-slate-500">Belum memilih titik</span>
                 </div>
-                <div data-address-map class="h-64 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 sm:h-80" aria-label="Peta alamat"></div>
+                <div data-address-map class="isolate z-0 h-64 overflow-hidden rounded-xl border border-slate-200 bg-slate-100 sm:h-80" aria-label="Peta alamat"></div>
                 <p data-address-map-message class="mt-2 text-xs text-slate-500" role="status">Peta memakai OpenStreetMap. Titik pin tidak menggantikan alamat tertulis.</p>
                 <input data-address-latitude type="hidden" name="latitude">
                 <input data-address-longitude type="hidden" name="longitude">
@@ -331,7 +331,7 @@
                     return;
                 }
 
-                map = L.map(form.querySelector('[data-address-map]'), { scrollWheelZoom: false }).setView([-2.5, 118], 4);
+                map = L.map(form.querySelector('[data-address-map]'), { scrollWheelZoom: true }).setView([-2.5, 118], 4);
                 L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
                     maxZoom: 19,
                     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">OpenStreetMap</a> contributors',
