@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\TestimoniController;
+use App\Http\Controllers\Store\CustomerAddressController;
 use App\Http\Controllers\Store\CustomerAccountController;
 use App\Http\Controllers\Store\CustomerAuthController;
 use App\Http\Controllers\Store\HomeController;
@@ -112,6 +113,16 @@ Route::prefix('account')->name('account.')->group(function () {
     Route::middleware('auth:customer')->group(function () {
         Route::post('/logout', [CustomerAuthController::class, 'logout'])
             ->name('logout');
+        Route::get('/addresses', [CustomerAddressController::class, 'index'])
+            ->name('addresses.index');
+        Route::post('/addresses', [CustomerAddressController::class, 'store'])
+            ->name('addresses.store');
+        Route::put('/addresses/{address}', [CustomerAddressController::class, 'update'])
+            ->name('addresses.update');
+        Route::delete('/addresses/{address}', [CustomerAddressController::class, 'destroy'])
+            ->name('addresses.destroy');
+        Route::patch('/addresses/{address}/default', [CustomerAddressController::class, 'setDefault'])
+            ->name('addresses.default');
         Route::get('/orders', [CustomerAccountController::class, 'orders'])
             ->name('orders');
         Route::get('/orders/{order}', [CustomerAccountController::class, 'showOrder'])
