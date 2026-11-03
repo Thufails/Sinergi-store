@@ -14,6 +14,7 @@
                     'color' => $variant->color,
                     'sku' => $variant->sku,
                     'stock' => $variant->stock,
+                    'weight_grams' => $variant->weight_grams,
                 ])
                 ->all() ?? [];
         }
@@ -59,6 +60,7 @@
                 <div><label for="name" class="mb-2 block text-sm font-medium text-slate-700">Nama produk</label><input id="name" name="name" type="text" value="{{ old('name', $editingProduct?->name) }}" required placeholder="Contoh: Laptop Pro" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div>
                 <div><label for="category_id" class="mb-2 block text-sm font-medium text-slate-700">Kategori</label><select id="category_id" name="category_id" required class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><option value="">Pilih kategori</option>@foreach ($categories as $category)<option value="{{ $category->id }}" @selected(old('category_id', $editingProduct?->category_id) == $category->id)>{{ $category->name }}{{ $category->is_active ? '' : ' (Nonaktif)' }}</option>@endforeach</select></div>
                 <div class="grid gap-4 sm:grid-cols-2"><div><label for="price" class="mb-2 block text-sm font-medium text-slate-700">Harga normal</label><input id="price" name="price" type="number" min="0" step="0.01" value="{{ old('price', $editingProduct?->price) }}" required placeholder="0" class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"></div><div data-stock-field><label for="stock" class="mb-2 block text-sm font-medium text-slate-700">Stok / total stok</label><input id="stock" name="stock" type="number" min="0" value="{{ old('stock', $editingProduct?->stock ?? 0) }}" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><p data-stock-hint class="mt-1 text-xs text-slate-400">Stok umum untuk produk tanpa varian.</p></div></div>
+                <div class="sm:col-span-2"><label for="weight_grams" class="mb-2 block text-sm font-medium text-slate-700">Berat produk (gram)</label><input id="weight_grams" name="weight_grams" type="number" min="0" max="1000000" value="{{ old('weight_grams', $editingProduct?->weight_grams ?? 0) }}" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"><p class="mt-1 text-xs text-slate-500">Digunakan admin saat menghitung ongkir. Jika punya varian, kamu bisa mengisi berat khusus di setiap varian.</p></div>
                 <section class="sm:col-span-2 rounded-xl border border-slate-200 p-4">
                     <label for="has_variants" class="flex cursor-pointer items-start gap-3 text-sm font-medium text-slate-700">
                         <input type="hidden" name="has_variants" value="0">
@@ -71,11 +73,12 @@
                             @foreach ($variantRows as $index => $variant)
                                 <div data-variant-row class="rounded-xl bg-slate-50 p-4">
                                     <input type="hidden" data-variant-key="id" name="variants[{{ $index }}][id]" value="{{ data_get($variant, 'id') }}">
-                                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr_1fr_auto]">
+                                    <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr_.8fr_.8fr_auto]">
                                         <label class="text-xs font-medium text-slate-600">Ukuran <input data-variant-key="size" name="variants[{{ $index }}][size]" value="{{ data_get($variant, 'size') }}" placeholder="Contoh: M" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                                         <label class="text-xs font-medium text-slate-600">Warna <input data-variant-key="color" name="variants[{{ $index }}][color]" value="{{ data_get($variant, 'color') }}" placeholder="Contoh: Hitam" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                                         <label class="text-xs font-medium text-slate-600">SKU <span class="font-normal text-slate-400">(opsional)</span><input data-variant-key="sku" name="variants[{{ $index }}][sku]" value="{{ data_get($variant, 'sku') }}" placeholder="Kode produk" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                                         <label class="text-xs font-medium text-slate-600">Stok <input data-variant-key="stock" name="variants[{{ $index }}][stock]" type="number" min="0" value="{{ data_get($variant, 'stock', 0) }}" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
+                                        <label class="text-xs font-medium text-slate-600">Berat (gram) <span class="font-normal text-slate-400">(opsional)</span><input data-variant-key="weight_grams" name="variants[{{ $index }}][weight_grams]" type="number" min="0" max="1000000" value="{{ data_get($variant, 'weight_grams') }}" placeholder="Ikuti produk" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                                         <button type="button" data-remove-variant class="self-end rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">Hapus</button>
                                     </div>
                                 </div>
@@ -141,11 +144,12 @@
         row.className = 'rounded-xl bg-slate-50 p-4';
         row.innerHTML = `
             <input type="hidden" data-variant-key="id" value="">
-            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr_1fr_auto]">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1.2fr_.8fr_.8fr_auto]">
                 <label class="text-xs font-medium text-slate-600">Ukuran <input data-variant-key="size" placeholder="Contoh: M" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                 <label class="text-xs font-medium text-slate-600">Warna <input data-variant-key="color" placeholder="Contoh: Hitam" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                 <label class="text-xs font-medium text-slate-600">SKU <span class="font-normal text-slate-400">(opsional)</span><input data-variant-key="sku" placeholder="Kode produk" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                 <label class="text-xs font-medium text-slate-600">Stok <input data-variant-key="stock" type="number" min="0" value="0" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
+                <label class="text-xs font-medium text-slate-600">Berat (gram) <span class="font-normal text-slate-400">(opsional)</span><input data-variant-key="weight_grams" type="number" min="0" max="1000000" placeholder="Ikuti produk" class="mt-1 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm"></label>
                 <button type="button" data-remove-variant class="self-end rounded-lg px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50">Hapus</button>
             </div>`;
         variantRows.append(row);

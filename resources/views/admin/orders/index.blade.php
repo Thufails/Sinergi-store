@@ -8,6 +8,7 @@
         $statusStyles = [
             'pending_confirmation' => 'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300',
             'awaiting_payment' => 'bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300',
+            'payment_review' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
             'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
@@ -19,7 +20,7 @@
     <section class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
             <h2 class="text-xl font-semibold text-slate-900">Daftar pesanan</h2>
-            <p class="mt-1 text-sm text-slate-500">Tinjau pesanan dan kelola konfirmasi pembayaran.</p>
+            <p class="mt-1 text-sm text-slate-500">Tinjau alamat, tetapkan ongkir, dan verifikasi bukti pembayaran.</p>
         </div>
 
         <form method="GET" action="{{ route('admin.orders.index') }}" class="grid items-end gap-3 border-b border-slate-200 bg-slate-50 p-5 md:grid-cols-2 2xl:grid-cols-[minmax(220px,2fr)_minmax(155px,1.2fr)_minmax(135px,1fr)_minmax(135px,1fr)_auto]">
@@ -109,6 +110,9 @@
                                         <span class="whitespace-nowrap rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyles[$order->status] ?? 'bg-slate-100 text-slate-600' }}">{{ $statusLabels[$order->status] ?? $order->status }}</span>
                                         @if ($order->status === 'shipped' && $order->tracking_number)
                                             <span class="whitespace-nowrap text-xs text-slate-500">Resi · <strong class="font-semibold text-slate-800">{{ $order->tracking_number }}</strong></span>
+                                        @endif
+                                        @if ($order->status === 'payment_review')
+                                            <span class="whitespace-nowrap text-xs font-medium text-rose-700">Bukti pembayaran menunggu pemeriksaan</span>
                                         @endif
                                     </div>
                                 </td>

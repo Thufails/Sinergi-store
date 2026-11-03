@@ -7,6 +7,7 @@
         $statusLabels = [
             'pending_confirmation' => 'Menunggu konfirmasi',
             'awaiting_payment' => 'Menunggu pembayaran',
+            'payment_review' => 'Menunggu verifikasi pembayaran',
             'paid' => 'Dibayar',
             'packing' => 'Sedang dikemas',
             'shipped' => 'Dikirim',
@@ -16,6 +17,7 @@
         $statusStyles = [
             'pending_confirmation' => 'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300',
             'awaiting_payment' => 'bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300',
+            'payment_review' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
             'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
@@ -68,6 +70,11 @@
                                 <p class="mt-1 text-sm text-slate-500">{{ $order->items->sum('quantity') }} unit · {{ $order->items->count() }} jenis produk</p>
                                 @if ($order->tracking_number)
                                     <p class="mt-2 text-sm text-slate-600">Resi · <span class="font-semibold text-slate-900">{{ $order->tracking_number }}</span></p>
+                                @endif
+                                @if ($order->status === 'pending_confirmation')
+                                    <p class="mt-2 text-xs text-amber-700">Ongkir dan total final menunggu konfirmasi admin.</p>
+                                @elseif ($order->payment_proof_uploaded_at)
+                                    <p class="mt-2 text-xs text-slate-500">Bukti pembayaran dikirim {{ $order->payment_proof_uploaded_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB.</p>
                                 @endif
                             </div>
                             <div class="flex items-center justify-between gap-4 sm:justify-end">

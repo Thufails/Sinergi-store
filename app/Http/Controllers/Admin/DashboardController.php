@@ -72,6 +72,9 @@ class DashboardController extends Controller
         $ordersAwaitingConfirmation = Order::query()
             ->where('status', Order::STATUS_PENDING_CONFIRMATION)
             ->count();
+        $ordersAwaitingPaymentReview = Order::query()
+            ->where('status', Order::STATUS_PAYMENT_REVIEW)
+            ->count();
         $ordersAwaitingPaymentQuery = Order::query()
             ->where('status', Order::STATUS_AWAITING_PAYMENT);
         $ordersAwaitingPayment = (clone $ordersAwaitingPaymentQuery)->count();
@@ -120,6 +123,7 @@ class DashboardController extends Controller
             'paidOrdersThisMonth',
             'productsSoldInPeriod',
             'ordersAwaitingConfirmation',
+            'ordersAwaitingPaymentReview',
             'ordersAwaitingPayment',
             'ordersPaymentOverdue',
             'selectedPeriod',

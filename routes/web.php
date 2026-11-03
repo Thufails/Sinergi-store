@@ -65,6 +65,12 @@ Route::middleware('auth')
             ->name('admin.orders.export-sales');
         Route::get('/orders/{order}', [OrderController::class, 'show'])
             ->name('admin.orders.show');
+        Route::get('/orders/{order}/payment-proof', [OrderController::class, 'showPaymentProof'])
+            ->name('admin.orders.payment-proof');
+        Route::patch('/orders/{order}/shipping-quote', [OrderController::class, 'quoteShipping'])
+            ->name('admin.orders.shipping-quote');
+        Route::patch('/orders/{order}/payment-review', [OrderController::class, 'reviewPayment'])
+            ->name('admin.orders.payment-review');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])
             ->name('admin.orders.status');
         Route::patch('/orders/{order}/shipping', [OrderController::class, 'updateShipping'])
@@ -129,6 +135,11 @@ Route::prefix('account')->name('account.')->group(function () {
             ->name('addresses.default');
         Route::get('/orders', [CustomerAccountController::class, 'orders'])
             ->name('orders');
+        Route::post('/orders/{order}/payment-proof', [CustomerAccountController::class, 'uploadPaymentProof'])
+            ->middleware('throttle:5,1')
+            ->name('orders.payment-proof.upload');
+        Route::get('/orders/{order}/payment-proof', [CustomerAccountController::class, 'showPaymentProof'])
+            ->name('orders.payment-proof');
         Route::get('/orders/{order}', [CustomerAccountController::class, 'showOrder'])
             ->name('orders.show');
         Route::get('/profile', [CustomerAccountController::class, 'profile'])
@@ -146,10 +157,15 @@ Route::get('/', [HomeController::class, 'index'])
 Route::get('/products', [StoreProductController::class, 'index'])
     ->name('store.products.index');
 
+Route::get('/products/{product:slug}/checkout', [StoreProductController::class, 'checkout'])
+    ->middleware('auth:customer')
+    ->name('store.products.checkout');
+
 Route::get('/products/{product:slug}', [StoreProductController::class, 'show'])
     ->name('store.products.show');
 
 Route::post('/products/{product:slug}/order', [StoreProductController::class, 'order'])
+    ->middleware('auth:customer')
     ->middleware('throttle:5,1')
     ->name('store.products.order');
 

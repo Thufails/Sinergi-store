@@ -52,9 +52,12 @@ class ProductController extends Controller
         $productIds = $products->getCollection()->modelKeys();
         $heldStockByProduct = OrderItem::query()
             ->whereIn('product_id', $productIds)
-            ->whereHas('order', fn ($orderQuery) => $orderQuery
-                ->where('status', Order::STATUS_AWAITING_PAYMENT)
-                ->where('payment_due_at', '>', now()))
+            ->whereHas('order', fn ($orderQuery) => $orderQuery->where(function ($statusQuery) {
+                $statusQuery->where(function ($awaitingPaymentQuery) {
+                    $awaitingPaymentQuery->where('status', Order::STATUS_AWAITING_PAYMENT)
+                        ->where('payment_due_at', '>', now());
+                })->orWhere('status', Order::STATUS_PAYMENT_REVIEW);
+            }))
             ->selectRaw('product_id, SUM(quantity) as reserved_quantity')
             ->groupBy('product_id')
             ->pluck('reserved_quantity', 'product_id');
@@ -168,6 +171,7 @@ class ProductController extends Controller
             'discount_type' => ['required', 'in:percentage,fixed'],
             'discount_value' => ['required', 'numeric', 'min:0'],
             'stock' => [Rule::requiredIf(! $hasVariants), 'nullable', 'integer', 'min:0'],
+            'weight_grams' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'has_variants' => ['nullable', 'boolean'],
             'variants' => [Rule::requiredIf($hasVariants), 'array', $hasVariants ? 'min:1' : 'nullable'],
             'variants.*.id' => ['nullable', 'integer', 'distinct'],
@@ -175,6 +179,7 @@ class ProductController extends Controller
             'variants.*.color' => ['nullable', 'string', 'max:50'],
             'variants.*.sku' => ['nullable', 'string', 'max:100'],
             'variants.*.stock' => [$hasVariants ? 'required' : 'nullable', 'integer', 'min:0'],
+            'variants.*.weight_grams' => ['nullable', 'integer', 'min:0', 'max:1000000'],
             'image' => ['nullable', 'image', 'max:2048'],
         ];
 
@@ -186,6 +191,7 @@ class ProductController extends Controller
         $validated = $request->validate([
             ...$rules,
         ]);
+        $validated['weight_grams'] = (int) ($validated['weight_grams'] ?? 0);
 
         $variantErrors = [];
         $variantCombinations = [];
@@ -224,6 +230,7 @@ class ProductController extends Controller
                 'color' => $color,
                 'sku' => $sku !== '' ? $sku : null,
                 'stock' => (int) $variant['stock'],
+                'weight_grams' => filled($variant['weight_grams'] ?? null) ? (int) $variant['weight_grams'] : null,
             ];
         }
 
@@ -269,6 +276,7 @@ class ProductController extends Controller
                 'color' => $variant['color'],
                 'sku' => $variant['sku'],
                 'stock' => $variant['stock'],
+                'weight_grams' => $variant['weight_grams'],
             ];
 
             if (! empty($variant['id'])) {

@@ -24,6 +24,7 @@
         $statusStyles = [
             'pending_confirmation' => 'bg-amber-100 text-amber-900 ring-1 ring-inset ring-amber-300',
             'awaiting_payment' => 'bg-sky-100 text-sky-900 ring-1 ring-inset ring-sky-300',
+            'payment_review' => 'bg-rose-100 text-rose-900 ring-1 ring-inset ring-rose-300',
             'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
@@ -31,6 +32,9 @@
             'expired' => 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-300',
         ];
     @endphp
+
+    @if (session('success'))<div class="mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800" role="status">{{ session('success') }}</div>@endif
+    @if (session('error'))<div class="mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800" role="alert">{{ session('error') }}</div>@endif
 
     <section class="mt-4 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 px-6 py-5">
@@ -54,6 +58,14 @@
             <div class="md:text-right">
                 <h3 class="text-sm font-semibold text-slate-900">Waktu pesanan</h3>
                 <p class="mt-3 text-sm text-slate-700">Dibuat {{ $order->created_at->timezone('Asia/Jakarta')->format('d M Y, H:i') }} WIB</p>
+            </div>
+
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 md:col-span-2">
+                <h3 class="text-sm font-semibold text-slate-900">Alamat penerima</h3>
+                <p class="mt-2 text-sm font-medium text-slate-800">{{ $order->shipping_recipient_name ?: $order->customer_name }} · {{ $order->shipping_recipient_phone ?: $order->customer_phone }}</p>
+                <p class="mt-1 text-sm leading-6 text-slate-600">{{ collect([$order->shipping_address_line, $order->shipping_village, $order->shipping_district, $order->shipping_city, $order->shipping_province, $order->shipping_postal_code])->filter()->implode(', ') ?: 'Alamat tidak tersedia untuk pesanan lama.' }}</p>
+                @if ($order->shipping_notes)<p class="mt-2 text-sm text-slate-500">Catatan kurir: {{ $order->shipping_notes }}</p>@endif
+                @if ($order->shipping_weight_grams)<p class="mt-2 text-xs text-slate-500">Berat paket tercatat: {{ number_format((int) $order->shipping_weight_grams, 0, ',', '.') }} gram</p>@endif
             </div>
 
             @if ($order->payment_due_at)
@@ -111,6 +123,10 @@
                         <p class="mt-1 text-sm font-semibold text-slate-800">{{ $order->courier_name ?: 'Belum diisi' }}</p>
                     </div>
                     <div>
+                        <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Layanan</p>
+                        <p class="mt-1 text-sm font-semibold text-slate-800">{{ $order->courier_service ?: 'Belum diisi' }}</p>
+                    </div>
+                    <div>
                         <p class="text-xs font-medium uppercase tracking-wide text-slate-500">Nomor resi</p>
                         <p class="mt-1 break-all text-sm font-semibold text-slate-800">{{ $order->tracking_number ?: 'Belum diisi' }}</p>
                     </div>
@@ -156,24 +172,28 @@
                     @endforeach
                 </tbody>
                 <tfoot class="bg-slate-50">
-                    <tr>
-                        <th colspan="4" class="px-6 py-4 text-right text-sm font-semibold text-slate-700">Total pesanan</th>
-                        <th class="whitespace-nowrap px-6 py-4 text-right text-base font-bold text-slate-900">Rp {{ number_format((float) $order->total_amount, 0, ',', '.') }}</th>
-                    </tr>
+                    <tr><th colspan="4" class="px-6 pt-4 text-right text-sm font-medium text-slate-600">Subtotal produk</th><th class="whitespace-nowrap px-6 pt-4 text-right text-sm font-medium text-slate-800">Rp {{ number_format((float) ($order->subtotal_amount ?? $order->total_amount), 0, ',', '.') }}</th></tr>
+                    <tr><th colspan="4" class="px-6 py-2 text-right text-sm font-medium text-slate-600">Ongkir{{ $order->courier_name ? ' · ' . $order->courier_name : '' }}</th><th class="whitespace-nowrap px-6 py-2 text-right text-sm font-medium text-slate-800">{{ (float) $order->shipping_fee > 0 ? 'Rp ' . number_format((float) $order->shipping_fee, 0, ',', '.') : ($order->status === 'pending_confirmation' ? 'Belum ditetapkan' : 'Rp 0') }}</th></tr>
+                    <tr><th colspan="4" class="px-6 pb-4 pt-2 text-right text-sm font-semibold text-slate-900">Total pembayaran</th><th class="whitespace-nowrap px-6 pb-4 pt-2 text-right text-base font-bold text-slate-900">Rp {{ number_format((float) $order->total_amount, 0, ',', '.') }}</th></tr>
                 </tfoot>
             </table>
         </div>
 
         <div class="border-t border-slate-200 bg-slate-50 px-6 py-5">
             <h3 class="text-sm font-semibold text-slate-900">Tindakan pesanan</h3>
-            <p class="mt-1 text-sm text-slate-500">Stok baru dikurangi setelah pembayaran dikonfirmasi.</p>
+            <p class="mt-1 text-sm text-slate-500">Ongkir dikonfirmasi admin; stok baru dikurangi setelah pembayaran disetujui.</p>
             <div class="mt-4 flex flex-wrap gap-3">
                 @if ($order->status === 'pending_confirmation')
-                    <form method="POST" action="{{ route('admin.orders.status', $order) }}" data-approve-order-form>
+                    <form method="POST" action="{{ route('admin.orders.shipping-quote', $order) }}" class="grid w-full gap-4 rounded-xl border border-amber-200 bg-amber-50/60 p-4 sm:grid-cols-2">
                         @csrf
                         @method('PATCH')
-                        <input type="hidden" name="status" value="awaiting_payment">
-                        <button type="submit" class="rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Setujui &amp; mulai hold 24 jam</button>
+                        <div><label for="courier_name" class="mb-1.5 block text-sm font-medium text-slate-700">Ekspedisi / kurir</label><input id="courier_name" name="courier_name" value="{{ old('courier_name', $order->courier_name) }}" required maxlength="100" placeholder="Contoh: J&amp;T Express" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
+                        <div><label for="courier_service" class="mb-1.5 block text-sm font-medium text-slate-700">Layanan</label><input id="courier_service" name="courier_service" value="{{ old('courier_service', $order->courier_service) }}" required maxlength="100" placeholder="Contoh: Reguler" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
+                        <div><label for="shipping_fee" class="mb-1.5 block text-sm font-medium text-slate-700">Ongkir (Rp)</label><input id="shipping_fee" name="shipping_fee" type="number" min="0" step="1" value="{{ old('shipping_fee', $order->shipping_fee) }}" required class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
+                        <div><label for="shipping_estimated_delivery" class="mb-1.5 block text-sm font-medium text-slate-700">Estimasi pengiriman <span class="font-normal text-slate-500">(opsional)</span></label><input id="shipping_estimated_delivery" name="shipping_estimated_delivery" value="{{ old('shipping_estimated_delivery', $order->shipping_estimated_delivery) }}" maxlength="100" placeholder="Contoh: 2–3 hari kerja" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
+                        @if ($errors->any())<div class="sm:col-span-2 rounded-lg bg-rose-50 p-3 text-sm text-rose-700">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
+                        <p class="text-sm leading-5 text-slate-600 sm:col-span-2">Setelah disimpan, ongkir ditambahkan ke subtotal, stok di-hold selama 24 jam, dan pembeli dapat melihat total serta mengunggah bukti pembayaran.</p>
+                        <button type="submit" class="justify-self-start rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 sm:col-span-2">Simpan ongkir &amp; minta pembayaran</button>
                     </form>
                     <form method="POST" action="{{ route('admin.orders.status', $order) }}" data-confirm-title="Batalkan pesanan ini?" data-confirm-description="Pesanan {{ $order->order_number }} akan dibatalkan. Tindakan ini tidak bisa dibatalkan." data-confirm-button="Ya, batalkan pesanan" data-confirm-tone="danger">
                         @csrf
@@ -182,12 +202,7 @@
                         <button type="submit" class="rounded-xl border border-rose-200 px-4 py-2.5 text-sm font-semibold text-rose-700 transition hover:bg-rose-50">Batalkan pesanan</button>
                     </form>
                 @elseif ($order->status === 'awaiting_payment' && $order->payment_due_at?->isFuture())
-                    <form method="POST" action="{{ route('admin.orders.status', $order) }}" data-confirm-payment-form>
-                        @csrf
-                        @method('PATCH')
-                        <input type="hidden" name="status" value="paid">
-                        <button type="submit" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700">Konfirmasi pembayaran diterima</button>
-                    </form>
+                    <p class="rounded-xl bg-sky-50 px-4 py-3 text-sm text-sky-900">Menunggu pembeli mengunggah bukti transfer. Setelah dikirim, pesanan akan muncul di antrean verifikasi.</p>
                     <form method="POST" action="{{ route('admin.orders.status', $order) }}" data-confirm-title="Batalkan pesanan &amp; lepas hold?" data-confirm-description="Pesanan {{ $order->order_number }} akan dibatalkan dan stok yang sedang di-hold akan tersedia kembali." data-confirm-button="Ya, batalkan &amp; lepas hold" data-confirm-tone="danger">
                         @csrf
                         @method('PATCH')
@@ -206,6 +221,18 @@
                         @method('PATCH')
                         <input type="hidden" name="status" value="cancelled">
                         <button type="submit" class="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-white">Batalkan pesanan</button>
+                    </form>
+                @elseif ($order->status === 'payment_review')
+                    @if ($order->payment_proof_path)
+                        <a href="{{ route('admin.orders.payment-proof', $order) }}" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-10 items-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 hover:border-amber-400 hover:bg-amber-50">Lihat bukti pembayaran</a>
+                    @endif
+                    <form method="POST" action="{{ route('admin.orders.payment-review', $order) }}" class="grid w-full gap-3 rounded-xl border border-rose-200 bg-rose-50/60 p-4 sm:grid-cols-[1fr_auto_auto] sm:items-end">
+                        @csrf
+                        @method('PATCH')
+                        <div><label for="review_note" class="mb-1.5 block text-sm font-medium text-slate-700">Catatan jika bukti ditolak</label><input id="review_note" name="review_note" value="{{ old('review_note') }}" maxlength="500" placeholder="Contoh: nominal transfer belum sesuai" class="w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm"></div>
+                        <button type="submit" name="decision" value="reject" class="rounded-xl border border-rose-300 px-4 py-2.5 text-sm font-semibold text-rose-700 hover:bg-rose-100">Tolak bukti</button>
+                        <button type="submit" name="decision" value="approve" class="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700">Setujui pembayaran</button>
+                        @if ($errors->any())<div class="text-sm text-rose-700 sm:col-span-3">@foreach ($errors->all() as $error)<p>{{ $error }}</p>@endforeach</div>@endif
                     </form>
                 @elseif ($order->status === 'paid')
                     <form method="POST" action="{{ route('admin.orders.status', $order) }}">

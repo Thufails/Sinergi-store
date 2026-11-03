@@ -19,6 +19,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -28,6 +29,7 @@ class OrderController extends Controller
     private const STATUS_LABELS = [
         Order::STATUS_PENDING_CONFIRMATION => 'Menunggu konfirmasi',
         Order::STATUS_AWAITING_PAYMENT => 'Menunggu pembayaran',
+        Order::STATUS_PAYMENT_REVIEW => 'Menunggu verifikasi pembayaran',
         Order::STATUS_PAID => 'Dibayar',
         Order::STATUS_PROCESSING => 'Sedang dikemas',
         Order::STATUS_SHIPPED => 'Dikirim',
@@ -181,12 +183,147 @@ class OrderController extends Controller
 
     public function show(Order $order): View
     {
-        $order->load(['items.product', 'items.variant', 'statusHistories']);
+        $order->load(['items.product', 'items.variant', 'statusHistories', 'customerAddress']);
 
         return view('admin.orders.show', [
             'order' => $order,
             'statusLabels' => self::STATUS_LABELS,
         ]);
+    }
+
+    public function showPaymentProof(Order $order): \Symfony\Component\HttpFoundation\BinaryFileResponse
+    {
+        abort_unless($order->payment_proof_path && Storage::disk('local')->exists($order->payment_proof_path), 404);
+
+        $path = Storage::disk('local')->path($order->payment_proof_path);
+
+        return response()->file($path, [
+            'Content-Type' => Storage::disk('local')->mimeType($order->payment_proof_path) ?? 'application/octet-stream',
+            'Cache-Control' => 'private, no-store',
+        ]);
+    }
+
+    public function quoteShipping(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'courier_name' => ['required', 'string', 'max:100'],
+            'courier_service' => ['nullable', 'string', 'max:150'],
+            'shipping_fee' => ['required', 'numeric', 'min:0', 'max:999999999.99'],
+            'shipping_estimated_delivery' => ['nullable', 'string', 'max:80'],
+        ]);
+
+        $admin = $request->user();
+        $message = DB::transaction(function () use ($order, $validated, $admin): ?string {
+            $lockedOrder = Order::query()->with('items')->lockForUpdate()->findOrFail($order->id);
+
+            if ($lockedOrder->status !== Order::STATUS_PENDING_CONFIRMATION) {
+                return 'Ongkir hanya bisa dikonfirmasi untuk pesanan yang menunggu konfirmasi.';
+            }
+
+            if ((int) $lockedOrder->shipping_weight_grams < 1) {
+                return 'Berat produk belum diatur. Lengkapi berat produk atau variannya sebelum menetapkan ongkir.';
+            }
+
+            $inventoryError = $this->reserveOrderItems($lockedOrder);
+            if ($inventoryError !== null) {
+                return $inventoryError;
+            }
+
+            $previousStatus = $lockedOrder->status;
+            $shippingFee = round((float) $validated['shipping_fee'], 2);
+            $lockedOrder->update([
+                'courier_name' => trim($validated['courier_name']),
+                'courier_service' => filled($validated['courier_service'] ?? null) ? trim($validated['courier_service']) : null,
+                'shipping_fee' => $shippingFee,
+                'shipping_estimated_delivery' => filled($validated['shipping_estimated_delivery'] ?? null)
+                    ? trim($validated['shipping_estimated_delivery'])
+                    : null,
+                'total_amount' => round((float) $lockedOrder->subtotal_amount + $shippingFee, 2),
+                'status' => Order::STATUS_AWAITING_PAYMENT,
+                'payment_due_at' => now()->addHours(24),
+            ]);
+
+            $this->recordStatusChange(
+                $lockedOrder,
+                $previousStatus,
+                Order::STATUS_AWAITING_PAYMENT,
+                (int) $admin->getAuthIdentifier(),
+                (string) $admin->name,
+            );
+
+            return null;
+        });
+
+        if ($message !== null) {
+            return back()->with('error', $message);
+        }
+
+        return redirect()->route('admin.orders.show', $order)
+            ->with('success', 'Ongkir tersimpan, total pembayaran sudah dihitung, dan pesanan menunggu pembayaran.');
+    }
+
+    public function reviewPayment(Request $request, Order $order): RedirectResponse
+    {
+        $validated = $request->validate([
+            'decision' => ['required', Rule::in(['approve', 'reject'])],
+            'review_note' => ['nullable', 'required_if:decision,reject', 'string', 'max:1000'],
+        ]);
+
+        $admin = $request->user();
+        $message = DB::transaction(function () use ($order, $validated, $admin): ?string {
+            $lockedOrder = Order::query()->with('items')->lockForUpdate()->findOrFail($order->id);
+
+            if ($lockedOrder->status !== Order::STATUS_PAYMENT_REVIEW || ! $lockedOrder->payment_proof_path) {
+                return 'Pesanan ini belum memiliki bukti pembayaran yang menunggu verifikasi.';
+            }
+
+            if ($validated['decision'] === 'approve') {
+                $inventoryError = $this->deductPaidOrderItems($lockedOrder);
+                if ($inventoryError !== null) {
+                    return $inventoryError;
+                }
+
+                $lockedOrder->update([
+                    'status' => Order::STATUS_PAID,
+                    'paid_at' => now(),
+                    'payment_review_note' => null,
+                ]);
+                $this->recordStatusChange(
+                    $lockedOrder,
+                    Order::STATUS_PAYMENT_REVIEW,
+                    Order::STATUS_PAID,
+                    (int) $admin->getAuthIdentifier(),
+                    (string) $admin->name,
+                );
+
+                return null;
+            }
+
+            $lockedOrder->update([
+                'status' => Order::STATUS_AWAITING_PAYMENT,
+                'payment_due_at' => now()->addHours(24),
+                'payment_review_note' => trim((string) $validated['review_note']),
+            ]);
+            $this->recordStatusChange(
+                $lockedOrder,
+                Order::STATUS_PAYMENT_REVIEW,
+                Order::STATUS_AWAITING_PAYMENT,
+                (int) $admin->getAuthIdentifier(),
+                (string) $admin->name,
+            );
+
+            return null;
+        });
+
+        if ($message !== null) {
+            return back()->with('error', $message);
+        }
+
+        $successMessage = $validated['decision'] === 'approve'
+            ? 'Pembayaran berhasil diverifikasi dan stok dikurangi.'
+            : 'Bukti pembayaran ditolak. Pembeli dapat mengunggah bukti baru dalam 24 jam.';
+
+        return redirect()->route('admin.orders.show', $order)->with('success', $successMessage);
     }
 
     public function updateStatus(Request $request, Order $order): RedirectResponse
@@ -195,11 +332,9 @@ class OrderController extends Controller
             'status' => [
                 'required',
                 Rule::in([
-                    Order::STATUS_AWAITING_PAYMENT,
-                    Order::STATUS_PAID,
-                    Order::STATUS_PROCESSING,
-                    Order::STATUS_CANCELLED,
-                    Order::STATUS_EXPIRED,
+                        Order::STATUS_PROCESSING,
+                        Order::STATUS_CANCELLED,
+                        Order::STATUS_EXPIRED,
                 ]),
             ],
         ]);
@@ -211,60 +346,6 @@ class OrderController extends Controller
                 ->lockForUpdate()
                 ->findOrFail($order->id);
             $targetStatus = $validated['status'];
-
-            if ($targetStatus === Order::STATUS_AWAITING_PAYMENT) {
-                if ($lockedOrder->status !== Order::STATUS_PENDING_CONFIRMATION) {
-                    return 'Hanya pesanan yang menunggu konfirmasi yang bisa disetujui.';
-                }
-
-                $inventoryError = $this->reserveOrderItems($lockedOrder);
-                if ($inventoryError !== null) {
-                    return $inventoryError;
-                }
-
-                $lockedOrder->update([
-                    'status' => Order::STATUS_AWAITING_PAYMENT,
-                    'payment_due_at' => now()->addHours(24),
-                ]);
-                $this->recordStatusChange(
-                    $lockedOrder,
-                    Order::STATUS_PENDING_CONFIRMATION,
-                    Order::STATUS_AWAITING_PAYMENT,
-                    (int) $admin->getAuthIdentifier(),
-                    (string) $admin->name,
-                );
-
-                return null;
-            }
-
-            if ($targetStatus === Order::STATUS_PAID) {
-                if ($lockedOrder->status !== Order::STATUS_AWAITING_PAYMENT) {
-                    return 'Hanya pesanan yang menunggu pembayaran yang bisa dikonfirmasi lunas.';
-                }
-
-                if (! $lockedOrder->payment_due_at || $lockedOrder->payment_due_at->isPast()) {
-                    return 'Batas pembayaran sudah lewat. Tandai pesanan ini kedaluwarsa terlebih dahulu.';
-                }
-
-                $inventoryError = $this->deductPaidOrderItems($lockedOrder);
-                if ($inventoryError !== null) {
-                    return $inventoryError;
-                }
-
-                $lockedOrder->update([
-                    'status' => Order::STATUS_PAID,
-                    'paid_at' => now(),
-                ]);
-                $this->recordStatusChange(
-                    $lockedOrder,
-                    Order::STATUS_AWAITING_PAYMENT,
-                    Order::STATUS_PAID,
-                    (int) $admin->getAuthIdentifier(),
-                    (string) $admin->name,
-                );
-
-                return null;
-            }
 
             if ($targetStatus === Order::STATUS_PROCESSING) {
                 if ($lockedOrder->status !== Order::STATUS_PAID) {
@@ -284,7 +365,7 @@ class OrderController extends Controller
             }
 
             if ($targetStatus === Order::STATUS_CANCELLED) {
-                if (! in_array($lockedOrder->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_AWAITING_PAYMENT], true)) {
+                if (! in_array($lockedOrder->status, [Order::STATUS_PENDING_CONFIRMATION, Order::STATUS_AWAITING_PAYMENT, Order::STATUS_PAYMENT_REVIEW], true)) {
                     return 'Pesanan yang sudah dibayar atau selesai tidak dapat dibatalkan dari alur ini.';
                 }
 
@@ -337,7 +418,7 @@ class OrderController extends Controller
     public function updateShipping(Request $request, Order $order): RedirectResponse
     {
         $validated = $request->validate([
-            'courier_name' => ['required', 'string', 'max:100'],
+            'courier_name' => ['nullable', 'string', 'max:100'],
             'tracking_number' => ['required', 'string', 'max:100'],
         ]);
 
@@ -351,8 +432,13 @@ class OrderController extends Controller
                 return 'Detail pengiriman hanya bisa diisi untuk pesanan yang sedang diproses.';
             }
 
+            $courierName = trim((string) ($validated['courier_name'] ?? $lockedOrder->courier_name));
+            if ($courierName === '') {
+                return 'Nama kurir harus diisi sebelum pesanan ditandai dikirim.';
+            }
+
             $lockedOrder->update([
-                'courier_name' => trim($validated['courier_name']),
+                'courier_name' => $courierName,
                 'tracking_number' => trim($validated['tracking_number']),
                 'shipped_at' => now(),
                 'status' => Order::STATUS_SHIPPED,
@@ -695,10 +781,14 @@ class OrderController extends Controller
         [$type, $id] = explode(':', $inventoryKey, 2);
 
         $query = OrderItem::query()
-            ->whereHas('order', function ($query) use ($excludingOrderId) {
-                $query->where('status', Order::STATUS_AWAITING_PAYMENT)
-                    ->where('payment_due_at', '>', now())
-                    ->where('id', '!=', $excludingOrderId);
+            ->whereHas('order', function ($query) use ($excludingOrderId): void {
+                $query->where('id', '!=', $excludingOrderId)
+                    ->where(function ($statusQuery): void {
+                        $statusQuery->where(function ($awaitingPaymentQuery): void {
+                            $awaitingPaymentQuery->where('status', Order::STATUS_AWAITING_PAYMENT)
+                                ->where('payment_due_at', '>', now());
+                        })->orWhere('status', Order::STATUS_PAYMENT_REVIEW);
+                    });
             });
 
         if ($type === 'variant') {

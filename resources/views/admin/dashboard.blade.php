@@ -28,7 +28,7 @@
             <h2 class="text-lg font-semibold text-slate-900">Pesanan perlu ditindaklanjuti</h2>
             <p class="mt-1 text-sm text-slate-500">Pengingat untuk admin. Perubahan status tetap dilakukan secara manual.</p>
         </div>
-        <div class="grid gap-4 md:grid-cols-2">
+        <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <a href="{{ route('admin.orders.index', ['status' => 'pending_confirmation']) }}" class="admin-dashboard-card group rounded-2xl border border-amber-300 bg-white p-5 shadow-sm transition hover:border-amber-500 hover:shadow-md">
                 <div class="flex items-start justify-between gap-4">
                     <div>
@@ -69,6 +69,25 @@
                     <span class="rounded-xl bg-sky-100 px-3 py-1.5 text-lg font-bold text-sky-900">{{ number_format($ordersAwaitingPayment, 0, ',', '.') }}</span>
                 </div>
                 <p class="mt-4 text-sm font-semibold text-sky-700 group-hover:text-sky-800">Lihat pesanan <span aria-hidden="true">→</span></p>
+            </a>
+
+            <a href="{{ route('admin.orders.index', ['status' => 'payment_review']) }}" class="admin-dashboard-card group rounded-2xl border border-rose-300 bg-white p-5 shadow-sm transition hover:border-rose-500 hover:shadow-md">
+                <div class="flex items-start justify-between gap-4">
+                    <div>
+                        <p class="flex items-center gap-2 text-sm font-semibold text-slate-800">
+                            Verifikasi pembayaran
+                            @if ($ordersAwaitingPaymentReview > 0)
+                                <span class="relative inline-flex h-6 w-6 items-center justify-center rounded-lg bg-rose-100 text-rose-800" aria-label="Ada bukti pembayaran menunggu verifikasi">
+                                    <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg>
+                                    <span class="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-rose-500 motion-safe:animate-pulse" aria-hidden="true"></span>
+                                </span>
+                            @endif
+                        </p>
+                        <p class="mt-1 text-sm text-slate-500">Bukti transfer yang perlu diperiksa admin.</p>
+                    </div>
+                    <span class="rounded-xl bg-rose-100 px-3 py-1.5 text-lg font-bold text-rose-900">{{ number_format($ordersAwaitingPaymentReview, 0, ',', '.') }}</span>
+                </div>
+                <p class="mt-4 text-sm font-semibold text-rose-700 group-hover:text-rose-800">Periksa bukti <span aria-hidden="true">→</span></p>
             </a>
         </div>
     </section>
