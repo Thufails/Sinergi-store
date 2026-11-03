@@ -89,35 +89,41 @@
                     <a href="{{ route('store.home') }}#contact" class="store-nav-link" data-store-nav="contact">Kontak</a>
                 </nav>
 
-                <details class="store-theme-menu relative">
-                    <summary aria-label="Pengaturan tema" class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 text-slate-700 outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-amber-400 [&::-webkit-details-marker]:hidden">
-                        <svg class="store-theme-chevron h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
-                            <circle cx="12" cy="12" r="9" />
-                            <path d="M12 3v18a9 9 0 0 0 0-18Z" />
-                        </svg>
-                        <span class="sr-only">Pilih tema tampilan</span>
-                    </summary>
-                    <div class="store-theme-dropdown absolute right-0 z-[60] mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
-                        <p class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tema tampilan</p>
-                        <div class="space-y-1" role="group" aria-label="Pilihan tema">
-                            <button type="button" data-store-theme-option="system" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
-                                Ikuti perangkat <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
-                            </button>
-                            <button type="button" data-store-theme-option="light" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
-                                Terang <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
-                            </button>
-                            <button type="button" data-store-theme-option="dark" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
-                                Gelap <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
-                            </button>
-                        </div>
-                    </div>
-                </details>
+                <div class="flex shrink-0 items-center gap-2">
+                    <a href="{{ auth('customer')->check() ? route('account.orders') : route('account.login') }}" class="hidden min-h-10 items-center justify-center rounded-xl bg-amber-500 px-4 py-2 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex">
+                        {{ auth('customer')->check() ? 'Akun Saya' : 'Masuk' }}
+                    </a>
 
-                <button type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-100 lg:hidden" aria-label="Buka menu" aria-controls="mobile-menu" aria-expanded="false" data-store-menu-button>
-                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                        <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
-                    </svg>
-                </button>
+                    <details class="store-theme-menu relative">
+                        <summary aria-label="Pengaturan tema" class="flex h-10 w-10 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 text-slate-700 outline-none transition hover:bg-slate-100 focus-visible:ring-2 focus-visible:ring-amber-400 [&::-webkit-details-marker]:hidden">
+                            <svg class="store-theme-chevron h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <circle cx="12" cy="12" r="9" />
+                                <path d="M12 3v18a9 9 0 0 0 0-18Z" />
+                            </svg>
+                            <span class="sr-only">Pilih tema tampilan</span>
+                        </summary>
+                        <div class="store-theme-dropdown absolute right-0 z-[60] mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl shadow-slate-900/10">
+                            <p class="px-3 pb-1 pt-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Tema tampilan</p>
+                            <div class="space-y-1" role="group" aria-label="Pilihan tema">
+                                <button type="button" data-store-theme-option="system" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                    Ikuti perangkat <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" data-store-theme-option="light" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                    Terang <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                </button>
+                                <button type="button" data-store-theme-option="dark" aria-pressed="false" class="store-theme-option flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 transition hover:bg-slate-50 focus:bg-slate-50 focus:outline-none">
+                                    Gelap <span data-theme-check class="text-amber-600" aria-hidden="true"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </details>
+
+                    <button type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:bg-slate-100 lg:hidden" aria-label="Buka menu" aria-controls="mobile-menu" aria-expanded="false" data-store-menu-button>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                            <path stroke-linecap="round" d="M4 6h16M4 12h16M4 18h16" />
+                        </svg>
+                    </button>
+                </div>
             </div>
 
             <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white lg:hidden" data-store-menu>
@@ -127,6 +133,9 @@
                     <a href="{{ route('store.home') }}#about" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="about">Tentang Kami</a>
                     <a href="{{ route('store.home') }}#services" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="contact">Kontak</a>
+                    <a href="{{ auth('customer')->check() ? route('account.orders') : route('account.login') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" @if (request()->routeIs('account.*')) aria-current="page" @endif>
+                        {{ auth('customer')->check() ? 'Akun Saya' : 'Masuk / Sign in' }}
+                    </a>
                 </nav>
             </div>
         </header>
@@ -190,7 +199,7 @@
                         Kirim testimoni
                     </button>
 
-                    <dialog id="testimonial-modal" aria-labelledby="testimonial-modal-title" aria-describedby="testimonial-modal-description" data-testimonial-modal @if ($errors->any() || session('testimonial_success')) data-open-on-load @endif class="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-2xl bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/70">
+                    <dialog id="testimonial-modal" aria-labelledby="testimonial-modal-title" aria-describedby="testimonial-modal-description" data-testimonial-modal @if (session('testimonial_success') || (request()->routeIs('store.home') && ($errors->has('name') || $errors->has('message')))) data-open-on-load @endif class="m-auto max-h-[calc(100dvh-2rem)] w-[calc(100vw-2rem)] max-w-lg overflow-y-auto rounded-2xl bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/70">
                         <div class="flex items-start justify-between gap-5 border-b border-slate-200 px-5 py-5 sm:px-7">
                             <div>
                                 <p class="text-xs font-semibold uppercase tracking-[0.16em] text-amber-600">Cerita pelanggan</p>

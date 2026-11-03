@@ -14,8 +14,15 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->redirectGuestsTo(function (Request $request): string {
-        return route('admin.login');
-    });
+            return $request->is('account/*')
+                ? route('account.login')
+                : route('admin.login');
+        });
+        $middleware->redirectUsersTo(function (Request $request): string {
+            return $request->is('account/*')
+                ? route('account.orders')
+                : route('admin.dashboard');
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(

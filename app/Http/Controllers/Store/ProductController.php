@@ -11,6 +11,7 @@ use App\Models\ProductVariant;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -106,7 +107,8 @@ class ProductController extends Controller
         ]);
 
         $quantity = (int) $validated['quantity'];
-        $order = DB::transaction(function () use ($product, $validated, $quantity): Order {
+        $customerId = Auth::guard('customer')->id();
+        $order = DB::transaction(function () use ($product, $validated, $quantity, $customerId): Order {
             $lockedProduct = Product::query()
                 ->with('category')
                 ->lockForUpdate()
@@ -175,6 +177,7 @@ class ProductController extends Controller
 
             $order = Order::query()->create([
                 'order_number' => 'SS-' . now('Asia/Jakarta')->format('Ymd') . '-' . Str::upper(Str::random(8)),
+                'customer_id' => $customerId,
                 'customer_name' => trim($validated['customer_name']),
                 'customer_phone' => trim($validated['customer_phone']),
                 'status' => Order::STATUS_PENDING_CONFIRMATION,

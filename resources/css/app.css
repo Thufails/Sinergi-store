@@ -445,6 +445,63 @@ html[data-admin-theme='dark'] body.store-app .store-main .text-emerald-800 {
     color: #6ee7b7;
 }
 
+html[data-admin-theme='dark'] body.store-app .store-main .bg-amber-100 {
+    background-color: #3a2c12;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-amber-900 {
+    color: #fcd34d;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-sky-100 {
+    background-color: #102d45;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-sky-900 {
+    color: #7dd3fc;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-emerald-100 {
+    background-color: #12352f;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-emerald-900 {
+    color: #6ee7b7;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-violet-100 {
+    background-color: #2b2150;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-violet-900 {
+    color: #c4b5fd;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-cyan-100 {
+    background-color: #103447;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-cyan-900 {
+    color: #67e8f9;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-slate-200 {
+    background-color: #334155;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .text-slate-800 {
+    color: #cbd5e1;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .bg-rose-50,
+html[data-admin-theme='dark'] body.store-app .store-main .bg-rose-100 {
+    background-color: #3b2029;
+}
+
+html[data-admin-theme='dark'] body.store-app .store-main .border-rose-200 {
+    border-color: #71303b;
+}
+
 html[data-admin-theme='dark'] body.store-app .store-main .bg-red-50 {
     background-color: #3b2029;
 }

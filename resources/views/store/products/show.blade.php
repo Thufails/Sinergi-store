@@ -111,7 +111,7 @@
 
                 <div>
                     <label for="customer_name" class="mb-2 block text-sm font-medium text-slate-700">Nama pembeli</label>
-                    <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name') }}" maxlength="150" autocomplete="name" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200" placeholder="Nama lengkap">
+                    <input id="customer_name" name="customer_name" type="text" value="{{ old('customer_name', auth('customer')->user()?->name) }}" maxlength="150" autocomplete="name" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200" placeholder="Nama lengkap">
                     @error('customer_name')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror
@@ -119,7 +119,7 @@
 
                 <div>
                     <label for="customer_phone" class="mb-2 block text-sm font-medium text-slate-700">Nomor WhatsApp</label>
-                    <input id="customer_phone" name="customer_phone" type="tel" value="{{ old('customer_phone') }}" maxlength="30" autocomplete="tel" inputmode="tel" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200" placeholder="Contoh: 081234567890">
+                    <input id="customer_phone" name="customer_phone" type="tel" value="{{ old('customer_phone', auth('customer')->user()?->phone) }}" maxlength="30" autocomplete="tel" inputmode="tel" required class="w-full rounded-xl border border-slate-300 px-4 py-3 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200" placeholder="Contoh: 081234567890">
                     @error('customer_phone')
                         <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                     @enderror

@@ -8,6 +8,8 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\TestimoniController;
+use App\Http\Controllers\Store\CustomerAccountController;
+use App\Http\Controllers\Store\CustomerAuthController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Store\TestimonialController as StoreTestimonialController;
@@ -83,6 +85,46 @@ Route::middleware('auth')
     });
 
 // ==================== PUBLIC STORE ====================
+Route::prefix('account')->name('account.')->group(function () {
+    Route::middleware('guest:customer')->group(function () {
+        Route::get('/register', [CustomerAuthController::class, 'showRegistrationForm'])
+            ->name('register');
+        Route::post('/register', [CustomerAuthController::class, 'register'])
+            ->middleware('throttle:5,1')
+            ->name('register.submit');
+        Route::get('/login', [CustomerAuthController::class, 'showLoginForm'])
+            ->name('login');
+        Route::post('/login', [CustomerAuthController::class, 'login'])
+            ->middleware('throttle:5,1')
+            ->name('login.submit');
+        Route::get('/forgot-password', [CustomerAuthController::class, 'showForgotPasswordForm'])
+            ->name('password.request');
+        Route::post('/forgot-password', [CustomerAuthController::class, 'sendResetLink'])
+            ->middleware('throttle:5,1')
+            ->name('password.email');
+        Route::get('/reset-password/{token}', [CustomerAuthController::class, 'showResetPasswordForm'])
+            ->name('password.reset');
+        Route::post('/reset-password', [CustomerAuthController::class, 'resetPassword'])
+            ->middleware('throttle:5,1')
+            ->name('password.update');
+    });
+
+    Route::middleware('auth:customer')->group(function () {
+        Route::post('/logout', [CustomerAuthController::class, 'logout'])
+            ->name('logout');
+        Route::get('/orders', [CustomerAccountController::class, 'orders'])
+            ->name('orders');
+        Route::get('/orders/{order}', [CustomerAccountController::class, 'showOrder'])
+            ->name('orders.show');
+        Route::get('/profile', [CustomerAccountController::class, 'profile'])
+            ->name('profile');
+        Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])
+            ->name('profile.update');
+        Route::put('/profile/password', [CustomerAccountController::class, 'updatePassword'])
+            ->name('profile.password.update');
+    });
+});
+
 Route::get('/', [HomeController::class, 'index'])
     ->name('store.home');
 
