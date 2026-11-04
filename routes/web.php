@@ -7,10 +7,12 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\TestimoniController;
 use App\Http\Controllers\Store\CustomerAddressController;
-use App\Http\Controllers\Store\CustomerAccountController;
 use App\Http\Controllers\Store\CustomerAuthController;
+use App\Http\Controllers\Store\CustomerOrderController;
+use App\Http\Controllers\Store\CustomerProfileController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Store\TestimonialController as StoreTestimonialController;
@@ -88,6 +90,14 @@ Route::middleware('auth')
         Route::delete('/testimonials/{testimonial}', [TestimoniController::class, 'destroy'])
             ->name('admin.testimonials.destroy');
 
+        // Moderasi ulasan produk dari pesanan pembeli
+        Route::get('/product-reviews', [ProductReviewController::class, 'index'])
+            ->name('admin.product-reviews.index');
+        Route::patch('/product-reviews/{productReview}/approval', [ProductReviewController::class, 'updateApproval'])
+            ->name('admin.product-reviews.approval');
+        Route::delete('/product-reviews/{productReview}', [ProductReviewController::class, 'destroy'])
+            ->name('admin.product-reviews.destroy');
+
         // Logout
         Route::post('/logout', [AuthController::class, 'logout'])
             ->name('admin.logout');
@@ -135,20 +145,28 @@ Route::prefix('account')->name('account.')->group(function () {
             ->name('addresses.destroy');
         Route::patch('/addresses/{address}/default', [CustomerAddressController::class, 'setDefault'])
             ->name('addresses.default');
-        Route::get('/orders', [CustomerAccountController::class, 'orders'])
+        Route::get('/orders', [CustomerOrderController::class, 'index'])
             ->name('orders');
-        Route::post('/orders/{order}/payment-proof', [CustomerAccountController::class, 'uploadPaymentProof'])
+        Route::post('/orders/{order}/payment-proof', [CustomerOrderController::class, 'uploadPaymentProof'])
             ->middleware('throttle:5,1')
             ->name('orders.payment-proof.upload');
-        Route::get('/orders/{order}/payment-proof', [CustomerAccountController::class, 'showPaymentProof'])
+        Route::get('/orders/{order}/payment-proof', [CustomerOrderController::class, 'showPaymentProof'])
             ->name('orders.payment-proof');
-        Route::get('/orders/{order}', [CustomerAccountController::class, 'showOrder'])
+        Route::post('/orders/{order}/confirm-receipt', [CustomerOrderController::class, 'confirmReceipt'])
+            ->middleware('throttle:5,1')
+            ->name('orders.confirm-receipt');
+        Route::get('/orders/{order}/reviews', [CustomerOrderController::class, 'createReviews'])
+            ->name('orders.reviews.create');
+        Route::post('/orders/{order}/reviews', [CustomerOrderController::class, 'storeReviews'])
+            ->middleware('throttle:5,1')
+            ->name('orders.reviews.store');
+        Route::get('/orders/{order}', [CustomerOrderController::class, 'show'])
             ->name('orders.show');
-        Route::get('/profile', [CustomerAccountController::class, 'profile'])
+        Route::get('/profile', [CustomerProfileController::class, 'show'])
             ->name('profile');
-        Route::put('/profile', [CustomerAccountController::class, 'updateProfile'])
+        Route::put('/profile', [CustomerProfileController::class, 'update'])
             ->name('profile.update');
-        Route::put('/profile/password', [CustomerAccountController::class, 'updatePassword'])
+        Route::put('/profile/password', [CustomerProfileController::class, 'updatePassword'])
             ->name('profile.password.update');
     });
 });
