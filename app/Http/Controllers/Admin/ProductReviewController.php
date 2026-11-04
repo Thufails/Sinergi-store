@@ -12,6 +12,11 @@ class ProductReviewController extends Controller
 {
     public function index(Request $request): View
     {
+        $reviewSummary = ProductReview::query()
+            ->where('is_approved', true)
+            ->selectRaw('COUNT(*) as review_count, AVG(rating) as average_rating')
+            ->first();
+
         $query = ProductReview::query()
             ->with([
                 'product:id,name,slug',
@@ -39,8 +44,17 @@ class ProductReviewController extends Controller
             });
         });
 
+        $rating = $request->integer('rating');
+        if (in_array($rating, [1, 2, 3, 4, 5], true)) {
+            $query->where('rating', $rating);
+        }
+
         $reviews = $query->latest()->paginate(10)->withQueryString();
 
-        return view('admin.product-reviews.index', compact('reviews'));
+        return view('admin.product-reviews.index', [
+            'reviews' => $reviews,
+            'reviewCount' => (int) ($reviewSummary->review_count ?? 0),
+            'averageRating' => (float) ($reviewSummary->average_rating ?? 0),
+        ]);
     }
 }

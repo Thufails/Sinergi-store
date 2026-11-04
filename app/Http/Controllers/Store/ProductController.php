@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -22,7 +23,14 @@ class ProductController extends Controller
 {
     public function index(Request $request): View
     {
-        $query = Product::with('category')
+        $query = Product::query()
+            ->with('category')
+            ->withCount([
+                'reviews as approved_reviews_count' => fn (Builder $query) => $query->where('is_approved', true),
+            ])
+            ->withAvg([
+                'reviews as approved_reviews_avg_rating' => fn (Builder $query) => $query->where('is_approved', true),
+            ], 'rating')
             ->where('is_active', true)
             ->whereHas('category', fn ($query) => $query->where('is_active', true));
 
@@ -62,6 +70,7 @@ class ProductController extends Controller
         abort_unless($product->is_active && $product->category?->is_active, 404);
 
         $productReviews = $product->reviews()
+            ->where('is_approved', true)
             ->with('customer')
             ->latest()
             ->get();

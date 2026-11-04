@@ -66,6 +66,16 @@
                             <p class="text-xs text-slate-500">{{ $product->category?->name }}</p>
                             <h2 class="mt-1 min-h-10 text-sm font-semibold leading-5 text-slate-900">{{ $product->name }}</h2>
 
+                            @if ($product->approved_reviews_count > 0)
+                                <p class="mt-1 text-xs text-slate-600">
+                                    <span class="font-semibold text-amber-500">★ {{ number_format((float) $product->approved_reviews_avg_rating, 1) }}</span>
+                                    <span aria-hidden="true">·</span>
+                                    {{ $product->approved_reviews_count }} ulasan
+                                </p>
+                            @else
+                                <p class="mt-1 text-xs text-slate-400">Belum ada ulasan</p>
+                            @endif
+
                             <div class="mt-3">
                                 @if ((float) $product->discount_value > 0)
                                     <p class="text-base font-bold text-amber-600">Rp {{ number_format($product->final_price, 0, ',', '.') }}</p>

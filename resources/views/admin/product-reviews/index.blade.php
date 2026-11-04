@@ -4,23 +4,49 @@
 @section('heading', 'Ulasan Produk')
 
 @section('content')
+    <div class="mb-5 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <p class="text-sm text-slate-500">Ulasan tayang</p>
+            <p class="mt-1 text-2xl font-semibold text-slate-900">{{ number_format($reviewCount) }}</p>
+        </div>
+        <div class="rounded-2xl border border-slate-200 bg-white px-5 py-4 shadow-sm">
+            <p class="text-sm text-slate-500">Rata-rata rating</p>
+            <p class="mt-1 text-2xl font-semibold text-slate-900">
+                {{ $reviewCount > 0 ? number_format($averageRating, 1) : '—' }}
+                @if ($reviewCount > 0)
+                    <span class="text-amber-500">★</span>
+                    <span class="text-sm font-normal text-slate-500">dari 5</span>
+                @endif
+            </p>
+        </div>
+    </div>
+
     <div class="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div class="border-b border-slate-200 px-6 py-5">
             <h2 class="text-xl font-semibold text-slate-900">Ulasan dari pembeli</h2>
             <p class="mt-1 text-sm text-slate-500">Ulasan produk yang dikirim setelah pembeli mengonfirmasi pesanan diterima.</p>
         </div>
 
-        <form method="GET" action="{{ route('admin.product-reviews.index') }}" class="flex flex-col gap-3 border-b border-slate-200 bg-slate-50 p-5 sm:flex-row">
+        <form method="GET" action="{{ route('admin.product-reviews.index') }}" class="grid gap-3 border-b border-slate-200 bg-slate-50 p-5 sm:grid-cols-[minmax(0,1fr)_auto_auto]">
             @if (request()->filled('order'))
                 <input type="hidden" name="order" value="{{ request('order') }}">
             @endif
+            <label class="sr-only" for="review-search">Cari ulasan</label>
             <input
+                id="review-search"
                 type="search"
                 name="search"
                 value="{{ request('search') }}"
                 placeholder="Cari produk, pembeli, nomor pesanan, atau komentar..."
                 class="min-w-0 flex-1 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 placeholder:text-slate-400 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200"
             >
+            <label class="sr-only" for="review-rating">Filter rating</label>
+            <select id="review-rating" name="rating" class="rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none focus:border-amber-500 focus:ring-2 focus:ring-amber-200">
+                <option value="">Semua rating</option>
+                @for ($ratingOption = 5; $ratingOption >= 1; $ratingOption--)
+                    <option value="{{ $ratingOption }}" @selected((string) request('rating') === (string) $ratingOption)>{{ $ratingOption }} bintang</option>
+                @endfor
+            </select>
             <div class="flex gap-2">
                 <button type="submit" class="rounded-xl bg-slate-900 px-5 py-3 text-sm font-semibold text-white transition hover:bg-slate-700">Cari</button>
                 <a href="{{ route('admin.product-reviews.index', request()->filled('order') ? ['order' => request('order')] : []) }}" class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-100">Reset</a>
@@ -36,7 +62,7 @@
 
         @if ($reviews->isEmpty())
             <div class="px-6 py-16 text-center">
-                <p class="font-medium text-slate-700">{{ request()->filled('order') ? 'Belum ada ulasan untuk pesanan ini.' : (request()->filled('search') ? 'Ulasan tidak ditemukan.' : 'Belum ada ulasan produk.') }}</p>
+                <p class="font-medium text-slate-700">{{ request()->filled('order') ? 'Belum ada ulasan untuk pesanan ini.' : ((request()->filled('search') || request()->filled('rating')) ? 'Ulasan tidak ditemukan untuk filter ini.' : 'Belum ada ulasan produk.') }}</p>
                 <p class="mt-1 text-sm text-slate-500">Ulasan akan tercatat di sini setelah pembeli mengirimkannya.</p>
             </div>
         @else
