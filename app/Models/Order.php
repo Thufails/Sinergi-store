@@ -25,6 +25,8 @@ class Order extends Model
 
     public const STATUS_SHIPPED = 'shipped';
 
+    public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     public const STATUS_EXPIRED = 'expired';
@@ -62,6 +64,8 @@ class Order extends Model
         'shipping_estimated_delivery',
         'tracking_number',
         'shipped_at',
+        'receipt_confirmed_at',
+        'receipt_media_path',
     ];
 
     protected function casts(): array
@@ -77,6 +81,7 @@ class Order extends Model
             'payment_due_at' => 'datetime',
             'payment_proof_uploaded_at' => 'datetime',
             'shipped_at' => 'datetime',
+            'receipt_confirmed_at' => 'datetime',
         ];
     }
 
