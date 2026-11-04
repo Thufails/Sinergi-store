@@ -84,10 +84,10 @@
 
                 <nav class="hidden items-center gap-5 text-sm font-medium lg:flex xl:absolute xl:left-1/2 xl:-translate-x-1/2 xl:gap-8" aria-label="Navigasi utama">
                     <a href="{{ route('store.home') }}" class="store-nav-link" data-store-nav="home" @if (request()->routeIs('store.home')) aria-current="page" @endif>Home</a>
-                    <a href="{{ route('store.products.index') }}" class="store-nav-link" data-store-nav="products" @if (request()->routeIs('store.products.*')) aria-current="page" @endif>Produk</a>
                     <a href="{{ route('store.home') }}#about" class="store-nav-link" data-store-nav="about">Tentang Kami</a>
                     <a href="{{ route('store.home') }}#services" class="store-nav-link" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-nav-link" data-store-nav="contact">Kontak</a>
+                    <a href="{{ route('store.products.index') }}" class="store-nav-link" data-store-nav="products" @if (request()->routeIs('store.products.*')) aria-current="page" @endif>Produk</a>
                     @auth('customer')
                         <a href="{{ route('account.orders') }}" class="store-nav-link" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
                     @endauth
@@ -142,12 +142,12 @@
             <div id="mobile-menu" class="hidden border-t border-slate-200 bg-white lg:hidden" data-store-menu>
                 <nav class="mx-auto grid max-w-7xl gap-1 px-6 py-3 text-sm font-medium text-slate-700" aria-label="Navigasi mobile">
                     <a href="{{ route('store.home') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="home" @if (request()->routeIs('store.home')) aria-current="page" @endif>Home</a>
-                    <a href="{{ route('store.products.index') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="products" @if (request()->routeIs('store.products.*')) aria-current="page" @endif>Produk</a>
                     <a href="{{ route('store.home') }}#about" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="about">Tentang Kami</a>
                     <a href="{{ route('store.home') }}#services" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="contact">Kontak</a>
+                    <a href="{{ route('store.products.index') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="products" @if (request()->routeIs('store.products.*')) aria-current="page" @endif>Produk</a>
                     @auth('customer')
-                        <a href="{{ route('account.orders') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
+                        <a href="{{ route('account.orders') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
                         <a href="{{ route('account.profile') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" @if (request()->routeIs('account.profile*')) aria-current="page" @endif>Profil saya</a>
                     @else
                         <a href="{{ route('account.login') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 font-semibold text-amber-700 hover:bg-amber-50" @if (request()->routeIs('account.login')) aria-current="page" @endif>Masuk / Sign in</a>
@@ -160,7 +160,7 @@
             @yield('content')
         </main>
 
-        @guest('customer')
+        @if (request()->routeIs('store.home'))
         @php
             $storeLocationName = 'PEUBA Usman Bin Affan';
             $storeLocation = 'Jl Terusan Nusa Indah No.21, Dusun Durek, Giripurno, Kec. Bumiaji, Kota Batu, Jawa Timur 65333, Indonesia';
@@ -205,7 +205,7 @@
                 </section>
             </div>
         </section>
-        @endguest
+        @endif
 
         <footer class="w-full bg-slate-950 text-slate-300">
             <div class="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-10 pt-7 md:grid-cols-2 lg:grid-cols-[1.15fr_0.75fr_0.85fr] lg:gap-12 lg:px-8">
