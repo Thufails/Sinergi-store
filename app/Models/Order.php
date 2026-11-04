@@ -65,7 +65,6 @@ class Order extends Model
         'tracking_number',
         'shipped_at',
         'receipt_confirmed_at',
-        'receipt_media_path',
     ];
 
     protected function casts(): array
