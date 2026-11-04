@@ -36,7 +36,7 @@ class CustomerOrderController extends Controller
         $customer = $request->user('customer');
 
         $order = $customer->orders()
-            ->with(['items', 'statusHistories', 'customerAddress'])
+            ->with(['items.review', 'statusHistories', 'customerAddress'])
             ->whereKey($order)
             ->firstOrFail();
 
@@ -168,7 +168,7 @@ class CustomerOrderController extends Controller
                     'rating' => (int) $rating,
                     'comment' => $comment !== '' ? $comment : null,
                     'media_paths' => $storedPaths !== [] ? $storedPaths : null,
-                    'is_approved' => false,
+                    'is_approved' => true,
                 ];
             }
 
@@ -187,7 +187,7 @@ class CustomerOrderController extends Controller
             ->route('account.orders.show', $order)
             ->with('success', $reviewsToCreate === []
                 ? 'Kamu bisa memberikan ulasan kapan saja dari detail pesanan.'
-                : 'Ulasan produk berhasil dikirim dan menunggu persetujuan admin.');
+                : 'Ulasanmu berhasil dikirim dan langsung tampil di halaman produk.');
     }
 
     public function uploadPaymentProof(Request $request, string $order): RedirectResponse

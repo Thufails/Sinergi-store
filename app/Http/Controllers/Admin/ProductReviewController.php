@@ -4,50 +4,43 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\ProductReview;
-use Illuminate\Http\RedirectResponse;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class ProductReviewController extends Controller
 {
     public function index(Request $request): View
     {
-        $reviews = ProductReview::query()
-            ->with(['customer', 'product', 'orderItem.order'])
-            ->when($request->status === 'pending', fn ($query) => $query->where('is_approved', false))
-            ->when($request->status === 'approved', fn ($query) => $query->where('is_approved', true))
-            ->latest()
-            ->paginate(10)
-            ->withQueryString();
+        $query = ProductReview::query()
+            ->with([
+                'product:id,name,slug',
+                'customer:id,name',
+                'orderItem.order:id,order_number',
+            ])
+            ->where('is_approved', true);
+
+        $query->when($request->filled('order'), function (Builder $query) use ($request): void {
+            $orderId = $request->integer('order');
+
+            $query->whereHas('orderItem.order', function (Builder $orderQuery) use ($orderId): void {
+                $orderQuery->whereKey($orderId);
+            });
+        });
+
+        $query->when($request->filled('search'), function (Builder $query) use ($request): void {
+            $search = (string) $request->string('search')->trim();
+
+            $query->where(function (Builder $query) use ($search): void {
+                $query->where('comment', 'like', "%{$search}%")
+                    ->orWhereHas('product', fn (Builder $productQuery) => $productQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('customer', fn (Builder $customerQuery) => $customerQuery->where('name', 'like', "%{$search}%"))
+                    ->orWhereHas('orderItem.order', fn (Builder $orderQuery) => $orderQuery->where('order_number', 'like', "%{$search}%"));
+            });
+        });
+
+        $reviews = $query->latest()->paginate(10)->withQueryString();
 
         return view('admin.product-reviews.index', compact('reviews'));
-    }
-
-    public function updateApproval(Request $request, ProductReview $productReview): RedirectResponse
-    {
-        $validated = $request->validate([
-            'is_approved' => ['required', 'boolean'],
-        ]);
-
-        $productReview->update([
-            'is_approved' => (bool) $validated['is_approved'],
-        ]);
-
-        return redirect()
-            ->route('admin.product-reviews.index')
-            ->with('success', $productReview->is_approved
-                ? 'Ulasan produk disetujui dan dapat ditampilkan.'
-                : 'Ulasan produk disembunyikan dari halaman produk.');
-    }
-
-    public function destroy(ProductReview $productReview): RedirectResponse
-    {
-        Storage::disk('public')->delete($productReview->media_paths ?? []);
-        $productReview->delete();
-
-        return redirect()
-            ->route('admin.product-reviews.index')
-            ->with('success', 'Ulasan produk berhasil dihapus.');
     }
 }

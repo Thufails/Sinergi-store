@@ -61,6 +61,13 @@ class ProductController extends Controller
         $product->loadMissing(['category', 'variants']);
         abort_unless($product->is_active && $product->category?->is_active, 404);
 
+        $productReviews = $product->reviews()
+            ->with('customer')
+            ->latest()
+            ->get();
+        $reviewCount = $productReviews->count();
+        $averageRating = $reviewCount > 0 ? (float) $productReviews->avg('rating') : 0;
+
         $activeHolds = OrderItem::query()
             ->where('product_id', $product->id)
             ->whereNotNull('product_variant_id')
@@ -97,7 +104,14 @@ class ProductController extends Controller
             ? $availableProductStock > 0
             : $product->variants->contains(fn ($variant) => $variant->available_stock > 0);
 
-        return view('store.products.show', compact('product', 'availableProductStock', 'hasAvailableStock'));
+        return view('store.products.show', compact(
+            'product',
+            'availableProductStock',
+            'hasAvailableStock',
+            'productReviews',
+            'reviewCount',
+            'averageRating',
+        ));
     }
 
     public function checkout(Request $request, Product $product): View

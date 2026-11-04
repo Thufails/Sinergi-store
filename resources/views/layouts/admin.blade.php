@@ -110,6 +110,13 @@
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         Testimoni
                 </a>
+                <a href="{{ route('admin.product-reviews.index') }}"
+                    class="block rounded-xl px-4 py-3 text-sm transition
+                    {{ request()->routeIs('admin.product-reviews.*')
+                            ? 'bg-amber-500 font-semibold text-slate-950'
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                        Ulasan Produk
+                </a>
                 </div>
             </nav>
 

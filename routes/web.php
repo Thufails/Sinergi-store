@@ -90,13 +90,9 @@ Route::middleware('auth')
         Route::delete('/testimonials/{testimonial}', [TestimoniController::class, 'destroy'])
             ->name('admin.testimonials.destroy');
 
-        // Moderasi ulasan produk dari pesanan pembeli
+        // Lihat ulasan produk dari pesanan pelanggan
         Route::get('/product-reviews', [ProductReviewController::class, 'index'])
             ->name('admin.product-reviews.index');
-        Route::patch('/product-reviews/{productReview}/approval', [ProductReviewController::class, 'updateApproval'])
-            ->name('admin.product-reviews.approval');
-        Route::delete('/product-reviews/{productReview}', [ProductReviewController::class, 'destroy'])
-            ->name('admin.product-reviews.destroy');
 
         // Logout
         Route::post('/logout', [AuthController::class, 'logout'])

@@ -37,7 +37,7 @@ class OrderController extends Controller
         Order::STATUS_PAID => 'Dibayar',
         Order::STATUS_PROCESSING => 'Sedang dikemas',
         Order::STATUS_SHIPPED => 'Dikirim',
-        Order::STATUS_COMPLETED => 'Selesai',
+        Order::STATUS_COMPLETED => 'Pesanan Diterima & Selesai',
         Order::STATUS_CANCELLED => 'Dibatalkan',
         Order::STATUS_EXPIRED => 'Kedaluwarsa',
     ];

@@ -11,6 +11,7 @@
             'paid' => 'Dibayar',
             'packing' => 'Sedang dikemas',
             'shipped' => 'Dikirim',
+            'completed' => 'Pesanan Diterima & Selesai',
             'cancelled' => 'Dibatalkan',
             'expired' => 'Kedaluwarsa',
         ];
@@ -21,6 +22,7 @@
             'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
+            'completed' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'cancelled' => 'bg-slate-200 text-slate-800 ring-1 ring-inset ring-slate-300',
             'expired' => 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-300',
         ];
@@ -156,6 +158,23 @@
                 </table>
             </div>
 
+            @if ($order->status === 'shipped')
+                <div class="border-t border-slate-200 bg-emerald-50/60 px-5 py-5 sm:px-7">
+                    <h2 class="font-semibold text-slate-900">Pesanan sudah sampai?</h2>
+                    <p class="mt-1 text-sm text-slate-600">Konfirmasikan setelah barang diterima. Kamu bisa memberi ulasan untuk produk setelahnya.</p>
+                    <form method="POST" action="{{ route('account.orders.confirm-receipt', $order) }}" class="mt-4 flex justify-end" data-confirm-title="Pesanan sudah diterima?" data-confirm-description="Pastikan semua barang dalam pesanan ini sudah kamu terima. Setelah dikonfirmasi, status pesanan menjadi Selesai dan kamu bisa memberi ulasan produk." data-confirm-button="Ya, konfirmasi diterima">
+                        @csrf
+                        <button type="submit" class="inline-flex min-h-10 items-center justify-center rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">Konfirmasi barang diterima</button>
+                    </form>
+                </div>
+            @elseif ($order->status === 'completed' && $order->receipt_confirmed_at && $order->items->contains(fn ($item) => $item->product_id && ! $item->review))
+                <div class="border-t border-slate-200 bg-amber-50/60 px-5 py-5 sm:px-7">
+                    <h2 class="font-semibold text-slate-900">Bagaimana produk yang kamu terima?</h2>
+                    <p class="mt-1 text-sm text-slate-600">Bagikan rating dan pengalamanmu. Ulasan akan langsung tampil di halaman produk.</p>
+                    <a href="{{ route('account.orders.reviews.create', $order) }}" class="mt-4 inline-flex min-h-10 items-center justify-center rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Beri ulasan produk</a>
+                </div>
+            @endif
+
             <div class="border-t border-slate-200 px-5 py-5 sm:px-7">
                 <h2 class="font-semibold text-slate-900">Riwayat status</h2>
                 @php
@@ -211,7 +230,76 @@
         </div>
     </section>
 
+    <dialog data-receipt-confirmation-dialog aria-labelledby="receipt-confirmation-title" aria-describedby="receipt-confirmation-description" class="m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 text-slate-900 shadow-2xl backdrop:bg-slate-950/60">
+        <div class="p-6 sm:p-7">
+            <div class="flex items-start gap-4">
+                <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700" aria-hidden="true">
+                    <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path stroke-linecap="round" stroke-linejoin="round" d="m8 12 2.5 2.5L16 9"/></svg>
+                </span>
+                <div>
+                    <p class="text-sm font-semibold text-emerald-700">Konfirmasi penerimaan</p>
+                    <h2 data-receipt-confirmation-title id="receipt-confirmation-title" class="mt-1 text-xl font-semibold text-slate-900">Pesanan sudah diterima?</h2>
+                </div>
+            </div>
+            <p data-receipt-confirmation-description id="receipt-confirmation-description" class="mt-5 text-sm leading-6 text-slate-600"></p>
+            <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button type="button" data-receipt-confirmation-cancel class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-400">Nanti</button>
+                <button type="button" data-receipt-confirmation-submit class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2">Ya, konfirmasi diterima</button>
+            </div>
+        </div>
+    </dialog>
+
     <script>
+        (() => {
+            const dialog = document.querySelector('[data-receipt-confirmation-dialog]');
+            const title = dialog?.querySelector('[data-receipt-confirmation-title]');
+            const description = dialog?.querySelector('[data-receipt-confirmation-description]');
+            const submitButton = dialog?.querySelector('[data-receipt-confirmation-submit]');
+            const cancelButton = dialog?.querySelector('[data-receipt-confirmation-cancel]');
+            let pendingForm = null;
+
+            document.addEventListener('submit', (event) => {
+                const form = event.target;
+                if (!(form instanceof HTMLFormElement) || !form.hasAttribute('data-confirm-title')) {
+                    return;
+                }
+
+                event.preventDefault();
+                pendingForm = form;
+                title.textContent = form.dataset.confirmTitle || 'Konfirmasi tindakan ini?';
+                description.textContent = form.dataset.confirmDescription || 'Pastikan kamu ingin melanjutkan tindakan ini.';
+                submitButton.textContent = form.dataset.confirmButton || 'Ya, lanjutkan';
+                dialog.showModal();
+            });
+
+            submitButton?.addEventListener('click', () => {
+                if (!pendingForm) {
+                    return;
+                }
+
+                const form = pendingForm;
+                pendingForm = null;
+                dialog.close();
+                form.submit();
+            });
+
+            cancelButton?.addEventListener('click', () => {
+                pendingForm = null;
+                dialog.close();
+            });
+
+            dialog?.addEventListener('click', (event) => {
+                if (event.target === dialog) {
+                    pendingForm = null;
+                    dialog.close();
+                }
+            });
+
+            dialog?.addEventListener('close', () => {
+                pendingForm = null;
+            });
+        })();
+
         document.querySelectorAll('[data-copy-tracking-number]').forEach((button) => {
             button.addEventListener('click', async () => {
                 const trackingNumber = button.dataset.copyTrackingNumber;

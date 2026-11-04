@@ -28,6 +28,7 @@
             'paid' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'packing' => 'bg-violet-100 text-violet-900 ring-1 ring-inset ring-violet-300',
             'shipped' => 'bg-cyan-100 text-cyan-900 ring-1 ring-inset ring-cyan-300',
+            'completed' => 'bg-emerald-100 text-emerald-900 ring-1 ring-inset ring-emerald-300',
             'cancelled' => 'bg-slate-200 text-slate-800 ring-1 ring-inset ring-slate-300',
             'expired' => 'bg-rose-100 text-rose-700 ring-1 ring-inset ring-rose-300',
         ];
@@ -291,6 +292,11 @@
                                     <span class="rounded-full px-2.5 py-1 text-xs font-semibold {{ $historyStyle }}">
                                         {{ $isPaymentProofRejected ? 'Bukti ditolak' : ($statusLabels[$history->to_status] ?? $history->to_status) }}
                                     </span>
+                                    @if ($history->to_status === 'completed')
+                                        <a href="{{ route('admin.product-reviews.index', ['order' => $order->id]) }}" class="text-xs font-semibold text-amber-700 hover:text-amber-800 hover:underline">
+                                            Lihat ulasan produk
+                                        </a>
+                                    @endif
                                 </div>
                                 @if ($history->message)
                                     <p class="mt-1 text-sm text-slate-600">{{ $history->message }}</p>
@@ -308,6 +314,8 @@
                                     <span aria-hidden="true">·</span>
                                     @if ($history->from_status === null)
                                         Oleh Pelanggan
+                                    @elseif ($history->to_status === 'completed')
+                                        Oleh Pembeli ({{ $order->customer_name }})
                                     @else
                                         Oleh Admin ({{ $history->actor_name ?? 'Tidak diketahui' }})
                                     @endif

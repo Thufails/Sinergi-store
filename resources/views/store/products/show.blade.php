@@ -58,6 +58,59 @@
                 </div>
             </div>
         </div>
+
+        <section class="mt-12 border-t border-slate-200 pt-10" aria-labelledby="product-reviews-heading">
+            <div class="flex flex-wrap items-end justify-between gap-4">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-[0.2em] text-amber-700">Pengalaman pembeli</p>
+                    <h2 id="product-reviews-heading" class="mt-2 text-2xl font-semibold tracking-tight text-slate-950">Ulasan produk</h2>
+                </div>
+                @if ($reviewCount > 0)
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-slate-950">{{ number_format($averageRating, 1) }} <span class="text-amber-500">★</span></p>
+                        <p class="text-sm text-slate-500">{{ $reviewCount }} ulasan</p>
+                    </div>
+                @endif
+            </div>
+
+            @if ($productReviews->isEmpty())
+                <div class="mt-5 rounded-2xl border border-dashed border-slate-300 bg-slate-50 px-5 py-8 text-center">
+                    <p class="font-medium text-slate-800">Belum ada ulasan untuk produk ini.</p>
+                    <p class="mt-1 text-sm text-slate-500">Ulasan pembeli akan muncul di sini setelah pesanan diterima.</p>
+                </div>
+            @else
+                <div class="mt-5 divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white px-5 sm:px-6">
+                    @foreach ($productReviews as $review)
+                        <article class="py-5">
+                            <div class="flex flex-wrap items-start justify-between gap-3">
+                                <div>
+                                    <p class="font-semibold text-slate-900">{{ $review->customer?->name ?? 'Pembeli Sinergi Store' }}</p>
+                                    <p class="mt-0.5 text-xs text-slate-500">Pembeli terverifikasi · {{ $review->created_at->timezone('Asia/Jakarta')->format('d M Y') }}</p>
+                                </div>
+                                <div class="flex gap-0.5 text-amber-500" aria-label="Rating {{ $review->rating }} dari 5">
+                                    @for ($star = 1; $star <= 5; $star++)<span aria-hidden="true">{{ $star <= $review->rating ? '★' : '☆' }}</span>@endfor
+                                </div>
+                            </div>
+                            @if ($review->comment)<p class="mt-3 whitespace-pre-line text-sm leading-6 text-slate-700">{{ $review->comment }}</p>@endif
+                            @if ($review->media_paths)
+                                <div class="mt-4 flex flex-wrap gap-3">
+                                    @foreach ($review->media_paths as $mediaPath)
+                                        @php($mediaExtension = strtolower(pathinfo($mediaPath, PATHINFO_EXTENSION)))
+                                        @if (in_array($mediaExtension, ['mp4', 'mov', 'webm'], true))
+                                            <video controls preload="metadata" class="max-h-72 max-w-full rounded-xl border border-slate-200" aria-label="Video ulasan pembeli"><source src="{{ asset('storage/' . $mediaPath) }}"></video>
+                                        @else
+                                            <a href="{{ asset('storage/' . $mediaPath) }}" target="_blank" rel="noopener noreferrer" class="block">
+                                                <img src="{{ asset('storage/' . $mediaPath) }}" alt="Foto ulasan dari {{ $review->customer?->name ?? 'pembeli' }}" loading="lazy" class="h-24 w-24 rounded-xl border border-slate-200 object-cover sm:h-28 sm:w-28">
+                                            </a>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @endif
+                        </article>
+                    @endforeach
+                </div>
+            @endif
+        </section>
     </section>
 
     <script>
