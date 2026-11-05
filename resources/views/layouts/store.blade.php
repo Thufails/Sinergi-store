@@ -94,8 +94,16 @@
                 </nav>
 
                 <div class="flex shrink-0 items-center gap-2">
+                    <a href="{{ route('account.chats.index') }}" aria-label="Percakapan saya" title="Percakapan saya" @class(['inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2', 'border-amber-300 bg-amber-50 text-amber-800' => request()->routeIs('account.chats.*'), 'border-slate-200 text-slate-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700' => ! request()->routeIs('account.chats.*')])>
+                        <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M20.5 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20.5 11.5Z" />
+                            <circle cx="8.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+                            <circle cx="12" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+                            <circle cx="15.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+                        </svg>
+                    </a>
                     @auth('customer')
-                        <a href="{{ route('account.profile') }}" aria-label="Profil saya" title="Profil saya" class="hidden h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-700 transition hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex">
+                        <a href="{{ route('account.profile') }}" aria-label="Profil saya" title="Profil saya" @class(['hidden h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex', 'border-amber-300 bg-amber-50 text-amber-800' => request()->routeIs('account.profile*'), 'border-slate-200 text-slate-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700' => ! request()->routeIs('account.profile*')])>
                             <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                                 <circle cx="12" cy="8" r="3.25" />
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M5.5 20a6.5 6.5 0 0 1 13 0" />
@@ -146,6 +154,7 @@
                     <a href="{{ route('store.home') }}#services" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="services">Jasa</a>
                     <a href="{{ route('store.home') }}#contact" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="contact">Kontak</a>
                     <a href="{{ route('store.products.index') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="products" @if (request()->routeIs('store.products.*')) aria-current="page" @endif>Produk</a>
+                    <a href="{{ route('account.chats.index') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" @if (request()->routeIs('account.chats.*')) aria-current="page" @endif>Percakapan saya</a>
                     @auth('customer')
                         <a href="{{ route('account.orders') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" data-store-nav="orders" @if (request()->routeIs('account.orders*')) aria-current="page" @endif>Pesanan Saya</a>
                         <a href="{{ route('account.profile') }}" class="store-mobile-nav-link rounded-lg px-3 py-2 hover:bg-slate-100" @if (request()->routeIs('account.profile*')) aria-current="page" @endif>Profil saya</a>

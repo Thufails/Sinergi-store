@@ -118,6 +118,11 @@ Route::middleware('auth')
 
 // ==================== PUBLIC STORE ====================
 Route::prefix('account')->name('account.')->group(function () {
+    Route::get('/chats', [ProductConversationController::class, 'index'])
+        ->name('chats.index');
+    Route::get('/chats/{conversation}', [ProductConversationController::class, 'show'])
+        ->name('chats.show');
+
     Route::middleware('guest:customer')->group(function () {
         Route::get('/register', [CustomerAuthController::class, 'showRegistrationForm'])
             ->name('register');

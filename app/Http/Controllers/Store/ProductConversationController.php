@@ -8,15 +8,50 @@ use App\Models\ProductConversation;
 use App\Models\ProductConversationMessage;
 use App\Services\ProductAvailabilityService;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
+use Illuminate\View\View;
 
 class ProductConversationController extends Controller
 {
+    public function index(Request $request): View
+    {
+        $conversations = $this->conversationQuery($request)
+            ->with(['product:id,name,slug,image', 'latestMessage'])
+            ->withCount([
+                'messages as unread_messages_count' => fn (Builder $query) => $query
+                    ->whereIn('sender_type', ['system', 'admin'])
+                    ->whereNull('read_at'),
+            ])
+            ->orderByDesc('last_message_at')
+            ->orderByDesc('id')
+            ->paginate(10);
+
+        return view('store.chats.index', compact('conversations'));
+    }
+
+    public function show(Request $request, ProductConversation $conversation): View
+    {
+        $conversation = $this->conversationQuery($request)->findOrFail($conversation->id);
+        $conversation->messages()
+            ->whereIn('sender_type', ['system', 'admin'])
+            ->whereNull('read_at')
+            ->update(['read_at' => now()]);
+
+        $conversation->load([
+            'product:id,name,slug,image',
+            'productVariant:id,size,color',
+            'messages' => fn (HasMany $query) => $query->with('user:id,name')->orderBy('id'),
+        ]);
+
+        return view('store.chats.show', compact('conversation'));
+    }
+
     public function start(Request $request, Product $product, ProductAvailabilityService $productAvailability): JsonResponse
     {
         $product->loadMissing(['category', 'variants']);
