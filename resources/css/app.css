@@ -629,3 +629,41 @@ html[data-admin-theme='dark'] body.store-app .store-main .hover\:bg-slate-50:hov
 html[data-admin-theme='dark'] body.store-app .store-main .hover\:bg-slate-100:hover {
     background-color: #243148;
 }
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel {
+    border-color: #64748b;
+    background-color: #1b2940;
+    box-shadow: 0 0 0 1px rgb(148 163 184 / 18%), 0 24px 55px rgb(2 6 23 / 60%);
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel > header,
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-bot-form] {
+    border-color: #53647d;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel > header {
+    background-color: #202f47;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-bot-messages] > div:first-child {
+    background-color: #111b2d;
+    color: #e2e8f0;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-prompt] {
+    border-color: #64748b;
+    color: #d1d9e5;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-prompt]:hover {
+    border-color: #f59e0b;
+    color: #fcd34d;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-bot-input] {
+    border-color: #64748b;
+}
+
+html[data-admin-theme='dark'] body.store-app #faq-bot-panel [data-faq-bot-input]:focus {
+    border-color: #f59e0b;
+}

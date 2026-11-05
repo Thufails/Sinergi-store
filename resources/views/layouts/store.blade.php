@@ -170,8 +170,9 @@
             <div aria-hidden="true" class="pointer-events-none absolute -left-24 -top-36 h-80 w-80 rounded-full border-[36px] border-amber-200/10"></div>
             <div aria-hidden="true" class="pointer-events-none absolute -bottom-48 -right-16 h-[26rem] w-[26rem] rounded-full border-[42px] border-amber-200/10"></div>
             <div aria-hidden="true" class="pointer-events-none absolute right-[18%] top-8 h-24 w-40 rotate-12 rounded-3xl border border-amber-100/15 bg-white/5 backdrop-blur-sm"></div>
+            <div aria-hidden="true" class="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-b from-transparent via-slate-950/80 to-slate-950 sm:h-36"></div>
 
-            <div class="relative mx-auto grid max-w-7xl items-stretch gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div class="relative z-10 mx-auto grid max-w-7xl items-stretch gap-5 lg:grid-cols-[1.05fr_0.95fr]">
                 <div class="flex flex-col items-center justify-center rounded-3xl border border-white/10 bg-slate-950/20 px-6 py-10 text-center shadow-xl shadow-orange-950/10 sm:px-10 sm:py-12">
                     <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-200">Sinergi Store &amp; Sinergi Creative</p>
                     <h2 id="store-cta-title" class="mx-auto mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-white sm:text-4xl xl:text-[2.7rem]">

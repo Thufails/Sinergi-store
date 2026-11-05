@@ -320,4 +320,208 @@
         </div>
     </section>
 
+    <div class="fixed bottom-5 right-5 z-40 flex flex-col items-end sm:bottom-6 sm:right-6" data-faq-bot>
+        <section
+            id="faq-bot-panel"
+            class="mb-3 hidden w-[calc(100vw-2.5rem)] max-w-sm overflow-hidden rounded-2xl border border-slate-300 bg-white shadow-2xl shadow-slate-950/20"
+            aria-label="Bantuan Sinergi Store"
+            aria-hidden="true"
+        >
+            <header class="flex items-start justify-between gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4">
+                <div>
+                    <p class="font-semibold text-slate-900">Bantuan Sinergi Store</p>
+                    <p class="mt-1 text-xs text-slate-500">Jawaban cepat untuk pertanyaan umum</p>
+                </div>
+                <button
+                    type="button"
+                    class="rounded-lg p-1 text-slate-500 transition hover:bg-slate-200 hover:text-slate-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    aria-label="Tutup chat bantuan"
+                    data-faq-bot-close
+                >
+                    <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                        <path stroke-linecap="round" d="m6 6 12 12M18 6 6 18" />
+                    </svg>
+                </button>
+            </header>
+
+            <div class="flex h-[min(55vh,24rem)] flex-col">
+                <div class="flex-1 space-y-3 overflow-y-auto px-4 py-4" data-faq-bot-messages aria-live="polite" aria-relevant="additions text">
+                    <div class="max-w-[90%] rounded-2xl rounded-tl-sm bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-700">
+                        Halo! Ada yang ingin kamu tanyakan tentang produk atau pesanan?
+                    </div>
+                    <div class="flex flex-wrap gap-2" data-faq-bot-suggestions>
+                        <button type="button" class="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-amber-500 hover:text-amber-700" data-faq-prompt="Cara memesan produk">Cara memesan</button>
+                        <button type="button" class="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-amber-500 hover:text-amber-700" data-faq-prompt="Bagaimana ongkir dihitung?">Ongkir</button>
+                        <button type="button" class="rounded-full border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-600 transition hover:border-amber-500 hover:text-amber-700" data-faq-prompt="Cara cek status pesanan">Status pesanan</button>
+                    </div>
+                </div>
+
+                <form class="border-t border-slate-200 p-3" data-faq-bot-form>
+                    @csrf
+                    <label class="sr-only" for="faq-bot-message">Tulis pertanyaan</label>
+                    <div class="flex items-end gap-2">
+                        <textarea
+                            id="faq-bot-message"
+                            name="message"
+                            rows="1"
+                            maxlength="500"
+                            required
+                            placeholder="Tulis pertanyaan..."
+                            class="max-h-28 min-h-11 flex-1 resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
+                            data-faq-bot-input
+                        ></textarea>
+                        <button
+                            type="submit"
+                            class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 text-slate-950 transition hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 disabled:cursor-wait disabled:opacity-60"
+                            aria-label="Kirim pertanyaan"
+                            data-faq-bot-submit
+                        >
+                            <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="m22 2-7 20-4-9-9-4 20-7ZM22 2 11 13" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="mt-2 px-1 text-[11px] text-slate-500">Jawaban otomatis memakai FAQ. Pesan tidak disimpan.</p>
+                </form>
+            </div>
+        </section>
+
+        <button
+            type="button"
+            class="flex h-14 w-14 items-center justify-center rounded-full bg-amber-500 text-slate-950 shadow-lg shadow-amber-950/20 transition hover:-translate-y-0.5 hover:bg-amber-400 focus:outline-none focus:ring-4 focus:ring-amber-500/30"
+            aria-label="Buka chat bantuan"
+            aria-controls="faq-bot-panel"
+            aria-expanded="false"
+            data-faq-bot-toggle
+        >
+        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M20.5 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20.5 11.5Z" />
+            <circle cx="8.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+            <circle cx="12" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+            <circle cx="15.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
+            </svg>
+        </button>
+    </div>
+
 @endsection
+
+@push('scripts')
+    <script>
+        (() => {
+            const widget = document.querySelector('[data-faq-bot]');
+            if (!widget) return;
+
+            const panel = widget.querySelector('#faq-bot-panel');
+            const toggle = widget.querySelector('[data-faq-bot-toggle]');
+            const closeButton = widget.querySelector('[data-faq-bot-close]');
+            const form = widget.querySelector('[data-faq-bot-form]');
+            const input = widget.querySelector('[data-faq-bot-input]');
+            const submitButton = widget.querySelector('[data-faq-bot-submit]');
+            const messages = widget.querySelector('[data-faq-bot-messages]');
+            const suggestions = widget.querySelector('[data-faq-bot-suggestions]');
+            const csrfToken = form.querySelector('input[name="_token"]').value;
+            const endpoint = @json(route('store.faq-bot.message'));
+
+            const setPanelOpen = (isOpen) => {
+                panel.classList.toggle('hidden', !isOpen);
+                panel.setAttribute('aria-hidden', String(!isOpen));
+                toggle.setAttribute('aria-expanded', String(isOpen));
+                toggle.setAttribute('aria-label', isOpen ? 'Tutup chat bantuan' : 'Buka chat bantuan');
+
+                if (isOpen) input.focus();
+                else toggle.focus();
+            };
+
+            const appendMessage = (text, isCustomer = false) => {
+                const bubble = document.createElement('div');
+                bubble.className = isCustomer
+                    ? 'ml-auto max-w-[90%] rounded-2xl rounded-tr-sm bg-amber-500 px-4 py-3 text-sm leading-6 text-slate-950'
+                    : 'max-w-[90%] rounded-2xl rounded-tl-sm bg-slate-100 px-4 py-3 text-sm leading-6 text-slate-700';
+                bubble.textContent = text;
+                messages.append(bubble);
+                messages.scrollTop = messages.scrollHeight;
+                return bubble;
+            };
+
+            const appendContactLink = (url) => {
+                let parsedUrl;
+                try {
+                    parsedUrl = new URL(url);
+                } catch {
+                    return;
+                }
+
+                if (parsedUrl.protocol !== 'https:' || parsedUrl.hostname !== 'wa.me') return;
+
+                const link = document.createElement('a');
+                link.href = parsedUrl.href;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.className = 'inline-flex rounded-full border border-amber-500 px-3 py-1.5 text-xs font-semibold text-amber-700 transition hover:bg-amber-50';
+                link.textContent = 'Hubungi admin via WhatsApp';
+                messages.append(link);
+                messages.scrollTop = messages.scrollHeight;
+            };
+
+            const sendMessage = async (message) => {
+                const cleanMessage = message.trim();
+                if (!cleanMessage || submitButton.disabled) return;
+
+                if (suggestions) suggestions.remove();
+                appendMessage(cleanMessage, true);
+                input.value = '';
+                submitButton.disabled = true;
+
+                const waitingMessage = appendMessage('Sebentar, aku carikan jawabannya...');
+
+                try {
+                    const response = await fetch(endpoint, {
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                        body: JSON.stringify({ message: cleanMessage }),
+                    });
+                    const result = await response.json();
+                    waitingMessage.remove();
+
+                    if (!response.ok) {
+                        const errorMessage = response.status === 429
+                            ? 'Terlalu banyak pertanyaan dalam waktu singkat. Coba lagi sebentar, ya.'
+                            : (result.message || 'Pertanyaan belum bisa diproses. Coba lagi, ya.');
+                        appendMessage(errorMessage);
+                        return;
+                    }
+
+                    appendMessage(result.reply || 'Maaf, jawaban belum tersedia.');
+                    if (result.contact_url) appendContactLink(result.contact_url);
+                } catch {
+                    waitingMessage.remove();
+                    appendMessage('Koneksi sedang bermasalah. Coba kirim pertanyaan lagi atau hubungi admin melalui WhatsApp.');
+                } finally {
+                    submitButton.disabled = false;
+                    input.focus();
+                }
+            };
+
+            toggle.addEventListener('click', () => {
+                setPanelOpen(toggle.getAttribute('aria-expanded') !== 'true');
+            });
+            closeButton.addEventListener('click', () => setPanelOpen(false));
+            form.addEventListener('submit', (event) => {
+                event.preventDefault();
+                sendMessage(input.value);
+            });
+            widget.querySelectorAll('[data-faq-prompt]').forEach((button) => {
+                button.addEventListener('click', () => sendMessage(button.dataset.faqPrompt || ''));
+            });
+            document.addEventListener('keydown', (event) => {
+                if (event.key === 'Escape' && toggle.getAttribute('aria-expanded') === 'true') {
+                    setPanelOpen(false);
+                }
+            });
+        })();
+    </script>
+@endpush

@@ -13,6 +13,7 @@ use App\Http\Controllers\Store\CustomerAddressController;
 use App\Http\Controllers\Store\CustomerAuthController;
 use App\Http\Controllers\Store\CustomerOrderController;
 use App\Http\Controllers\Store\CustomerProfileController;
+use App\Http\Controllers\Store\FaqBotController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
 use App\Http\Controllers\Store\TestimonialController as StoreTestimonialController;
@@ -169,6 +170,10 @@ Route::prefix('account')->name('account.')->group(function () {
 
 Route::get('/', [HomeController::class, 'index'])
     ->name('store.home');
+
+Route::post('/faq-bot/message', [FaqBotController::class, 'respond'])
+    ->middleware('throttle:10,1')
+    ->name('store.faq-bot.message');
 
 Route::get('/products', [StoreProductController::class, 'index'])
     ->name('store.products.index');
