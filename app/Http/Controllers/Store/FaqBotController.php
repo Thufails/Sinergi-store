@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
+use App\Models\Category;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -91,12 +93,96 @@ class FaqBotController extends Controller
             ],
         ];
 
+        /** @var list<string> $productCategoryKeywords */
+        $productCategoryKeywords = [
+            'ada produk apa',
+            'ada produk apa saja',
+            'produk apa saja',
+            'produk apa aja',
+            'produk apa',
+            'ada produk apa aja',
+            'jual produk apa',
+            'jual apa saja',
+            'jual apa aja',
+            'menjual apa',
+            'barang apa saja',
+            'barang apa aja',
+            'jenis produk',
+            'katalog produk',
+            'katalog',
+        ];
+
+        foreach ($productCategoryKeywords as $keyword) {
+            if ($this->containsKeyword($message, $keyword)) {
+                $productCategories = Category::query()
+                    ->where('is_active', true)
+                    ->whereHas('products', fn (Builder $query) => $query->where('is_active', true))
+                    ->inRandomOrder()
+                    ->limit(3)
+                    ->pluck('name');
+
+                if ($productCategories->isEmpty()) {
+                    return response()->json([
+                        'matched' => true,
+                        'reply' => 'Saat ini belum ada kategori produk aktif yang tersedia di katalog. Silakan coba lagi nanti atau hubungi admin melalui WhatsApp.',
+                    ]);
+                }
+
+                $categoryNames = $productCategories->take(2)->implode(' dan ');
+                $moreCategories = $productCategories->count() > 2 ? ', dan lainnya' : '';
+
+                return response()->json([
+                    'matched' => true,
+                    'reply' => 'Produk yang tersedia antara lain kategori '.$categoryNames.$moreCategories.'. Lihat katalog pada menu Produk untuk daftar lengkapnya.',
+                ]);
+            }
+        }
+
         foreach ($faqResponses as $faqResponse) {
             foreach ($faqResponse['keywords'] as $keyword) {
                 if ($this->containsKeyword($message, $keyword)) {
                     return response()->json([
                         'matched' => true,
                         'reply' => $faqResponse['reply'],
+                    ]);
+                }
+            }
+        }
+
+        /** @var array<array{keywords: list<string>, reply: string}> $conversationalResponses */
+        $conversationalResponses = [
+            [
+                'keywords' => ['terima kasih', 'terimakasih', 'makasih', 'makasi', 'thanks', 'thank you', 'okeoke jos'],
+                'reply' => 'Sama-sama! Senang bisa membantu. Kalau ada pertanyaan lain soal produk, pesanan, atau jasa, langsung tanya aja ya.',
+            ],
+        ];
+
+        /** @var array<string, string> $greetings */
+        $greetings = [
+            'selamat pagi' => 'Selamat pagi',
+            'selamat siang' => 'Selamat siang',
+            'selamat sore' => 'Selamat sore',
+            'selamat malam' => 'Selamat malam',
+            'halo' => 'Halo',
+            'hai' => 'Hai',
+            'hi' => 'Hi',
+        ];
+
+        foreach ($greetings as $keyword => $greeting) {
+            if ($this->containsKeyword($message, $keyword)) {
+                return response()->json([
+                    'matched' => true,
+                    'reply' => $greeting.'! Ada yang ingin kamu tanyakan tentang produk, pesanan, ongkir, atau jasa kami?',
+                ]);
+            }
+        }
+
+        foreach ($conversationalResponses as $conversationalResponse) {
+            foreach ($conversationalResponse['keywords'] as $keyword) {
+                if ($this->containsKeyword($message, $keyword)) {
+                    return response()->json([
+                        'matched' => true,
+                        'reply' => $conversationalResponse['reply'],
                     ]);
                 }
             }
@@ -111,7 +197,7 @@ class FaqBotController extends Controller
 
     private function containsKeyword(string $message, string $keyword): bool
     {
-        $pattern = '/(^|\s)'.preg_quote($keyword, '/').'(?=\s|$)/u';
+        $pattern = '/(?<![\p{L}\p{N}_])'.preg_quote($keyword, '/').'(?![\p{L}\p{N}_])/u';
 
         return preg_match($pattern, $message) === 1;
     }
