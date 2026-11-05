@@ -25,6 +25,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer('layouts.admin', function (\Illuminate\View\View $view): void {
             $unreadChatConversations = auth()->check()
                 ? ProductConversation::query()
+                    ->where('status', '!=', 'closed')
                     ->whereHas('messages', fn (Builder $query) => $query
                         ->where('sender_type', 'customer')
                         ->whereNull('read_at'))

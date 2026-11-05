@@ -14,10 +14,24 @@
             <span class="rounded-full bg-amber-100 px-3 py-1.5 text-sm font-semibold text-amber-900" data-admin-unread-count>{{ $unreadConversationCount }} belum dibaca</span>
         </div>
 
+        <nav class="flex gap-2 border-b border-slate-200 px-5 py-3 sm:px-6" aria-label="Filter percakapan">
+            <a href="{{ route('admin.chats.index', ['view' => 'active']) }}" @class(['rounded-lg px-3 py-2 text-sm font-semibold transition', 'bg-amber-100 text-amber-900' => $selectedView === 'active', 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' => $selectedView !== 'active']) @if ($selectedView === 'active') aria-current="page" @endif>
+                Percakapan aktif
+            </a>
+            <a href="{{ route('admin.chats.index', ['view' => 'closed']) }}" @class(['rounded-lg px-3 py-2 text-sm font-semibold transition', 'bg-amber-100 text-amber-900' => $selectedView === 'closed', 'text-slate-600 hover:bg-slate-100 hover:text-slate-900' => $selectedView !== 'closed']) @if ($selectedView === 'closed') aria-current="page" @endif>
+                Selesai
+            </a>
+        </nav>
+
         @if ($conversations->isEmpty())
             <div class="px-6 py-16 text-center">
-                <p class="font-medium text-slate-700">Belum ada chat dari pembeli.</p>
-                <p class="mt-1 text-sm text-slate-500">Percakapan baru dari halaman produk akan muncul di inbox ini.</p>
+                @if ($selectedView === 'closed')
+                    <p class="font-medium text-slate-700">Belum ada percakapan yang selesai.</p>
+                    <p class="mt-1 text-sm text-slate-500">Percakapan yang ditutup akan tersimpan di sini.</p>
+                @else
+                    <p class="font-medium text-slate-700">Belum ada chat dari pembeli.</p>
+                    <p class="mt-1 text-sm text-slate-500">Percakapan baru dari halaman produk akan muncul di inbox ini.</p>
+                @endif
             </div>
         @else
             <div class="divide-y divide-slate-100">

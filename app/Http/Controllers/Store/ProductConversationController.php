@@ -19,6 +19,27 @@ use Illuminate\View\View;
 
 class ProductConversationController extends Controller
 {
+    public function unreadCount(Request $request): JsonResponse
+    {
+        $conversationQuery = $this->conversationQuery($request);
+        $conversationIds = (clone $conversationQuery)->select('id');
+        $unreadMessages = ProductConversationMessage::query()
+            ->whereIn('product_conversation_id', $conversationIds)
+            ->whereIn('sender_type', ['system', 'admin'])
+            ->whereNull('read_at')
+            ->count();
+        $unreadConversations = $conversationQuery
+            ->whereHas('messages', fn (Builder $query) => $query
+                ->whereIn('sender_type', ['system', 'admin'])
+                ->whereNull('read_at'))
+            ->count();
+
+        return response()->json([
+            'unread_messages' => $unreadMessages,
+            'unread_conversations' => $unreadConversations,
+        ]);
+    }
+
     public function index(Request $request): View
     {
         $conversations = $this->conversationQuery($request)
@@ -162,15 +183,22 @@ class ProductConversationController extends Controller
         }
 
         $product = $conversation->product()->with('variants')->first();
-        $automaticReply = $product
-            ? $this->replyToCustomerMessage($conversation, $product, $body, $productAvailability)
-            : 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.';
+        $isClosingMessage = $this->isConversationClosingMessage($body);
+        $automaticReply = $isClosingMessage
+            ? $this->closingReply()
+            : ($product
+                ? $this->replyToCustomerMessage($conversation, $product, $body, $productAvailability)
+                : 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.');
 
-        $messages = DB::transaction(function () use ($conversation, $body, $automaticReply): array {
+        $messages = DB::transaction(function () use ($conversation, $body, $automaticReply, $isClosingMessage): array {
             $customerMessage = $conversation->messages()->create([
                 'sender_type' => 'customer',
                 'body' => $body,
             ]);
+
+            if ($isClosingMessage) {
+                $customerMessage->forceFill(['read_at' => now()])->save();
+            }
 
             $systemMessage = $conversation->messages()->create([
                 'sender_type' => 'system',
@@ -178,7 +206,7 @@ class ProductConversationController extends Controller
             ]);
 
             $conversation->forceFill([
-                'status' => 'waiting_admin',
+                'status' => $isClosingMessage ? 'closed' : 'waiting_admin',
                 'last_message_at' => $systemMessage->created_at,
             ])->save();
 
@@ -187,7 +215,7 @@ class ProductConversationController extends Controller
 
         return response()->json([
             'messages' => $this->serializeMessages(collect($messages)),
-            'status' => 'waiting_admin',
+            'status' => $isClosingMessage ? 'closed' : 'waiting_admin',
         ], 201);
     }
 
@@ -251,6 +279,10 @@ class ProductConversationController extends Controller
         string $message,
         ProductAvailabilityService $productAvailability,
     ): string {
+        if ($this->isConversationClosingMessage($message)) {
+            return $this->closingReply();
+        }
+
         $productAvailability->refresh($product);
         $availability = $this->availabilityForConversation($conversation, $product);
         $normalizedMessage = mb_strtolower($message);
@@ -271,6 +303,32 @@ class ProductConversationController extends Controller
         }
 
         return 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.';
+    }
+
+    private function isConversationClosingMessage(string $message): bool
+    {
+        $normalizedMessage = mb_strtolower(trim($message));
+        $normalizedMessage = preg_replace('/[.!?]+$/u', '', $normalizedMessage) ?? $normalizedMessage;
+        $normalizedMessage = preg_replace('/\s+/u', ' ', $normalizedMessage) ?? $normalizedMessage;
+
+        $closingPatterns = [
+            '/^(?:(?:oke|ok|sip|siap|baik|ya|iya)\s+)*(?:terima kasih|terimakasih|makasih|makasi|thanks|thank you)(?:\s+(?:min|admin|kak|mas|mbak|bang|sis|ya))*$/u',
+            '/^(?:udah|sudah)\s+(?:cukup|jelas)(?:\s+(?:makasih|terima kasih))?$/u',
+            '/^(?:itu aja|segitu dulu|cukup dulu|sampai sini saja|selesai)(?:\s+(?:makasih|terima kasih))?$/u',
+        ];
+
+        foreach ($closingPatterns as $pattern) {
+            if (preg_match($pattern, $normalizedMessage) === 1) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    private function closingReply(): string
+    {
+        return 'Sama-sama! Percakapan ini aku tandai selesai. Kalau ada pertanyaan lain, kirim pesan lagi kapan saja ya.';
     }
 
     /**
@@ -334,9 +392,15 @@ class ProductConversationController extends Controller
             $product = $lockedConversation->product()->with('variants')->first();
 
             foreach ($pendingCustomerMessages as $customerMessage) {
+                $isClosingMessage = $this->isConversationClosingMessage($customerMessage->body);
                 $reply = $product
                     ? $this->replyToCustomerMessage($lockedConversation, $product, $customerMessage->body, $productAvailability)
                     : 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.';
+
+                if ($isClosingMessage) {
+                    $customerMessage->forceFill(['read_at' => now()])->save();
+                    $reply = $this->closingReply();
+                }
 
                 $systemMessage = $lockedConversation->messages()->create([
                     'sender_type' => 'system',
@@ -344,7 +408,7 @@ class ProductConversationController extends Controller
                 ]);
 
                 $lockedConversation->forceFill([
-                    'status' => 'waiting_admin',
+                    'status' => $isClosingMessage ? 'closed' : 'waiting_admin',
                     'last_message_at' => $systemMessage->created_at,
                 ])->save();
             }

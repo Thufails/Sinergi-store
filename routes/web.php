@@ -74,6 +74,8 @@ Route::middleware('auth')
         Route::post('/chats/{conversation}/messages', [AdminProductConversationController::class, 'send'])
             ->middleware('throttle:30,1')
             ->name('admin.chats.messages.store');
+        Route::patch('/chats/{conversation}/close', [AdminProductConversationController::class, 'close'])
+            ->name('admin.chats.close');
 
         // Kelola pesanan yang dibuat dari halaman publik
         Route::get('/orders', [OrderController::class, 'index'])
@@ -118,6 +120,8 @@ Route::middleware('auth')
 
 // ==================== PUBLIC STORE ====================
 Route::prefix('account')->name('account.')->group(function () {
+    Route::get('/chats/unread-count', [ProductConversationController::class, 'unreadCount'])
+        ->name('chats.unread-count');
     Route::get('/chats', [ProductConversationController::class, 'index'])
         ->name('chats.index');
     Route::get('/chats/{conversation}', [ProductConversationController::class, 'show'])

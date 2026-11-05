@@ -15,15 +15,30 @@ use Illuminate\View\View;
 
 class ProductConversationController extends Controller
 {
-    public function index(): View
+    public function index(Request $request): View
     {
-        $conversations = ProductConversation::query()
+        $this->closeIdleWaitingConversations();
+
+        $filters = $request->validate([
+            'view' => ['nullable', 'in:active,closed'],
+        ]);
+        $selectedView = $filters['view'] ?? 'active';
+
+        $conversationQuery = ProductConversation::query()
             ->with(['customer:id,name,email,phone', 'product:id,name,slug,image', 'latestMessage'])
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
                     ->where('sender_type', 'customer')
                     ->whereNull('read_at'),
-            ])
+            ]);
+
+        if ($selectedView === 'closed') {
+            $conversationQuery->where('status', 'closed');
+        } else {
+            $conversationQuery->where('status', '!=', 'closed');
+        }
+
+        $conversations = $conversationQuery
             ->orderByRaw("CASE status WHEN 'waiting_admin' THEN 0 WHEN 'waiting_customer' THEN 1 ELSE 2 END")
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
@@ -31,11 +46,14 @@ class ProductConversationController extends Controller
 
         $unreadConversationCount = $this->unreadConversationCount();
 
-        return view('admin.chats.index', compact('conversations', 'unreadConversationCount'));
+        return view('admin.chats.index', compact('conversations', 'unreadConversationCount', 'selectedView'));
     }
 
     public function show(ProductConversation $conversation): View
     {
+        $this->closeIdleWaitingConversations();
+        $conversation->refresh();
+
         $conversation->messages()
             ->where('sender_type', 'customer')
             ->whereNull('read_at')
@@ -54,6 +72,9 @@ class ProductConversationController extends Controller
 
     public function messages(Request $request, ProductConversation $conversation): JsonResponse
     {
+        $this->closeIdleWaitingConversations();
+        $conversation->refresh();
+
         $validated = $request->validate([
             'after_id' => ['nullable', 'integer', 'min:0'],
         ]);
@@ -111,8 +132,43 @@ class ProductConversationController extends Controller
         ], 201);
     }
 
+    public function close(ProductConversation $conversation): JsonResponse
+    {
+        if ($conversation->status === 'closed') {
+            return response()->json([
+                'status' => 'closed',
+            ]);
+        }
+
+        $message = DB::transaction(function () use ($conversation): ProductConversationMessage {
+            $conversation->messages()
+                ->where('sender_type', 'customer')
+                ->whereNull('read_at')
+                ->update(['read_at' => now()]);
+
+            $message = $conversation->messages()->create([
+                'sender_type' => 'system',
+                'body' => 'Admin menandai percakapan ini selesai. Kalau masih butuh bantuan, kirim pesan lagi kapan saja.',
+            ]);
+
+            $conversation->forceFill([
+                'status' => 'closed',
+                'last_message_at' => $message->created_at,
+            ])->save();
+
+            return $message;
+        });
+
+        return response()->json([
+            'status' => 'closed',
+            'message' => $this->serializeMessages(collect([$message]))[0],
+        ]);
+    }
+
     public function unreadCount(): JsonResponse
     {
+        $this->closeIdleWaitingConversations();
+
         return response()->json([
             'unread_conversations' => $this->unreadConversationCount(),
         ]);
@@ -121,10 +177,20 @@ class ProductConversationController extends Controller
     private function unreadConversationCount(): int
     {
         return ProductConversation::query()
+            ->where('status', '!=', 'closed')
             ->whereHas('messages', fn (Builder $query) => $query
                 ->where('sender_type', 'customer')
                 ->whereNull('read_at'))
             ->count();
+    }
+
+    private function closeIdleWaitingConversations(): void
+    {
+        ProductConversation::query()
+            ->where('status', 'waiting_customer')
+            ->whereNotNull('last_message_at')
+            ->where('last_message_at', '<=', now()->subHours(48))
+            ->update(['status' => 'closed']);
     }
 
     /**

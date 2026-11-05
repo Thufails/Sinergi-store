@@ -24,7 +24,7 @@
         <section class="flex h-[min(75vh,52rem)] min-h-[32rem] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <header class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 px-5 py-4 sm:px-6">
                 <div class="flex min-w-0 items-center gap-3">
-                    <a href="{{ route('admin.chats.index') }}" class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Kembali ke inbox chat">
+                    <a href="{{ route('admin.chats.index', $conversation->status === 'closed' ? ['view' => 'closed'] : ['view' => 'active']) }}" class="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-slate-900" aria-label="Kembali ke inbox chat">
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 18 9 12l6-6"/></svg>
                     </a>
                     <div class="min-w-0">
@@ -32,7 +32,9 @@
                         <p class="truncate text-xs text-slate-500">{{ $conversation->customer?->email ?? 'Pembeli tanpa akun' }}</p>
                     </div>
                 </div>
-                <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyle }}" data-admin-chat-status>{{ $statusLabel }}</span>
+                <div class="flex items-center gap-2">
+                    <span class="rounded-full px-3 py-1 text-xs font-semibold {{ $statusStyle }}" data-admin-chat-status>{{ $statusLabel }}</span>
+                </div>
             </header>
 
             <div class="border-b border-slate-100 bg-slate-50 px-5 py-3 sm:px-6">
@@ -64,15 +66,25 @@
                 @endforelse
             </div>
 
-            <form class="border-t border-slate-200 bg-white p-3 sm:p-4" data-admin-chat-form data-customer-label="{{ $conversation->customer?->name ?? 'Tamu' }}" data-messages-url="{{ route('admin.chats.messages', $conversation) }}" data-send-url="{{ route('admin.chats.messages.store', $conversation) }}">
-                @csrf
-                <div class="flex items-end gap-2">
-                    <label for="admin-chat-message" class="sr-only">Tulis balasan kepada pembeli</label>
-                    <textarea id="admin-chat-message" rows="1" maxlength="2000" required placeholder="Tulis balasan..." class="max-h-32 min-h-11 flex-1 resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20" data-admin-chat-input></textarea>
+            @if ($conversation->status === 'closed')
+                <p class="border-t border-slate-200 bg-slate-50 px-5 py-4 text-center text-sm text-slate-600" data-admin-chat-closed-notice>
+                    Percakapan ini sudah selesai. Jika pembeli mengirim pesan baru, percakapan akan aktif kembali.
+                </p>
+            @else
+                <p class="hidden border-t border-slate-200 bg-slate-50 px-5 py-4 text-center text-sm text-slate-600" data-admin-chat-closed-notice>
+                    Percakapan ini sudah selesai. Jika pembeli mengirim pesan baru, percakapan akan aktif kembali.
+                </p>
+                <form class="border-t border-slate-200 bg-white p-3 sm:p-4" data-admin-chat-form data-customer-label="{{ $conversation->customer?->name ?? 'Tamu' }}" data-messages-url="{{ route('admin.chats.messages', $conversation) }}" data-send-url="{{ route('admin.chats.messages.store', $conversation) }}">
+                    @csrf
+                    <div class="flex flex-wrap items-end gap-2">
+                        <label for="admin-chat-message" class="sr-only">Tulis balasan kepada pembeli</label>
+                        <textarea id="admin-chat-message" rows="1" maxlength="2000" required placeholder="Tulis balasan..." class="max-h-32 min-h-11 min-w-[12rem] flex-1 resize-y rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:border-amber-500 focus:outline-none focus:ring-2 focus:ring-amber-500/20" data-admin-chat-input></textarea>
                     <button type="submit" class="inline-flex h-11 shrink-0 items-center justify-center rounded-xl bg-amber-500 px-4 text-sm font-semibold text-slate-950 transition hover:bg-amber-400 disabled:cursor-wait disabled:opacity-50" data-admin-chat-submit>Kirim</button>
-                </div>
-                <p class="mt-2 text-xs text-rose-600" data-admin-chat-error role="alert"></p>
-            </form>
+                    <button type="button" class="inline-flex h-11 shrink-0 items-center justify-center whitespace-nowrap rounded-xl border border-amber-300 px-3 text-xs font-semibold text-amber-900 transition hover:bg-amber-50 disabled:cursor-wait disabled:opacity-50 sm:px-4 sm:text-sm" data-admin-chat-close data-close-url="{{ route('admin.chats.close', $conversation) }}">Selesaikan percakapan</button>
+                    </div>
+                    <p class="mt-2 text-xs text-rose-600" data-admin-chat-error role="alert"></p>
+                </form>
+            @endif
         </section>
 
         <aside class="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -117,6 +129,8 @@
             const submitButton = form.querySelector('[data-admin-chat-submit]');
             const errorMessage = form.querySelector('[data-admin-chat-error]');
             const statusBadge = document.querySelector('[data-admin-chat-status]');
+            const closeButton = document.querySelector('[data-admin-chat-close]');
+            const closedNotice = document.querySelector('[data-admin-chat-closed-notice]');
             const unreadBadge = document.querySelector('[data-admin-chat-unread-badge]');
             const csrfToken = form.querySelector('input[name="_token"]').value;
             let lastMessageId = Math.max(0, ...Array.from(messagesContainer.querySelectorAll('[data-admin-chat-entry]'), (entry) => Number(entry.dataset.adminChatEntry) || 0));
@@ -134,6 +148,11 @@
                 const [label, classes] = labels[status] || ['Percakapan aktif', 'rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800'];
                 statusBadge.textContent = label;
                 statusBadge.className = classes;
+
+                const isClosed = status === 'closed';
+                if (closeButton) closeButton.classList.toggle('hidden', isClosed);
+                if (closedNotice) closedNotice.classList.toggle('hidden', !isClosed);
+                form.classList.toggle('hidden', isClosed);
             };
 
             const appendMessage = (message) => {
@@ -234,6 +253,31 @@
                     isSending = false;
                     submitButton.disabled = false;
                     input.focus();
+                }
+            });
+
+            closeButton?.addEventListener('click', async () => {
+                if (!window.confirm('Selesaikan percakapan ini? Riwayat chat tetap tersimpan dan pembeli bisa mengaktifkannya lagi dengan mengirim pesan baru.')) return;
+
+                closeButton.disabled = true;
+                errorMessage.textContent = '';
+
+                try {
+                    const response = await fetch(closeButton.dataset.closeUrl, {
+                        method: 'PATCH',
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        },
+                    });
+                    const payload = await response.json().catch(() => ({}));
+                    if (!response.ok) throw new Error(payload.message || 'Percakapan belum bisa diselesaikan. Coba lagi.');
+
+                    if (payload.message) appendMessage(payload.message);
+                    updateStatusBadge(payload.status);
+                } catch (error) {
+                    errorMessage.textContent = error.message || 'Percakapan belum bisa diselesaikan. Coba lagi.';
+                    closeButton.disabled = false;
                 }
             });
 
