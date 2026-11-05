@@ -89,6 +89,14 @@
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                         Pesanan
                 </a>
+                <a href="{{ route('admin.chats.index') }}"
+                    class="flex items-center justify-between gap-3 rounded-xl px-4 py-3 text-sm transition
+                    {{ request()->routeIs('admin.chats.*')
+                            ? 'bg-amber-500 font-semibold text-slate-950'
+                            : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
+                    <span>Chat pembeli</span>
+                    <span data-admin-chat-unread-badge class="inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white {{ $unreadChatConversations < 1 ? 'hidden' : '' }}" aria-label="{{ $unreadChatConversations }} percakapan belum dibaca">{{ $unreadChatConversations > 0 ? $unreadChatConversations : '' }}</span>
+                </a>
                 <a href="{{ route('admin.products.index') }}"
                     class="block rounded-xl px-4 py-3 text-sm transition
                     {{ request()->routeIs('admin.products.*')
@@ -354,5 +362,27 @@
         adminNavigation.classList.toggle('opacity-100', !isOpen);
         menuButton.setAttribute('aria-expanded', String(!isOpen));
     });
+
+    const chatUnreadBadge = document.querySelector('[data-admin-chat-unread-badge]');
+    const refreshChatUnreadBadge = async () => {
+        if (!chatUnreadBadge) return;
+
+        try {
+            const response = await fetch(@json(route('admin.chats.unread-count')), {
+                headers: { 'Accept': 'application/json' },
+            });
+            if (!response.ok) return;
+
+            const payload = await response.json();
+            const unreadCount = Number(payload.unread_conversations) || 0;
+            chatUnreadBadge.textContent = unreadCount > 0 ? String(unreadCount) : '';
+            chatUnreadBadge.classList.toggle('hidden', unreadCount < 1);
+            chatUnreadBadge.setAttribute('aria-label', `${unreadCount} percakapan belum dibaca`);
+        } catch {
+            // Keep the current badge when the network is temporarily unavailable.
+        }
+    };
+
+    window.setInterval(refreshChatUnreadBadge, 10000);
 </script>
 </html>

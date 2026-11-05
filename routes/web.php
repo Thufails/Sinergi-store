@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\Admin\ProductConversationController as AdminProductConversationController;
 use App\Http\Controllers\Admin\ProductReviewController;
 use App\Http\Controllers\Admin\TestimoniController;
 use App\Http\Controllers\Store\CustomerAddressController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Store\CustomerProfileController;
 use App\Http\Controllers\Store\FaqBotController;
 use App\Http\Controllers\Store\HomeController;
 use App\Http\Controllers\Store\ProductController as StoreProductController;
+use App\Http\Controllers\Store\ProductConversationController;
 use App\Http\Controllers\Store\TestimonialController as StoreTestimonialController;
 
 // ==================== ADMIN AUTHENTICATION ====================
@@ -58,6 +60,20 @@ Route::middleware('auth')
             ->name('admin.products.update');
         Route::delete('/products/{product}', [ProductController::class, 'destroy'])
             ->name('admin.products.destroy');
+
+        // Inbox chat produk
+        Route::get('/chats', [AdminProductConversationController::class, 'index'])
+            ->name('admin.chats.index');
+        Route::get('/chats/unread-count', [AdminProductConversationController::class, 'unreadCount'])
+            ->name('admin.chats.unread-count');
+        Route::get('/chats/{conversation}', [AdminProductConversationController::class, 'show'])
+            ->name('admin.chats.show');
+        Route::get('/chats/{conversation}/messages', [AdminProductConversationController::class, 'messages'])
+            ->middleware('throttle:60,1')
+            ->name('admin.chats.messages');
+        Route::post('/chats/{conversation}/messages', [AdminProductConversationController::class, 'send'])
+            ->middleware('throttle:30,1')
+            ->name('admin.chats.messages.store');
 
         // Kelola pesanan yang dibuat dari halaman publik
         Route::get('/orders', [OrderController::class, 'index'])
@@ -177,6 +193,18 @@ Route::post('/faq-bot/message', [FaqBotController::class, 'respond'])
 
 Route::get('/products', [StoreProductController::class, 'index'])
     ->name('store.products.index');
+
+Route::post('/products/{product:slug}/conversations', [ProductConversationController::class, 'start'])
+    ->middleware('throttle:10,1')
+    ->name('store.products.conversations.start');
+
+Route::get('/product-conversations/{conversation}/messages', [ProductConversationController::class, 'messages'])
+    ->middleware('throttle:60,1')
+    ->name('store.product-conversations.messages');
+
+Route::post('/product-conversations/{conversation}/messages', [ProductConversationController::class, 'send'])
+    ->middleware('throttle:20,1')
+    ->name('store.product-conversations.messages.store');
 
 Route::get('/products/{product:slug}/checkout', [StoreProductController::class, 'checkout'])
     ->middleware('auth:customer')

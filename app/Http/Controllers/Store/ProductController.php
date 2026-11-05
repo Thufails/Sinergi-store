@@ -10,6 +10,7 @@ use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -64,10 +65,11 @@ class ProductController extends Controller
         return view('store.products.index', compact('products', 'categories'));
     }
 
-    public function show(Product $product): View
+    public function show(Product $product, ProductAvailabilityService $productAvailability): View
     {
         $product->loadMissing(['category', 'variants']);
         abort_unless($product->is_active && $product->category?->is_active, 404);
+        $productAvailability->refresh($product);
 
         $productReviews = $product->reviews()
             ->where('is_approved', true)
@@ -77,37 +79,7 @@ class ProductController extends Controller
         $reviewCount = $productReviews->count();
         $averageRating = $reviewCount > 0 ? (float) $productReviews->avg('rating') : 0;
 
-        $activeHolds = OrderItem::query()
-            ->where('product_id', $product->id)
-            ->whereNotNull('product_variant_id')
-            ->whereHas('order', fn ($query) => $query->where(function ($statusQuery) {
-                $statusQuery->where(function ($awaitingPaymentQuery) {
-                    $awaitingPaymentQuery->where('status', Order::STATUS_AWAITING_PAYMENT)
-                        ->where('payment_due_at', '>', now());
-                })->orWhere('status', Order::STATUS_PAYMENT_REVIEW);
-            }))
-            ->selectRaw('product_variant_id, SUM(quantity) as reserved_quantity')
-            ->groupBy('product_variant_id')
-            ->pluck('reserved_quantity', 'product_variant_id');
-
-        foreach ($product->variants as $variant) {
-            $variant->setAttribute(
-                'available_stock',
-                max(0, (int) $variant->stock - (int) $activeHolds->get($variant->id, 0)),
-            );
-        }
-
-        $heldProductStock = OrderItem::query()
-            ->where('product_id', $product->id)
-            ->whereNull('product_variant_id')
-            ->whereHas('order', fn ($query) => $query->where(function ($statusQuery) {
-                $statusQuery->where(function ($awaitingPaymentQuery) {
-                    $awaitingPaymentQuery->where('status', Order::STATUS_AWAITING_PAYMENT)
-                        ->where('payment_due_at', '>', now());
-                })->orWhere('status', Order::STATUS_PAYMENT_REVIEW);
-            }))
-            ->sum('quantity');
-        $availableProductStock = max(0, (int) $product->stock - (int) $heldProductStock);
+        $availableProductStock = (int) $product->getAttribute('available_stock');
 
         $hasAvailableStock = $product->variants->isEmpty()
             ? $availableProductStock > 0
@@ -123,7 +95,7 @@ class ProductController extends Controller
         ));
     }
 
-    public function checkout(Request $request, Product $product): View
+    public function checkout(Request $request, Product $product, ProductAvailabilityService $productAvailability): View
     {
         $product->loadMissing(['category', 'variants']);
         abort_unless($product->is_active && $product->category?->is_active, 404);
@@ -135,29 +107,7 @@ class ProductController extends Controller
             ->orderBy('label')
             ->get();
 
-        $reservedItems = OrderItem::query()
-            ->where('product_id', $product->id)
-            ->whereHas('order', fn ($query) => $query->where(function ($statusQuery) {
-                $statusQuery->where(function ($awaitingPaymentQuery) {
-                    $awaitingPaymentQuery->where('status', Order::STATUS_AWAITING_PAYMENT)
-                        ->where('payment_due_at', '>', now());
-                })->orWhere('status', Order::STATUS_PAYMENT_REVIEW);
-            }));
-
-        if ($product->variants->isEmpty()) {
-            $reservedStock = (int) (clone $reservedItems)->whereNull('product_variant_id')->sum('quantity');
-            $product->setAttribute('available_stock', max(0, (int) $product->stock - $reservedStock));
-        } else {
-            $reservedByVariant = (clone $reservedItems)
-                ->whereNotNull('product_variant_id')
-                ->selectRaw('product_variant_id, SUM(quantity) as reserved_quantity')
-                ->groupBy('product_variant_id')
-                ->pluck('reserved_quantity', 'product_variant_id');
-
-            foreach ($product->variants as $variant) {
-                $variant->setAttribute('available_stock', max(0, (int) $variant->stock - (int) $reservedByVariant->get($variant->id, 0)));
-            }
-        }
+        $productAvailability->refresh($product);
 
         return view('store.products.checkout', [
             'product' => $product,
