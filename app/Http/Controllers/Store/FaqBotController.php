@@ -17,6 +17,15 @@ class FaqBotController extends Controller
         ]);
 
         $message = mb_strtolower(trim($validated['message']));
+        $greeting = $this->extractGreeting($message);
+        $message = $this->removeGreeting($message, $greeting);
+
+        if ($message === '') {
+            return response()->json([
+                'matched' => true,
+                'reply' => ($greeting ? $greeting.'! ' : '').'Ada yang ingin kamu tanyakan tentang produk, pesanan, ongkir, atau jasa kami?',
+            ]);
+        }
 
         /** @var list<string> $serviceKeywords */
         $serviceKeywords = [
@@ -37,7 +46,7 @@ class FaqBotController extends Controller
             'sinergi creative',
         ];
 
-        $shippingServiceKeywords = ['pengiriman', 'ongkir', 'ongkos kirim', 'ekspedisi', 'kurir'];
+        $shippingServiceKeywords = ['pengiriman', 'ongkir', 'ongkos kirim', 'ongkos pengiriman', 'ekspedisi', 'kurir', 'jasa kirim'];
         $mentionsShippingService = false;
 
         foreach ($shippingServiceKeywords as $keyword) {
@@ -55,7 +64,7 @@ class FaqBotController extends Controller
             if ($this->containsKeyword($message, $keyword)) {
                 return response()->json([
                     'matched' => false,
-                    'reply' => 'Untuk pertanyaan atau pemesanan jasa foto produk, video, dan desain, silakan konsultasi langsung dengan admin kami melalui WhatsApp.',
+                    'reply' => $this->withGreeting($greeting, 'Untuk pertanyaan atau pemesanan jasa foto produk, video, dan desain, silakan konsultasi langsung dengan admin kami melalui WhatsApp.'),
                     'contact_url' => 'https://wa.me/6282142612382',
                 ]);
             }
@@ -64,31 +73,31 @@ class FaqBotController extends Controller
         /** @var array<array{keywords: list<string>, reply: string}> $faqResponses */
         $faqResponses = [
             [
-                'keywords' => ['status pesanan', 'status order', 'pesanan saya', 'cek status', 'lacak pesanan', 'lacak order', 'cek pesanan', 'tracking pesanan', 'nomor resi', 'no resi', 'resi'],
+                'keywords' => ['status pesanan', 'status order', 'pesanan saya', 'pesenan saya', 'cek status', 'cek pesanan', 'cek pesenan', 'lacak pesanan', 'lacak order', 'tracking pesanan', 'nomor resi', 'no resi', 'no.resi', 'resi', 'pesanan udah sampai', 'pesanan sudah sampai'],
                 'reply' => 'Status pesanan dan informasi resi bisa dilihat di menu Pesanan Saya setelah masuk ke akun.',
             ],
             [
-                'keywords' => ['ongkir', 'ongkos kirim', 'ongkos pengiriman', 'biaya kirim', 'biaya pengiriman', 'tarif kirim', 'tarif ongkir', 'ekspedisi', 'kurir'],
+                'keywords' => ['ongkir', 'ongkirnya', 'ongkr', 'ongkos', 'ongkos kirim', 'ongkir kirim', 'ongkos pengiriman', 'biaya kirim', 'biaya pengiriman', 'tarif kirim', 'tarif ongkir', 'ekspedisi', 'kurir', 'berapa ongkir', 'brp ongkir', 'ongkir brp', 'ongkir berapa', 'ongkir ke', 'jasa kirim'],
                 'reply' => 'Ongkir belum termasuk saat pesanan dibuat. Admin akan menghitung ongkir berdasarkan alamat tujuan, lalu total pembayaran tampil di detail pesanan sebelum kamu membayar.',
             ],
             [
-                'keywords' => ['bukti pembayaran', 'bukti bayar', 'bukti transfer', 'upload bukti', 'unggah bukti', 'upload transfer', 'unggah transfer', 'cara bayar', 'cara pembayaran', 'pembayaran', 'transfer bank', 'transfer', 'nomor rekening', 'rekening', 'bayar pesanan', 'bayar'],
+                'keywords' => ['bukti pembayaran', 'bukti bayar', 'bukti transfer', 'bukti tf', 'upload bukti', 'unggah bukti', 'upload transfer', 'unggah transfer', 'cara bayar', 'cara pembayaran', 'pembayaran', 'transfer bank', 'transfer', 'tf', 'nomor rekening', 'norek', 'rekening', 'bayar pesanan', 'bayarnya gimana', 'bayar pake apa', 'bayar pakai apa', 'cara tf', 'bayar'],
                 'reply' => 'Setelah admin menetapkan ongkir, buka detail pesanan di menu Pesanan Saya. Ikuti informasi pembayaran yang tercantum di sana, lalu unggah bukti pembayaran sebelum batas waktunya.',
             ],
             [
-                'keywords' => ['stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'hold stok', 'di-hold', 'dihold', 'di hold', 'ditahan', 'persediaan', 'stok'],
+                'keywords' => ['stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'hold stok', 'di-hold', 'dihold', 'di hold', 'ditahan', 'persediaan', 'ready stock', 'ready stok', 'masih ready', 'masih ada stok', 'stok'],
                 'reply' => 'Stok ditahan selama 24 jam setelah admin menetapkan ongkir dan pesanan menunggu pembayaran. Stok fisik dikurangi setelah pembayaran dikonfirmasi admin.',
             ],
             [
-                'keywords' => ['buat akun', 'bikin akun', 'daftar akun', 'daftar', 'registrasi', 'sign up', 'sign in', 'masuk akun', 'login', 'akun'],
+                'keywords' => ['buat akun', 'bikin akun', 'bkin akun', 'daftar akun', 'daftar', 'registrasi', 'register', 'sign up', 'sign in', 'masuk akun', 'login', 'log in', 'akun'],
                 'reply' => 'Kamu perlu masuk atau membuat akun pelanggan untuk memesan. Akun juga dipakai untuk melihat pesanan, mengelola alamat, dan mengunggah bukti pembayaran.',
             ],
             [
-                'keywords' => ['pesan produk', 'pesan barang', 'cara memesan', 'cara pesan', 'cara order', 'buat pesanan', 'pemesanan', 'checkout', 'beli produk', 'beli barang', 'cara beli', 'cara pembelian'],
+                'keywords' => ['pesan produk', 'pesan barang', 'pesen produk', 'pesen barang', 'cara memesan', 'cara pesan', 'gimana pesan', 'gimana cara pesan', 'gmn cara pesan', 'gmna cara pesan', 'cara order', 'gimana order', 'gmn order', 'buat pesanan', 'pemesanan', 'checkout', 'beli produk', 'beli barang', 'cara beli', 'cara pembelian'],
                 'reply' => 'Masuk ke akun, pilih produk dan alamat tujuan, lalu buat pesanan. Admin akan meninjau pesanan dan menetapkan ongkir. Setelah total pembayaran tampil, kamu bisa melanjutkan pembayaran dari detail pesanan.',
             ],
             [
-                'keywords' => ['ukuran', 'warna', 'varian', 'bahan produk', 'material produk', 'motif', 'promo', 'promosi', 'diskon', 'detail produk', 'tanya produk', 'ketersediaan produk', 'produk tersedia'],
+                'keywords' => ['ukuran', 'warna', 'varian', 'bahan produk', 'material produk', 'motif', 'promo', 'promosi', 'diskon', 'detail produk', 'tanya produk', 'tanya soal produk', 'ketersediaan produk', 'produk tersedia', 'produk ini ready', 'masih jual'],
                 'reply' => 'Untuk pertanyaan detail tentang ukuran, warna, promo, atau produk tertentu, silakan tanyakan langsung kepada admin melalui WhatsApp.',
             ],
         ];
@@ -124,7 +133,7 @@ class FaqBotController extends Controller
                 if ($productCategories->isEmpty()) {
                     return response()->json([
                         'matched' => true,
-                        'reply' => 'Saat ini belum ada kategori produk aktif yang tersedia di katalog. Silakan coba lagi nanti atau hubungi admin melalui WhatsApp.',
+                        'reply' => $this->withGreeting($greeting, 'Saat ini belum ada kategori produk aktif yang tersedia di katalog. Silakan coba lagi nanti atau hubungi admin melalui WhatsApp.'),
                     ]);
                 }
 
@@ -133,7 +142,7 @@ class FaqBotController extends Controller
 
                 return response()->json([
                     'matched' => true,
-                    'reply' => 'Produk yang tersedia antara lain kategori '.$categoryNames.$moreCategories.'. Lihat katalog pada menu Produk untuk daftar lengkapnya.',
+                    'reply' => $this->withGreeting($greeting, 'Produk yang tersedia antara lain kategori '.$categoryNames.$moreCategories.'. Lihat katalog pada menu Produk untuk daftar lengkapnya.'),
                 ]);
             }
         }
@@ -143,7 +152,7 @@ class FaqBotController extends Controller
                 if ($this->containsKeyword($message, $keyword)) {
                     return response()->json([
                         'matched' => true,
-                        'reply' => $faqResponse['reply'],
+                        'reply' => $this->withGreeting($greeting, $faqResponse['reply']),
                     ]);
                 }
             }
@@ -157,32 +166,12 @@ class FaqBotController extends Controller
             ],
         ];
 
-        /** @var array<string, string> $greetings */
-        $greetings = [
-            'selamat pagi' => 'Selamat pagi',
-            'selamat siang' => 'Selamat siang',
-            'selamat sore' => 'Selamat sore',
-            'selamat malam' => 'Selamat malam',
-            'halo' => 'Halo',
-            'hai' => 'Hai',
-            'hi' => 'Hi',
-        ];
-
-        foreach ($greetings as $keyword => $greeting) {
-            if ($this->containsKeyword($message, $keyword)) {
-                return response()->json([
-                    'matched' => true,
-                    'reply' => $greeting.'! Ada yang ingin kamu tanyakan tentang produk, pesanan, ongkir, atau jasa kami?',
-                ]);
-            }
-        }
-
         foreach ($conversationalResponses as $conversationalResponse) {
             foreach ($conversationalResponse['keywords'] as $keyword) {
                 if ($this->containsKeyword($message, $keyword)) {
                     return response()->json([
                         'matched' => true,
-                        'reply' => $conversationalResponse['reply'],
+                        'reply' => $this->withGreeting($greeting, $conversationalResponse['reply']),
                     ]);
                 }
             }
@@ -190,9 +179,52 @@ class FaqBotController extends Controller
 
         return response()->json([
             'matched' => false,
-            'reply' => 'Maaf, aku belum menemukan jawaban yang sesuai. Untuk pertanyaan lebih lanjut, silakan hubungi admin melalui WhatsApp.',
+            'reply' => $this->withGreeting($greeting, 'Maaf, aku belum menemukan jawaban yang sesuai. Untuk pertanyaan khusus atau jawaban yang belum tersedia, chat admin kami melalui WhatsApp lewat tombol di bawah ini.'),
             'contact_url' => 'https://wa.me/6282142612382',
         ]);
+    }
+
+    private function extractGreeting(string $message): ?string
+    {
+        /** @var array<string, string> $greetings */
+        $greetings = [
+            'selamat pagi' => 'Selamat pagi',
+            'selamat siang' => 'Selamat siang',
+            'selamat sore' => 'Selamat sore',
+            'selamat malam' => 'Selamat malam',
+            'pagi' => 'Pagi',
+            'siang' => 'Siang',
+            'sore' => 'Sore',
+            'malam' => 'Malam',
+            'halo' => 'Halo',
+            'hai' => 'Hai',
+            'hi' => 'Hi',
+        ];
+
+        foreach ($greetings as $keyword => $greeting) {
+            if (preg_match('/^'.preg_quote($keyword, '/').'(?![\p{L}\p{N}_])/u', $message) === 1) {
+                return $greeting;
+            }
+        }
+
+        return null;
+    }
+
+    private function removeGreeting(string $message, ?string $greeting): string
+    {
+        if ($greeting !== null) {
+            $message = preg_replace('/^'.preg_quote(mb_strtolower($greeting), '/').'(?![\p{L}\p{N}_])/u', '', $message, 1) ?? $message;
+        }
+
+        $message = preg_replace('/^[\s,!.?;:]+/u', '', $message) ?? $message;
+        $message = preg_replace('/^(?:(?:mau|ingin|pengen)\s+)?(?:bertanya|tanya|nanya)\b[\s,!.?;:]+/u', '', $message) ?? $message;
+
+        return trim($message);
+    }
+
+    private function withGreeting(?string $greeting, string $reply): string
+    {
+        return $greeting === null ? $reply : $greeting.'! '.$reply;
     }
 
     private function containsKeyword(string $message, string $keyword): bool
