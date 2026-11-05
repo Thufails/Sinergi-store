@@ -116,6 +116,27 @@
             </a>
         </aside>
     </div>
+
+    @if ($conversation->status !== 'closed')
+        <dialog data-chat-close-dialog aria-labelledby="chat-close-title" aria-describedby="chat-close-description" class="admin-confirmation-dialog m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-2xl p-0 shadow-2xl backdrop:bg-slate-950/60">
+            <div class="bg-white p-6 sm:p-7">
+                <div class="flex items-start gap-4">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700" aria-hidden="true">
+                        <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9" /><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4m0 4h.01" /></svg>
+                    </span>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-700">Konfirmasi tindakan</p>
+                        <h2 id="chat-close-title" class="mt-1 text-xl font-semibold text-slate-900">Selesaikan percakapan?</h2>
+                    </div>
+                </div>
+                <p id="chat-close-description" class="mt-5 text-sm leading-6 text-slate-600">Riwayat chat akan tetap tersimpan. Pembeli dapat mengaktifkan percakapan ini lagi dengan mengirim pesan baru.</p>
+                <div class="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                    <button type="button" data-chat-close-cancel class="rounded-xl border border-slate-300 px-5 py-3 text-sm font-semibold text-slate-700 transition hover:bg-slate-50">Batal</button>
+                    <button type="button" data-chat-close-confirm class="rounded-xl bg-amber-500 px-5 py-3 text-sm font-semibold text-slate-950 transition hover:bg-amber-400">Selesaikan chat</button>
+                </div>
+            </div>
+        </dialog>
+    @endif
 @endsection
 
 @push('scripts')
@@ -130,6 +151,9 @@
             const errorMessage = form.querySelector('[data-admin-chat-error]');
             const statusBadge = document.querySelector('[data-admin-chat-status]');
             const closeButton = document.querySelector('[data-admin-chat-close]');
+            const closeDialog = document.querySelector('[data-chat-close-dialog]');
+            const cancelCloseButton = closeDialog?.querySelector('[data-chat-close-cancel]');
+            const confirmCloseButton = closeDialog?.querySelector('[data-chat-close-confirm]');
             const closedNotice = document.querySelector('[data-admin-chat-closed-notice]');
             const unreadBadge = document.querySelector('[data-admin-chat-unread-badge]');
             const csrfToken = form.querySelector('input[name="_token"]').value;
@@ -256,10 +280,10 @@
                 }
             });
 
-            closeButton?.addEventListener('click', async () => {
-                if (!window.confirm('Selesaikan percakapan ini? Riwayat chat tetap tersimpan dan pembeli bisa mengaktifkannya lagi dengan mengirim pesan baru.')) return;
-
+            const closeConversation = async () => {
+                if (!closeButton || !confirmCloseButton) return;
                 closeButton.disabled = true;
+                confirmCloseButton.disabled = true;
                 errorMessage.textContent = '';
 
                 try {
@@ -278,7 +302,18 @@
                 } catch (error) {
                     errorMessage.textContent = error.message || 'Percakapan belum bisa diselesaikan. Coba lagi.';
                     closeButton.disabled = false;
+                    confirmCloseButton.disabled = false;
                 }
+            };
+
+            closeButton?.addEventListener('click', () => closeDialog?.showModal());
+            cancelCloseButton?.addEventListener('click', () => closeDialog.close());
+            confirmCloseButton?.addEventListener('click', () => {
+                closeDialog.close();
+                closeConversation();
+            });
+            closeDialog?.addEventListener('click', (event) => {
+                if (event.target === closeDialog) closeDialog.close();
             });
 
             messagesContainer.scrollTop = messagesContainer.scrollHeight;

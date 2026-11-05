@@ -9,6 +9,7 @@ use App\Models\ProductConversationMessage;
 use App\Services\ProductAvailabilityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
@@ -19,6 +20,8 @@ use Illuminate\View\View;
 
 class ProductConversationController extends Controller
 {
+    private const ADMIN_CLOSURE_MESSAGE = 'Admin menandai percakapan ini selesai. Kalau masih butuh bantuan, kirim pesan lagi kapan saja.';
+
     public function unreadCount(Request $request): JsonResponse
     {
         $conversationQuery = $this->conversationQuery($request);
@@ -27,11 +30,17 @@ class ProductConversationController extends Controller
             ->whereIn('product_conversation_id', $conversationIds)
             ->whereIn('sender_type', ['system', 'admin'])
             ->whereNull('read_at')
+            ->where(fn (Builder $messageQuery) => $messageQuery
+                ->where('sender_type', '!=', 'system')
+                ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE))
             ->count();
         $unreadConversations = $conversationQuery
             ->whereHas('messages', fn (Builder $query) => $query
                 ->whereIn('sender_type', ['system', 'admin'])
-                ->whereNull('read_at'))
+                ->whereNull('read_at')
+                ->where(fn (Builder $messageQuery) => $messageQuery
+                    ->where('sender_type', '!=', 'system')
+                    ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE)))
             ->count();
 
         return response()->json([
@@ -43,11 +52,19 @@ class ProductConversationController extends Controller
     public function index(Request $request): View
     {
         $conversations = $this->conversationQuery($request)
-            ->with(['product:id,name,slug,image', 'latestMessage'])
+            ->with([
+                'product:id,name,slug,image',
+                'latestMessage' => fn (HasOne $query) => $query->where(fn (Builder $messageQuery) => $messageQuery
+                    ->where('sender_type', '!=', 'system')
+                    ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE)),
+            ])
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
                     ->whereIn('sender_type', ['system', 'admin'])
-                    ->whereNull('read_at'),
+                    ->whereNull('read_at')
+                    ->where(fn (Builder $messageQuery) => $messageQuery
+                        ->where('sender_type', '!=', 'system')
+                        ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE)),
             ])
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
@@ -67,7 +84,12 @@ class ProductConversationController extends Controller
         $conversation->load([
             'product:id,name,slug,image',
             'productVariant:id,size,color',
-            'messages' => fn (HasMany $query) => $query->with('user:id,name')->orderBy('id'),
+            'messages' => fn (HasMany $query) => $query
+                ->where(fn (Builder $messageQuery) => $messageQuery
+                    ->where('sender_type', '!=', 'system')
+                    ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE))
+                ->with('user:id,name')
+                ->orderBy('id'),
         ]);
 
         return view('store.chats.show', compact('conversation'));
@@ -144,7 +166,11 @@ class ProductConversationController extends Controller
         ]);
 
         $conversation = $this->conversationQuery($request)->findOrFail($conversation->id);
-        $messageQuery = $conversation->messages()->orderBy('id');
+        $messageQuery = $conversation->messages()
+            ->where(fn (Builder $messageQuery) => $messageQuery
+                ->where('sender_type', '!=', 'system')
+                ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE))
+            ->orderBy('id');
 
         if (! empty($validated['after_id'])) {
             $messageQuery->where('id', '>', (int) $validated['after_id']);
@@ -284,8 +310,49 @@ class ProductConversationController extends Controller
         }
 
         $productAvailability->refresh($product);
-        $availability = $this->availabilityForConversation($conversation, $product);
         $normalizedMessage = mb_strtolower($message);
+        $variantRequest = $product->variants->isNotEmpty()
+            ? $this->variantRequestFromMessage($product, $message)
+            : [
+                'color' => null,
+                'size' => null,
+                'has_variant_intent' => false,
+                'unavailable_label' => null,
+            ];
+
+        if ($variantRequest['unavailable_label'] !== null) {
+            return $this->unavailableVariantReply($variantRequest['unavailable_label'], $product);
+        }
+
+        $requestedVariants = $product->variants;
+        if ($variantRequest['color'] !== null) {
+            $requestedVariants = $requestedVariants->filter(fn ($variant): bool =>
+                $this->normalizeVariantValue((string) $variant->color) === $this->normalizeVariantValue($variantRequest['color'])
+            );
+        }
+        if ($variantRequest['size'] !== null) {
+            $requestedVariants = $requestedVariants->filter(fn ($variant): bool =>
+                $this->normalizeVariantValue((string) $variant->size) === $this->normalizeVariantValue($variantRequest['size'])
+            );
+        }
+
+        if (! $variantRequest['has_variant_intent']
+            && $variantRequest['color'] === null
+            && $variantRequest['size'] === null
+            && $conversation->product_variant_id) {
+            $requestedVariants = $requestedVariants->where('id', $conversation->product_variant_id);
+        }
+
+        if ($product->variants->isNotEmpty() && $requestedVariants->isEmpty()) {
+            $requestedLabel = collect([
+                $variantRequest['size'],
+                $variantRequest['color'],
+            ])->filter()->implode(' · ');
+
+            return $this->unavailableVariantReply('kombinasi '.$requestedLabel, $product);
+        }
+
+        $availability = $this->availabilityForConversation($conversation, $product, $requestedVariants);
 
         if (preg_match('/\b(?:pesan|pesen|beli|order|ambil|jumlah)\b[^\d]{0,30}(\d+)\s*(?:pcs|buah|unit|item)?/u', $normalizedMessage, $matches) === 1
             || preg_match('/\b(\d+)\s*(?:pcs|buah|unit|item)\b/u', $normalizedMessage, $matches) === 1) {
@@ -295,10 +362,11 @@ class ProductConversationController extends Controller
                 return 'Bisa, jumlah '.$requestedQuantity.' unit masih sesuai dengan total stok yang tersedia ('.$availability['total'].' unit). '.$availability['summary'].' Admin akan membantu memastikan variasi yang kamu pilih.';
             }
 
-            return 'Stok yang tercatat saat ini '.$availability['total'].' unit, sedangkan kamu menanyakan '.$requestedQuantity.' unit. Jumlah itu melebihi stok yang tersedia. Pesanmu sudah masuk antrean dan admin akan membantu mengecek ketersediaan tambahan.';
+            return 'Untuk varian yang kamu tanyakan, stok saat ini '.$availability['total'].' unit, sedangkan kamu menanyakan '.$requestedQuantity.' unit. Jumlah itu melebihi stok yang tersedia. Admin akan membantu mengecek ketersediaan tambahan.';
         }
 
-        if (preg_match('/\b(stok|tersedia|ready|sisa|ada barang|ada stok)\b/u', $normalizedMessage) === 1) {
+        if ($variantRequest['has_variant_intent']
+            || preg_match('/\b(stok|tersedia|ready|sisa|ada barang|ada stok)\b/u', $normalizedMessage) === 1) {
             return 'Stok yang tersedia saat ini: '.$availability['summary'].'. Admin akan membantu memastikan stok saat pesanan diproses.';
         }
 
@@ -332,9 +400,121 @@ class ProductConversationController extends Controller
     }
 
     /**
+     * @return array{color: ?string, size: ?string, has_variant_intent: bool, unavailable_label: ?string}
+     */
+    private function variantRequestFromMessage(Product $product, string $message): array
+    {
+        $normalizedMessage = $this->normalizeVariantValue($message);
+        $requestedColorLabel = $this->extractRequestedVariantLabel($normalizedMessage, 'color');
+        $requestedSizeLabel = $this->extractRequestedVariantLabel($normalizedMessage, 'size');
+        $requestedColor = $requestedColorLabel !== null
+            ? $this->findExactVariantValue($product->variants, 'color', $requestedColorLabel)
+            : $this->findMentionedVariantValue($product->variants, 'color', $normalizedMessage);
+        $requestedSize = $requestedSizeLabel !== null
+            ? $this->findExactVariantValue($product->variants, 'size', $requestedSizeLabel)
+            : $this->findMentionedVariantValue($product->variants, 'size', $normalizedMessage);
+        $unavailableLabel = null;
+
+        if ($requestedColorLabel !== null && $requestedColor === null) {
+            $unavailableLabel = 'warna '.$requestedColorLabel;
+        } elseif ($requestedSizeLabel !== null && $requestedSize === null) {
+            $unavailableLabel = 'ukuran '.$requestedSizeLabel;
+        }
+
+        return [
+            'color' => $requestedColor,
+            'size' => $requestedSize,
+            'has_variant_intent' => $requestedColorLabel !== null
+                || $requestedSizeLabel !== null
+                || preg_match('/\b(?:warna|color|ukuran|size)\b/u', $normalizedMessage) === 1
+                || $requestedColor !== null
+                || $requestedSize !== null,
+            'unavailable_label' => $unavailableLabel,
+        ];
+    }
+
+    private function extractRequestedVariantLabel(string $normalizedMessage, string $dimension): ?string
+    {
+        $pattern = $dimension === 'color'
+            ? '/\b(?:warna|color)\s+(.+?)(?=\b(?:ukuran|size)\b|$)/u'
+            : '/\b(?:ukuran|size)\s+(.+?)(?=\b(?:warna|color)\b|$)/u';
+
+        if (preg_match($pattern, $normalizedMessage, $matches) !== 1) {
+            return null;
+        }
+
+        $requestedLabel = trim($matches[1]);
+        $requestedLabel = preg_replace('/(?:\s+(?:ya|min|admin|kak|mas|mbak|bang|sis|dong|donk|sih|aja|saja|lagi|ada|ready|tersedia|stok|gak|ga|nggak|enggak|kah))*$/u', '', $requestedLabel) ?? $requestedLabel;
+
+        if ($requestedLabel === '' || preg_match('/^(?:apa|yang mana|bebas|semua)(?:\s|$)/u', $requestedLabel) === 1) {
+            return null;
+        }
+
+        return $requestedLabel;
+    }
+
+    private function findExactVariantValue(Collection $variants, string $attribute, string $requestedValue): ?string
+    {
+        $normalizedRequestedValue = $this->normalizeVariantValue($requestedValue);
+        $variant = $variants->first(fn ($item): bool =>
+            $this->normalizeVariantValue((string) $item->getAttribute($attribute)) === $normalizedRequestedValue
+        );
+
+        return $variant?->getAttribute($attribute);
+    }
+
+    private function findMentionedVariantValue(Collection $variants, string $attribute, string $message): ?string
+    {
+        $values = $variants
+            ->pluck($attribute)
+            ->filter(fn ($value): bool => is_string($value) && trim($value) !== '')
+            ->unique(fn (string $value): string => $this->normalizeVariantValue($value))
+            ->sortByDesc(fn (string $value): int => mb_strlen($this->normalizeVariantValue($value)));
+
+        foreach ($values as $value) {
+            $normalizedValue = $this->normalizeVariantValue($value);
+            $pattern = '/(?<![\pL\pN])'.preg_quote($normalizedValue, '/').'(?![\pL\pN])/u';
+
+            if (preg_match($pattern, $message) === 1) {
+                return $value;
+            }
+        }
+
+        return null;
+    }
+
+    private function normalizeVariantValue(string $value): string
+    {
+        $normalizedValue = mb_strtolower(trim($value));
+        $normalizedValue = preg_replace('/[^\pL\pN]+/u', ' ', $normalizedValue) ?? $normalizedValue;
+
+        return preg_replace('/\s+/u', ' ', trim($normalizedValue)) ?? trim($normalizedValue);
+    }
+
+    private function unavailableVariantReply(string $requestedLabel, Product $product): string
+    {
+        $availableVariants = $product->variants
+            ->map(function ($variant): string {
+                $variantName = collect([$variant->size, $variant->color])
+                    ->filter()
+                    ->implode(' · ');
+
+                return ($variantName !== '' ? $variantName : 'Varian')
+                    .': '.(int) $variant->available_stock.' unit';
+            })
+            ->implode(', ');
+
+        return 'Maaf, '.$requestedLabel.' belum tercatat sebagai varian produk ini. Varian yang tersedia di data saat ini: '.$availableVariants.'. Admin akan membantu memastikan pilihan yang sesuai.';
+    }
+
+    /**
      * @return array{total: int, summary: string}
      */
-    private function availabilityForConversation(ProductConversation $conversation, Product $product): array
+    private function availabilityForConversation(
+        ProductConversation $conversation,
+        Product $product,
+        ?Collection $requestedVariants = null,
+    ): array
     {
         if ($product->variants->isEmpty()) {
             $availableStock = (int) $product->getAttribute('available_stock');
@@ -345,9 +525,9 @@ class ProductConversationController extends Controller
             ];
         }
 
-        $variants = $conversation->product_variant_id
+        $variants = $requestedVariants ?? ($conversation->product_variant_id
             ? $product->variants->where('id', $conversation->product_variant_id)
-            : $product->variants;
+            : $product->variants);
 
         $totalAvailableStock = (int) $variants->sum('available_stock');
         $stockSummary = $variants

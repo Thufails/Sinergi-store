@@ -95,7 +95,7 @@
                             ? 'bg-amber-500 font-semibold text-slate-950'
                             : 'text-slate-400 hover:bg-white/5 hover:text-white' }}">
                     <span>Chat pembeli</span>
-                    <span data-admin-chat-unread-badge class="inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white {{ $unreadChatConversations < 1 ? 'hidden' : '' }}" aria-label="{{ $unreadChatConversations }} percakapan belum dibaca">{{ $unreadChatConversations > 0 ? $unreadChatConversations : '' }}</span>
+                    <span data-admin-chat-unread-badge @class(['inline-flex min-w-6 items-center justify-center rounded-full bg-rose-500 px-2 py-0.5 text-xs font-bold text-white' => $unreadChatConversations > 0, 'hidden' => $unreadChatConversations < 1]) aria-label="{{ $unreadChatConversations }} percakapan belum dibaca">{{ $unreadChatConversations > 0 ? $unreadChatConversations : '' }}</span>
                 </a>
                 <a href="{{ route('admin.products.index') }}"
                     class="block rounded-xl px-4 py-3 text-sm transition
@@ -377,6 +377,7 @@
             const unreadCount = Number(payload.unread_conversations) || 0;
             chatUnreadBadge.textContent = unreadCount > 0 ? String(unreadCount) : '';
             chatUnreadBadge.classList.toggle('hidden', unreadCount < 1);
+            chatUnreadBadge.classList.toggle('inline-flex', unreadCount > 0);
             chatUnreadBadge.setAttribute('aria-label', `${unreadCount} percakapan belum dibaca`);
         } catch {
             // Keep the current badge when the network is temporarily unavailable.

@@ -15,6 +15,8 @@ use Illuminate\View\View;
 
 class ProductConversationController extends Controller
 {
+    private const CUSTOMER_QUEUE_REPLY = 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.';
+
     public function index(Request $request): View
     {
         $this->closeIdleWaitingConversations();
@@ -26,6 +28,14 @@ class ProductConversationController extends Controller
 
         $conversationQuery = ProductConversation::query()
             ->with(['customer:id,name,email,phone', 'product:id,name,slug,image', 'latestMessage'])
+            ->addSelect([
+                'latest_customer_message_body' => ProductConversationMessage::query()
+                    ->select('body')
+                    ->whereColumn('product_conversation_id', 'product_conversations.id')
+                    ->where('sender_type', 'customer')
+                    ->orderByDesc('id')
+                    ->limit(1),
+            ])
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
                     ->where('sender_type', 'customer')
@@ -63,7 +73,12 @@ class ProductConversationController extends Controller
             'customer:id,name,email,phone',
             'product:id,name,slug,image',
             'productVariant:id,size,color,sku',
-            'messages' => fn (HasMany $query) => $query->with('user:id,name')->orderBy('id'),
+            'messages' => fn (HasMany $query) => $query
+                ->where(fn (Builder $messageQuery) => $messageQuery
+                    ->where('sender_type', '!=', 'system')
+                    ->orWhere('body', '!=', self::CUSTOMER_QUEUE_REPLY))
+                ->with('user:id,name')
+                ->orderBy('id'),
         ]);
         $unreadConversationCount = $this->unreadConversationCount();
 
@@ -79,7 +94,12 @@ class ProductConversationController extends Controller
             'after_id' => ['nullable', 'integer', 'min:0'],
         ]);
 
-        $messageQuery = $conversation->messages()->with('user:id,name')->orderBy('id');
+        $messageQuery = $conversation->messages()
+            ->where(fn (Builder $messageQuery) => $messageQuery
+                ->where('sender_type', '!=', 'system')
+                ->orWhere('body', '!=', self::CUSTOMER_QUEUE_REPLY))
+            ->with('user:id,name')
+            ->orderBy('id');
 
         if (! empty($validated['after_id'])) {
             $messageQuery->where('id', '>', (int) $validated['after_id']);
@@ -140,28 +160,17 @@ class ProductConversationController extends Controller
             ]);
         }
 
-        $message = DB::transaction(function () use ($conversation): ProductConversationMessage {
+        DB::transaction(function () use ($conversation): void {
             $conversation->messages()
                 ->where('sender_type', 'customer')
                 ->whereNull('read_at')
                 ->update(['read_at' => now()]);
 
-            $message = $conversation->messages()->create([
-                'sender_type' => 'system',
-                'body' => 'Admin menandai percakapan ini selesai. Kalau masih butuh bantuan, kirim pesan lagi kapan saja.',
-            ]);
-
-            $conversation->forceFill([
-                'status' => 'closed',
-                'last_message_at' => $message->created_at,
-            ])->save();
-
-            return $message;
+            $conversation->forceFill(['status' => 'closed'])->save();
         });
 
         return response()->json([
             'status' => 'closed',
-            'message' => $this->serializeMessages(collect([$message]))[0],
         ]);
     }
 

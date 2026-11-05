@@ -35,7 +35,7 @@
                             <p class="truncate text-xs text-slate-500">Chat Sinergi Store</p>
                         </div>
                     </div>
-                    <span class="shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold {{ $statusStyle }}">{{ $statusLabel }}</span>
+                    <span class="shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold {{ $statusStyle }}" data-customer-chat-status>{{ $statusLabel }}</span>
                 </header>
 
                 <div class="flex items-center gap-3 border-b border-slate-100 bg-slate-50 px-4 py-3 sm:px-5">
@@ -54,10 +54,10 @@
                             $isCustomerMessage = $message->sender_type === 'customer';
                             $isSystemMessage = $message->sender_type === 'system';
                         @endphp
-                        <div class="{{ $isSystemMessage ? 'mx-auto max-w-[90%] text-center' : ($isCustomerMessage ? 'ml-auto max-w-[88%]' : 'max-w-[88%]') }}" data-customer-chat-entry="{{ $message->id }}">
-                            <p class="mb-1 text-[11px] font-medium {{ $isSystemMessage ? 'text-center text-slate-500' : ($isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500') }}">{{ $isSystemMessage ? 'Balasan otomatis' : ($isCustomerMessage ? 'Kamu' : ($message->user?->name ?? 'Admin Sinergi Store')) }}</p>
+                        <div class="{{ $isCustomerMessage ? 'ml-auto max-w-[88%]' : 'max-w-[88%]' }}" data-customer-chat-entry="{{ $message->id }}">
+                            <p class="mb-1 text-[11px] font-medium {{ $isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500' }}">{{ $isSystemMessage ? 'Balasan otomatis' : ($isCustomerMessage ? 'Kamu' : ($message->user?->name ?? 'Admin Sinergi Store')) }}</p>
                             <p class="whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-6 {{ $isSystemMessage ? 'border border-amber-200 bg-amber-50 text-slate-700' : ($isCustomerMessage ? 'rounded-tr-sm bg-amber-500 text-slate-950' : 'rounded-tl-sm border border-slate-200 bg-white text-slate-700') }}">{{ $message->body }}</p>
-                            <time class="mt-1 block text-[10px] {{ $isSystemMessage ? 'text-center' : ($isCustomerMessage ? 'text-right' : '') }} text-slate-400">{{ $message->created_at->timezone('Asia/Jakarta')->format('H:i') }}</time>
+                            <time class="mt-1 block text-[10px] {{ $isCustomerMessage ? 'text-right' : '' }} text-slate-400">{{ $message->created_at->timezone('Asia/Jakarta')->format('H:i') }}</time>
                         </div>
                     @empty
                         <p class="py-10 text-center text-sm text-slate-500" data-customer-chat-empty>Belum ada pesan dalam percakapan ini.</p>
@@ -100,10 +100,24 @@
             const input = form.querySelector('[data-customer-chat-input]');
             const submitButton = form.querySelector('[data-customer-chat-submit]');
             const errorMessage = form.querySelector('[data-customer-chat-error]');
+            const statusBadge = document.querySelector('[data-customer-chat-status]');
             const csrfToken = form.querySelector('input[name="_token"]').value;
             let lastMessageId = Math.max(0, ...Array.from(messagesContainer.querySelectorAll('[data-customer-chat-entry]'), (entry) => Number(entry.dataset.customerChatEntry) || 0));
             let isPolling = false;
             let isSending = false;
+
+            const updateStatusBadge = (status) => {
+                if (!statusBadge) return;
+
+                const labels = {
+                    waiting_admin: ['Menunggu admin', 'shrink-0 rounded-full bg-amber-100 px-3 py-1 text-[11px] font-semibold text-amber-800'],
+                    waiting_customer: ['Menunggu balasanmu', 'shrink-0 rounded-full bg-sky-100 px-3 py-1 text-[11px] font-semibold text-sky-800'],
+                    closed: ['Selesai', 'shrink-0 rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600'],
+                };
+                const [label, classes] = labels[status] || ['Percakapan aktif', 'shrink-0 rounded-full bg-emerald-100 px-3 py-1 text-[11px] font-semibold text-emerald-800'];
+                statusBadge.textContent = label;
+                statusBadge.className = classes;
+            };
 
             const appendMessage = (message) => {
                 const messageId = Number(message.id) || 0;
@@ -114,10 +128,10 @@
                 const isSystemMessage = message.sender_type === 'system';
                 const wrapper = document.createElement('div');
                 wrapper.dataset.customerChatEntry = String(messageId);
-                wrapper.className = isSystemMessage ? 'mx-auto max-w-[90%] text-center' : (isCustomerMessage ? 'ml-auto max-w-[88%]' : 'max-w-[88%]');
+                wrapper.className = isCustomerMessage ? 'ml-auto max-w-[88%]' : 'max-w-[88%]';
 
                 const sender = document.createElement('p');
-                sender.className = `mb-1 text-[11px] font-medium ${isSystemMessage ? 'text-center text-slate-500' : (isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500')}`;
+                sender.className = `mb-1 text-[11px] font-medium ${isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500'}`;
                 sender.textContent = isSystemMessage ? 'Balasan otomatis' : (isCustomerMessage ? 'Kamu' : 'Admin Sinergi Store');
 
                 const bubble = document.createElement('p');
@@ -125,7 +139,7 @@
                 bubble.textContent = message.body;
 
                 const timestamp = document.createElement('time');
-                timestamp.className = `mt-1 block text-[10px] text-slate-400 ${isSystemMessage ? 'text-center' : (isCustomerMessage ? 'text-right' : '')}`;
+                timestamp.className = `mt-1 block text-[10px] text-slate-400 ${isCustomerMessage ? 'text-right' : ''}`;
                 const createdAt = new Date(message.created_at);
                 timestamp.textContent = Number.isNaN(createdAt.getTime())
                     ? ''
@@ -149,6 +163,7 @@
                     if (!response.ok) return;
 
                     (payload.messages || []).forEach(appendMessage);
+                    updateStatusBadge(payload.status);
                 } catch {
                     // Polling retries automatically on the next interval.
                 } finally {
@@ -180,6 +195,7 @@
 
                     input.value = '';
                     (payload.messages || []).forEach(appendMessage);
+                    updateStatusBadge(payload.status);
                 } catch (error) {
                     errorMessage.textContent = error.message || 'Pesan belum terkirim. Coba lagi.';
                 } finally {

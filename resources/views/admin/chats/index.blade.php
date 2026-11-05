@@ -63,7 +63,7 @@
                             </span>
                             <span class="mt-1 block truncate text-sm text-slate-600">{{ $conversation->product?->name ?? $conversation->product_name }}</span>
                             <span class="mt-1 block truncate text-sm {{ $conversation->unread_messages_count > 0 ? 'font-semibold text-slate-900' : 'text-slate-500' }}">
-                                {{ $conversation->latestMessage?->body ?? 'Belum ada pesan.' }}
+                                {{ $conversation->latest_customer_message_body ?? 'Belum ada pesan dari pembeli.' }}
                             </span>
                         </span>
                         <span class="flex shrink-0 items-center gap-3 sm:flex-col sm:items-end sm:gap-1">
