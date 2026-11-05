@@ -94,13 +94,14 @@
                 </nav>
 
                 <div class="flex shrink-0 items-center gap-2">
-                    <a href="{{ route('account.chats.index') }}" aria-label="Percakapan saya" title="Percakapan saya" @class(['inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2', 'border-amber-300 bg-amber-50 text-amber-800' => request()->routeIs('account.chats.*'), 'border-slate-200 text-slate-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700' => ! request()->routeIs('account.chats.*')])>
+                    <a href="{{ route('account.chats.index') }}" aria-label="Percakapan saya" title="Percakapan saya" data-customer-chat-link @class(['relative inline-flex h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2', 'border-amber-300 bg-amber-50 text-amber-800' => request()->routeIs('account.chats.*'), 'border-slate-200 text-slate-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700' => ! request()->routeIs('account.chats.*')])>
                         <svg class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                             <path d="M20.5 11.5a8.5 8.5 0 0 1-12.7 7.4L3 20l1.2-4.3A8.5 8.5 0 1 1 20.5 11.5Z" />
                             <circle cx="8.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
                             <circle cx="12" cy="11.5" r=".8" fill="currentColor" stroke="none" />
                             <circle cx="15.5" cy="11.5" r=".8" fill="currentColor" stroke="none" />
                         </svg>
+                        <span data-customer-chat-unread-badge class="absolute -right-1 -top-1 hidden h-5 min-w-5 items-center justify-center rounded-full border-2 border-white bg-rose-500 px-1 text-[10px] font-bold leading-none text-white shadow-sm" aria-hidden="true"></span>
                     </a>
                     @auth('customer')
                         <a href="{{ route('account.profile') }}" aria-label="Profil saya" title="Profil saya" @class(['hidden h-10 w-10 items-center justify-center rounded-xl border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 sm:inline-flex', 'border-amber-300 bg-amber-50 text-amber-800' => request()->routeIs('account.profile*'), 'border-slate-200 text-slate-700 hover:border-amber-400 hover:bg-amber-50 hover:text-amber-700' => ! request()->routeIs('account.profile*')])>
@@ -332,6 +333,38 @@
                     storeThemeMenu.querySelector('summary')?.focus();
                 }
             });
+        </script>
+
+        <script>
+            (() => {
+                const chatLink = document.querySelector('[data-customer-chat-link]');
+                const unreadBadge = document.querySelector('[data-customer-chat-unread-badge]');
+                if (!chatLink || !unreadBadge) return;
+
+                const refreshCustomerChatUnreadBadge = async () => {
+                    try {
+                        const response = await fetch(@json(route('account.chats.unread-count')), {
+                            headers: { 'Accept': 'application/json' },
+                        });
+                        if (!response.ok) return;
+
+                        const payload = await response.json();
+                        const unreadCount = Number(payload.unread_messages) || 0;
+                        unreadBadge.textContent = unreadCount > 99 ? '99+' : String(unreadCount);
+                        unreadBadge.classList.toggle('hidden', unreadCount < 1);
+                        unreadBadge.classList.toggle('inline-flex', unreadCount > 0);
+                        chatLink.setAttribute(
+                            'aria-label',
+                            unreadCount > 0 ? `Percakapan saya, ${unreadCount} pesan belum dibaca` : 'Percakapan saya',
+                        );
+                    } catch {
+                        // Keep the current badge when the network is temporarily unavailable.
+                    }
+                };
+
+                refreshCustomerChatUnreadBadge();
+                window.setInterval(refreshCustomerChatUnreadBadge, 10000);
+            })();
         </script>
 
         @stack('scripts')
