@@ -39,6 +39,11 @@ class Customer extends Authenticatable
         return $this->hasMany(ProductReview::class);
     }
 
+    public function productConversations(): HasMany
+    {
+        return $this->hasMany(ProductConversation::class);
+    }
+
     /**
      * Send the customer-specific password reset notification.
      *
