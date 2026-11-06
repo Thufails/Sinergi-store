@@ -24,23 +24,34 @@ class ProductConversationController extends Controller
 
     public function unreadCount(Request $request): JsonResponse
     {
-        $conversationQuery = $this->conversationQuery($request);
+        $customer = $request->user('customer');
+        $guestToken = $request->session()->get('product_chat_guest_token');
+
+        if (! $customer && (! is_string($guestToken) || ! Str::isUuid($guestToken))) {
+            return response()->json([
+                'unread_messages' => 0,
+                'unread_conversations' => 0,
+            ]);
+        }
+
+        $conversationQuery = ProductConversation::query();
+
+        if ($customer) {
+            $conversationQuery->where('customer_id', $customer->id);
+        } else {
+            $conversationQuery->whereNull('customer_id')->where('guest_token', $guestToken);
+        }
+
         $conversationIds = (clone $conversationQuery)->select('id');
         $unreadMessages = ProductConversationMessage::query()
             ->whereIn('product_conversation_id', $conversationIds)
-            ->whereIn('sender_type', ['system', 'admin'])
+            ->where('sender_type', 'admin')
             ->whereNull('read_at')
-            ->where(fn (Builder $messageQuery) => $messageQuery
-                ->where('sender_type', '!=', 'system')
-                ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE))
             ->count();
         $unreadConversations = $conversationQuery
             ->whereHas('messages', fn (Builder $query) => $query
-                ->whereIn('sender_type', ['system', 'admin'])
-                ->whereNull('read_at')
-                ->where(fn (Builder $messageQuery) => $messageQuery
-                    ->where('sender_type', '!=', 'system')
-                    ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE)))
+                ->where('sender_type', 'admin')
+                ->whereNull('read_at'))
             ->count();
 
         return response()->json([
@@ -60,11 +71,8 @@ class ProductConversationController extends Controller
             ])
             ->withCount([
                 'messages as unread_messages_count' => fn (Builder $query) => $query
-                    ->whereIn('sender_type', ['system', 'admin'])
-                    ->whereNull('read_at')
-                    ->where(fn (Builder $messageQuery) => $messageQuery
-                        ->where('sender_type', '!=', 'system')
-                        ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE)),
+                    ->where('sender_type', 'admin')
+                    ->whereNull('read_at'),
             ])
             ->orderByDesc('last_message_at')
             ->orderByDesc('id')
@@ -140,6 +148,7 @@ class ProductConversationController extends Controller
                 $initialMessage = $conversation->messages()->create([
                     'sender_type' => 'system',
                     'body' => $initialReply,
+                    'read_at' => now(),
                 ]);
 
                 $conversation->forceFill(['last_message_at' => $initialMessage->created_at])->save();
@@ -229,6 +238,7 @@ class ProductConversationController extends Controller
             $systemMessage = $conversation->messages()->create([
                 'sender_type' => 'system',
                 'body' => $automaticReply,
+                'read_at' => now(),
             ]);
 
             $conversation->forceFill([
@@ -435,9 +445,13 @@ class ProductConversationController extends Controller
 
     private function extractRequestedVariantLabel(string $normalizedMessage, string $dimension): ?string
     {
+        $conversationBoundary = '\b(?:aku|saya|mau|ingin|tanya|nanya|cek|stok(?:nya)?|ready|tersedia|ada|pesan|pesen|beli|order|buat|dong|donk|min|admin|kak|mas|mbak|bang|sis|sih|ya|kah)\b';
+        $otherVariantBoundary = $dimension === 'color'
+            ? '\b(?:ukuran|size)\b'
+            : '\b(?:warna|color)\b';
         $pattern = $dimension === 'color'
-            ? '/\b(?:warna|color)\s+(.+?)(?=\b(?:ukuran|size)\b|$)/u'
-            : '/\b(?:ukuran|size)\s+(.+?)(?=\b(?:warna|color)\b|$)/u';
+            ? '/\b(?:warna|color)\s+(.+?)(?='.$otherVariantBoundary.'|'.$conversationBoundary.'|$)/u'
+            : '/\b(?:ukuran|size)\s+(.+?)(?='.$otherVariantBoundary.'|'.$conversationBoundary.'|$)/u';
 
         if (preg_match($pattern, $normalizedMessage, $matches) !== 1) {
             return null;
@@ -585,6 +599,7 @@ class ProductConversationController extends Controller
                 $systemMessage = $lockedConversation->messages()->create([
                     'sender_type' => 'system',
                     'body' => $reply,
+                    'read_at' => now(),
                 ]);
 
                 $lockedConversation->forceFill([
