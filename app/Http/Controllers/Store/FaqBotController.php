@@ -85,8 +85,12 @@ class FaqBotController extends Controller
                 'reply' => 'Setelah admin menetapkan ongkir, buka detail pesanan di menu Pesanan Saya. Ikuti informasi pembayaran yang tercantum di sana, lalu unggah bukti pembayaran sebelum batas waktunya.',
             ],
             [
-                'keywords' => ['stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'hold stok', 'di-hold', 'dihold', 'di hold', 'ditahan', 'persediaan', 'ready stock', 'ready stok', 'masih ready', 'masih ada stok', 'stok'],
+                'keywords' => ['hold stok', 'stok di-hold', 'di-hold', 'dihold', 'di hold', 'stok ditahan', 'stok pesanan ditahan', 'ditahan'],
                 'reply' => 'Stok ditahan selama 24 jam setelah admin menetapkan ongkir dan pesanan menunggu pembayaran. Stok fisik dikurangi setelah pembayaran dikonfirmasi admin.',
+            ],
+            [
+                'keywords' => ['total stok produk', 'total stok', 'stok total', 'jumlah stok produk', 'jumlah stok', 'stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'persediaan', 'ready stock', 'ready stok', 'masih ready', 'masih ada stok', 'stok'],
+                'reply' => 'Total stok dan rincian stok tiap ukuran atau warna bisa dilihat pada halaman detail produk. Untuk produk yang memiliki varian, jumlah yang tersedia mengikuti stok masing-masing varian. Stok dapat berubah karena sebagian unit ditahan sementara untuk pesanan yang menunggu pembayaran.',
             ],
             [
                 'keywords' => ['buat akun', 'bikin akun', 'bkin akun', 'daftar akun', 'daftar', 'registrasi', 'register', 'sign up', 'sign in', 'masuk akun', 'login', 'log in', 'akun'],
