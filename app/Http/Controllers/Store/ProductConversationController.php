@@ -159,7 +159,10 @@ class ProductConversationController extends Controller
             $this->replyToPendingMessages($conversation, $productAvailability);
         }
 
-        $messages = $conversation->messages()->orderBy('id')->get();
+        $messages = $conversation->messages()
+            ->with('user:id,name')
+            ->orderBy('id')
+            ->get();
 
         return response()->json([
             'conversation_id' => $conversation->id,
@@ -179,6 +182,7 @@ class ProductConversationController extends Controller
             ->where(fn (Builder $messageQuery) => $messageQuery
                 ->where('sender_type', '!=', 'system')
                 ->orWhere('body', '!=', self::ADMIN_CLOSURE_MESSAGE))
+            ->with('user:id,name')
             ->orderBy('id');
 
         if (! empty($validated['after_id'])) {
@@ -612,13 +616,14 @@ class ProductConversationController extends Controller
 
     /**
      * @param  Collection<int, ProductConversationMessage>  $messages
-     * @return list<array{id: int, sender_type: string, body: string, created_at: ?string}>
+     * @return list<array{id: int, sender_type: string, sender_name: ?string, body: string, created_at: ?string}>
      */
     private function serializeMessages(Collection $messages): array
     {
         return $messages->map(fn (ProductConversationMessage $message): array => [
             'id' => (int) $message->id,
             'sender_type' => $message->sender_type,
+            'sender_name' => $message->sender_type === 'admin' ? $message->user?->name : null,
             'body' => $message->body,
             'created_at' => $message->created_at?->toIso8601String(),
         ])->values()->all();

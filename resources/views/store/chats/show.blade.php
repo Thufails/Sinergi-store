@@ -55,7 +55,7 @@
                             $isSystemMessage = $message->sender_type === 'system';
                         @endphp
                         <div class="{{ $isCustomerMessage ? 'ml-auto max-w-[88%]' : 'max-w-[88%]' }}" data-customer-chat-entry="{{ $message->id }}">
-                            <p class="mb-1 text-[11px] font-medium {{ $isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500' }}">{{ $isSystemMessage ? 'Balasan otomatis' : ($isCustomerMessage ? 'Kamu' : ($message->user?->name ?? 'Admin Sinergi Store')) }}</p>
+                            <p class="mb-1 text-[11px] font-medium {{ $isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500' }}">{{ $isSystemMessage ? 'Balasan otomatis' : ($isCustomerMessage ? 'Kamu' : (($message->user?->name ? $message->user->name.' - Admin Sinergi' : 'Admin Sinergi'))) }}</p>
                             <p class="whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-6 {{ $isSystemMessage ? 'border border-amber-200 bg-amber-50 text-slate-700' : ($isCustomerMessage ? 'rounded-tr-sm bg-amber-500 text-slate-950' : 'rounded-tl-sm border border-slate-200 bg-white text-slate-700') }}">{{ $message->body }}</p>
                             <time class="mt-1 block text-[10px] {{ $isCustomerMessage ? 'text-right' : '' }} text-slate-400">{{ $message->created_at->timezone('Asia/Jakarta')->format('H:i') }}</time>
                         </div>
@@ -132,7 +132,9 @@
 
                 const sender = document.createElement('p');
                 sender.className = `mb-1 text-[11px] font-medium ${isCustomerMessage ? 'text-right text-slate-500' : 'text-slate-500'}`;
-                sender.textContent = isSystemMessage ? 'Balasan otomatis' : (isCustomerMessage ? 'Kamu' : 'Admin Sinergi Store');
+                sender.textContent = isSystemMessage
+                    ? 'Balasan otomatis'
+                    : (isCustomerMessage ? 'Kamu' : (message.sender_name ? `${message.sender_name} - Admin Sinergi` : 'Admin Sinergi'));
 
                 const bubble = document.createElement('p');
                 bubble.className = `whitespace-pre-wrap break-words rounded-2xl px-3.5 py-2.5 text-sm leading-6 ${isSystemMessage ? 'border border-amber-200 bg-amber-50 text-slate-700' : (isCustomerMessage ? 'rounded-tr-sm bg-amber-500 text-slate-950' : 'rounded-tl-sm border border-slate-200 bg-white text-slate-700')}`;

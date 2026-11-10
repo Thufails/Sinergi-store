@@ -257,7 +257,11 @@
 
                 const sender = document.createElement('p');
                 sender.className = isCustomerMessage ? 'mb-1 text-right text-[11px] font-medium text-slate-500' : 'mb-1 text-[11px] font-medium text-slate-500';
-                sender.textContent = isCustomerMessage ? 'Kamu' : (message.sender_type === 'admin' ? 'Admin Sinergi Store' : 'Sinergi Store');
+                sender.textContent = isCustomerMessage
+                    ? 'Kamu'
+                    : (message.sender_type === 'admin'
+                        ? (message.sender_name ? `${message.sender_name} - Admin Sinergi` : 'Admin Sinergi')
+                        : 'Sinergi Store');
 
                 const bubble = document.createElement('p');
                 bubble.className = isCustomerMessage
