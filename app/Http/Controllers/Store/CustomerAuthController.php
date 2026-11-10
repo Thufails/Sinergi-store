@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\ProductConversation;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,9 +16,11 @@ use Illuminate\View\View;
 
 class CustomerAuthController extends Controller
 {
-    public function showRegistrationForm(): View
+    public function showRegistrationForm(Request $request): View
     {
-        return view('store.auth.register');
+        return view('store.auth.register', [
+            'redirectTo' => $this->safeRedirectPath($request->query('redirect_to')),
+        ]);
     }
 
     public function register(Request $request): RedirectResponse
@@ -27,6 +30,7 @@ class CustomerAuthController extends Controller
             'email' => ['required', 'string', 'email', 'max:255', 'unique:customers,email'],
             'phone' => ['nullable', 'string', 'max:30', 'regex:/^[0-9+().\\s-]{8,30}$/'],
             'password' => ['required', 'string', 'min:8', 'regex:/^\\S+$/', 'confirmed'],
+            'redirect_to' => ['nullable', 'string', 'max:2048'],
         ], [
             'password.regex' => 'Password tidak boleh mengandung spasi.',
         ]);
@@ -39,15 +43,18 @@ class CustomerAuthController extends Controller
         ]);
 
         Auth::guard('customer')->login($customer);
+        $this->attachGuestConversationsToCustomer($request, $customer);
         $request->session()->regenerate();
 
-        return redirect()->route('store.home')
+        return $this->redirectAfterAuthentication($validated['redirect_to'] ?? null)
             ->with('success', 'Akun berhasil dibuat.');
     }
 
-    public function showLoginForm(): View
+    public function showLoginForm(Request $request): View
     {
-        return view('store.auth.login');
+        return view('store.auth.login', [
+            'redirectTo' => $this->safeRedirectPath($request->query('redirect_to')),
+        ]);
     }
 
     public function login(Request $request): RedirectResponse
@@ -55,6 +62,7 @@ class CustomerAuthController extends Controller
         $credentials = $request->validate([
             'email' => ['required', 'email'],
             'password' => ['required', 'string'],
+            'redirect_to' => ['nullable', 'string', 'max:2048'],
         ]);
 
         if (! Auth::guard('customer')->attempt($credentials, $request->boolean('remember'))) {
@@ -63,9 +71,15 @@ class CustomerAuthController extends Controller
                 ->onlyInput('email');
         }
 
+        $customer = Auth::guard('customer')->user();
+
+        if ($customer instanceof Customer) {
+            $this->attachGuestConversationsToCustomer($request, $customer);
+        }
+
         $request->session()->regenerate();
 
-        return redirect()->route('store.home');
+        return $this->redirectAfterAuthentication($validated['redirect_to'] ?? null);
     }
 
     public function logout(Request $request): RedirectResponse
@@ -76,6 +90,45 @@ class CustomerAuthController extends Controller
 
         return redirect()->route('store.home')
             ->with('success', 'Kamu berhasil keluar dari akun.');
+    }
+
+    private function attachGuestConversationsToCustomer(Request $request, Customer $customer): void
+    {
+        $guestToken = $request->session()->get('product_chat_guest_token');
+
+        if (! is_string($guestToken) || ! Str::isUuid($guestToken)) {
+            return;
+        }
+
+        ProductConversation::query()
+            ->whereNull('customer_id')
+            ->where('guest_token', $guestToken)
+            ->update([
+                'customer_id' => $customer->id,
+                'guest_token' => null,
+            ]);
+    }
+
+    private function redirectAfterAuthentication(?string $redirectTo): RedirectResponse
+    {
+        $safeRedirectPath = $this->safeRedirectPath($redirectTo);
+
+        return $safeRedirectPath !== null
+            ? redirect()->to($safeRedirectPath)
+            : redirect()->intended(route('store.home'));
+    }
+
+    private function safeRedirectPath(mixed $redirectTo): ?string
+    {
+        if (! is_string($redirectTo)
+            || ! str_starts_with($redirectTo, '/')
+            || str_starts_with($redirectTo, '//')
+            || str_starts_with($redirectTo, '/\\')
+            || preg_match('/[\\r\\n]/', $redirectTo) === 1) {
+            return null;
+        }
+
+        return $redirectTo;
     }
 
     public function showForgotPasswordForm(): View

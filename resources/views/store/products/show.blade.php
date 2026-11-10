@@ -54,7 +54,11 @@
                     <p data-share-feedback class="mt-1 hidden text-center text-xs text-slate-500" role="status" aria-live="polite"></p>
                     <button type="button" data-product-chat-open aria-expanded="false" class="mt-2 inline-flex min-h-10 w-full items-center justify-center gap-2 rounded-lg border border-amber-500 px-4 py-2.5 text-sm font-semibold text-amber-800 transition hover:bg-amber-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400">
                         <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.3L3 20l1.2-4.2A8.5 8.5 0 1 1 21 11.5Z"/><path d="M8 12h.01M12 12h.01M16 12h.01"/></svg>
-                        Tanya produk lewat chat
+                        @auth('customer')
+                            Tanya produk lewat chat
+                        @else
+                            Masuk untuk chat admin
+                        @endauth
                     </button>
                     @if (! $hasAvailableStock)
                         <p class="mt-3 text-center text-xs text-slate-500">Produk ini sedang tidak tersedia.</p>
@@ -73,6 +77,8 @@
             data-start-url="{{ route('store.products.conversations.start', $product) }}"
             data-messages-url-template="{{ route('store.product-conversations.messages', ['conversation' => '__conversation__']) }}"
             data-send-url-template="{{ route('store.product-conversations.messages.store', ['conversation' => '__conversation__']) }}"
+            data-customer-authenticated="{{ auth('customer')->check() ? 'true' : 'false' }}"
+            data-login-url="{{ route('account.login', ['redirect_to' => route('store.products.show', $product, false).'?open_chat=1']) }}"
         >
             <section class="flex h-[min(82vh,42rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl bg-white shadow-2xl">
                 <header class="flex items-center justify-between gap-4 border-b border-slate-200 bg-slate-50 px-5 py-4">
@@ -237,6 +243,7 @@
             let pollTimer = null;
             let isPolling = false;
             let isSending = false;
+            let isOpeningChat = false;
             let renderedMessageIds = new Set();
 
             const setChatStatus = (message) => {
@@ -306,16 +313,34 @@
                     const response = await fetch(url, {
                         headers: { 'Accept': 'application/json' },
                     });
+
+                    if (response.status === 401) {
+                        window.clearInterval(pollTimer);
+                        pollTimer = null;
+                        setChatStatus('Sesi login berakhir. Masuk kembali untuk melanjutkan chat.');
+                        return;
+                    }
+
                     const payload = await parseResponse(response);
+                    chatStatus.classList.add('hidden');
                     updateMessages(payload.messages || []);
                 } catch {
-                    // Polling will retry automatically on its next interval.
+                    setChatStatus('Koneksi chat terputus. Kami akan mencoba menghubungkan kembali.');
                 } finally {
                     isPolling = false;
                 }
             };
 
             const openProductChat = async () => {
+                if (productChat.dataset.customerAuthenticated !== 'true') {
+                    window.location.assign(productChat.dataset.loginUrl);
+                    return;
+                }
+
+                if (isOpeningChat) return;
+
+                isOpeningChat = true;
+                chatOpenButton.disabled = true;
                 productChat.classList.remove('hidden');
                 productChat.classList.add('flex');
                 productChat.setAttribute('aria-hidden', 'false');
@@ -333,6 +358,12 @@
                         },
                         body: JSON.stringify({}),
                     });
+
+                    if (response.status === 401) {
+                        window.location.assign(productChat.dataset.loginUrl);
+                        return;
+                    }
+
                     const payload = await parseResponse(response);
                     conversationId = payload.conversation_id;
                     lastMessageId = 0;
@@ -347,6 +378,9 @@
                     pollTimer = window.setInterval(pollMessages, 5000);
                 } catch (error) {
                     setChatStatus(error.message || 'Chat belum bisa dibuka. Coba tutup lalu buka lagi.');
+                } finally {
+                    isOpeningChat = false;
+                    chatOpenButton.disabled = false;
                 }
             };
 
@@ -388,6 +422,12 @@
                         },
                         body: JSON.stringify({ message: body }),
                     });
+
+                    if (response.status === 401) {
+                        window.location.assign(productChat.dataset.loginUrl);
+                        return;
+                    }
+
                     const payload = await parseResponse(response);
                     chatInput.value = '';
                     updateMessages(payload.messages || []);
@@ -400,6 +440,13 @@
                     chatInput.focus();
                 }
             });
+
+            const currentUrl = new URL(window.location.href);
+            if (currentUrl.searchParams.get('open_chat') === '1') {
+                currentUrl.searchParams.delete('open_chat');
+                window.history.replaceState({}, '', currentUrl);
+                openProductChat();
+            }
         }
     </script>
 @endsection

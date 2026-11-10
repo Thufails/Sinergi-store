@@ -123,8 +123,10 @@ Route::prefix('account')->name('account.')->group(function () {
     Route::get('/chats/unread-count', [ProductConversationController::class, 'unreadCount'])
         ->name('chats.unread-count');
     Route::get('/chats', [ProductConversationController::class, 'index'])
+        ->middleware('auth:customer')
         ->name('chats.index');
     Route::get('/chats/{conversation}', [ProductConversationController::class, 'show'])
+        ->middleware('auth:customer')
         ->name('chats.show');
 
     Route::middleware('guest:customer')->group(function () {
@@ -204,14 +206,17 @@ Route::get('/products', [StoreProductController::class, 'index'])
     ->name('store.products.index');
 
 Route::post('/products/{product:slug}/conversations', [ProductConversationController::class, 'start'])
+    ->middleware('auth:customer')
     ->middleware('throttle:10,1')
     ->name('store.products.conversations.start');
 
 Route::get('/product-conversations/{conversation}/messages', [ProductConversationController::class, 'messages'])
+    ->middleware('auth:customer')
     ->middleware('throttle:60,1')
     ->name('store.product-conversations.messages');
 
 Route::post('/product-conversations/{conversation}/messages', [ProductConversationController::class, 'send'])
+    ->middleware('auth:customer')
     ->middleware('throttle:20,1')
     ->name('store.product-conversations.messages.store');
 

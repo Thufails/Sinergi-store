@@ -117,45 +117,59 @@ class ProductConversationController extends Controller
         ]);
 
         $guestToken = $request->user('customer') ? null : $this->guestToken($request);
-        $conversation = $this->conversationQuery($request, $guestToken)
-            ->where('product_id', $product->id)
-            ->where('status', '!=', 'closed')
-            ->latest('last_message_at')
-            ->latest('id')
-            ->first();
+        $variant = isset($validated['variant_id'])
+            ? $product->variants->firstWhere('id', (int) $validated['variant_id'])
+            : null;
+        $variantLabel = $variant
+            ? collect([$variant->size, $variant->color])->filter()->implode(' · ')
+            : null;
 
-        if (! $conversation) {
+        [$conversation, $conversationAlreadyExisted] = DB::transaction(function () use (
+            $request,
+            $product,
+            $guestToken,
+            $variant,
+            $variantLabel,
+            $productAvailability,
+        ): array {
+            Product::query()->whereKey($product->id)->lockForUpdate()->firstOrFail();
+
+            $conversation = $this->conversationQuery($request, $guestToken)
+                ->where('product_id', $product->id)
+                ->where('status', '!=', 'closed')
+                ->latest('last_message_at')
+                ->latest('id')
+                ->lockForUpdate()
+                ->first();
+
+            if ($conversation) {
+                return [$conversation, true];
+            }
+
             $productAvailability->refresh($product);
-            $variant = isset($validated['variant_id'])
-                ? $product->variants->firstWhere('id', (int) $validated['variant_id'])
-                : null;
-            $variantLabel = $variant
-                ? collect([$variant->size, $variant->color])->filter()->implode(' · ')
-                : null;
             $initialReply = $this->initialReply($product);
+            $conversation = ProductConversation::query()->create([
+                'customer_id' => $request->user('customer')?->id,
+                'guest_token' => $guestToken,
+                'product_id' => $product->id,
+                'product_variant_id' => $variant?->id,
+                'product_name' => $product->name,
+                'variant_label' => $variantLabel !== '' ? $variantLabel : null,
+                'status' => 'waiting_admin',
+            ]);
 
-            $conversation = DB::transaction(function () use ($request, $product, $guestToken, $variant, $variantLabel, $initialReply): ProductConversation {
-                $conversation = ProductConversation::query()->create([
-                    'customer_id' => $request->user('customer')?->id,
-                    'guest_token' => $guestToken,
-                    'product_id' => $product->id,
-                    'product_variant_id' => $variant?->id,
-                    'product_name' => $product->name,
-                    'variant_label' => $variantLabel !== '' ? $variantLabel : null,
-                    'status' => 'waiting_admin',
-                ]);
+            $initialMessage = $conversation->messages()->create([
+                'sender_type' => 'system',
+                'body' => $initialReply,
+                'read_at' => now(),
+            ]);
 
-                $initialMessage = $conversation->messages()->create([
-                    'sender_type' => 'system',
-                    'body' => $initialReply,
-                    'read_at' => now(),
-                ]);
+            $conversation->forceFill(['last_message_at' => $initialMessage->created_at])->save();
 
-                $conversation->forceFill(['last_message_at' => $initialMessage->created_at])->save();
+            return [$conversation, false];
+        });
 
-                return $conversation;
-            });
-        } else {
+        if ($conversationAlreadyExisted) {
             $this->replyToPendingMessages($conversation, $productAvailability);
         }
 

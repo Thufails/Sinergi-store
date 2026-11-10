@@ -12,6 +12,9 @@
 
             <form method="POST" action="{{ route('account.register.submit') }}" class="mt-7 space-y-5">
                 @csrf
+                @if (old('redirect_to', $redirectTo))
+                    <input type="hidden" name="redirect_to" value="{{ old('redirect_to', $redirectTo) }}">
+                @endif
                 <div>
                     <label for="name" class="mb-2 block text-sm font-medium text-slate-700">Nama</label>
                     <input id="name" name="name" type="text" value="{{ old('name') }}" maxlength="150" required autocomplete="name" autofocus class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-200" placeholder="Nama lengkap">
@@ -58,7 +61,7 @@
 
             <p class="mt-6 border-t border-slate-200 pt-5 text-center text-sm text-slate-600">
                 Sudah punya akun?
-                <a href="{{ route('account.login') }}" class="font-semibold text-amber-700 hover:text-amber-800">Masuk / Sign in</a>
+                <a href="{{ route('account.login', $redirectTo ? ['redirect_to' => $redirectTo] : []) }}" class="font-semibold text-amber-700 hover:text-amber-800">Masuk / Sign in</a>
             </p>
         </div>
     </section>
