@@ -171,7 +171,7 @@ class FaqBotController extends Controller
         ];
 
         foreach ($productCategoryKeywords as $keyword) {
-            if ($this->containsKeyword($message, $keyword)) {
+            if (! $this->containsKeyword($message, 'kategori') && $this->containsKeyword($message, $keyword)) {
                 $productCategories = Category::query()
                     ->where('is_active', true)
                     ->whereHas('products', fn (Builder $query) => $query->where('is_active', true))
@@ -194,6 +194,53 @@ class FaqBotController extends Controller
                     'reply' => $this->withGreeting($greeting, 'Produk yang tersedia antara lain kategori '.$categoryNames.$moreCategories.'. Lihat katalog pada menu Produk untuk daftar lengkapnya.'),
                 ]);
             }
+        }
+
+        $asksForCategoryProducts = $this->containsKeyword($message, 'kategori')
+            && collect(['produk', 'barang', 'apa', 'ada', 'jual', 'tersedia', 'isi'])
+                ->contains(fn (string $keyword): bool => $this->containsKeyword($message, $keyword));
+
+        if ($asksForCategoryProducts) {
+            $category = $this->findMentionedActiveCategory($message);
+
+            if (! $category) {
+                $activeCategoryNames = Category::query()
+                    ->where('is_active', true)
+                    ->whereHas('products', fn (Builder $query) => $query->where('is_active', true))
+                    ->orderBy('name')
+                    ->pluck('name');
+
+                $availableCategories = $activeCategoryNames->isNotEmpty()
+                    ? ' Kategori yang tersedia: '.$activeCategoryNames->implode(', ').'.'
+                    : ' Saat ini belum ada kategori aktif di katalog.';
+
+                return response()->json([
+                    'matched' => true,
+                    'reply' => $this->withGreeting($greeting, 'Aku belum menemukan kategori yang kamu maksud.'.$availableCategories),
+                ]);
+            }
+
+            $products = $category->products()
+                ->where('is_active', true)
+                ->orderBy('name')
+                ->pluck('name');
+
+            if ($products->isEmpty()) {
+                return response()->json([
+                    'matched' => true,
+                    'reply' => $this->withGreeting($greeting, 'Saat ini belum ada produk aktif di kategori '.$category->name.'.'),
+                ]);
+            }
+
+            $listedProducts = $products->take(8)->implode(', ');
+            $moreProducts = $products->count() > 8
+                ? ' dan '.($products->count() - 8).' produk lainnya'
+                : '';
+
+            return response()->json([
+                'matched' => true,
+                'reply' => $this->withGreeting($greeting, 'Di kategori '.$category->name.', produk yang tersedia: '.$listedProducts.$moreProducts.'.'),
+            ]);
         }
 
         foreach ($faqResponses as $faqResponse) {
@@ -302,5 +349,21 @@ class FaqBotController extends Controller
             ->first();
 
         return $product?->load('variants');
+    }
+
+    private function findMentionedActiveCategory(string $message): ?Category
+    {
+        return Category::query()
+            ->where('is_active', true)
+            ->get(['id', 'name', 'slug'])
+            ->filter(function (Category $category) use ($message): bool {
+                $categoryName = mb_strtolower(trim($category->name));
+                $categorySlug = mb_strtolower(str_replace('-', ' ', trim($category->slug)));
+
+                return $this->containsKeyword($message, $categoryName)
+                    || $this->containsKeyword($message, $categorySlug);
+            })
+            ->sortByDesc(fn (Category $category): int => mb_strlen($category->name))
+            ->first();
     }
 }
