@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Store;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\Product;
+use App\Services\ProductAvailabilityService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class FaqBotController extends Controller
 {
-    public function respond(Request $request): JsonResponse
+    public function respond(Request $request, ProductAvailabilityService $productAvailability): JsonResponse
     {
         $validated = $request->validate([
             'message' => ['required', 'string', 'max:500'],
@@ -70,6 +72,57 @@ class FaqBotController extends Controller
             }
         }
 
+        $stockHoldingKeywords = ['hold stok', 'stok di-hold', 'dihold', 'di hold', 'stok ditahan', 'stok pesanan ditahan', 'ditahan'];
+
+        foreach ($stockHoldingKeywords as $keyword) {
+            if ($this->containsKeyword($message, $keyword)) {
+                return response()->json([
+                    'matched' => true,
+                    'reply' => $this->withGreeting($greeting, 'Stok ditahan selama 24 jam setelah admin menetapkan ongkir dan pesanan menunggu pembayaran. Stok fisik dikurangi setelah pembayaran dikonfirmasi admin.'),
+                ]);
+            }
+        }
+
+        $stockQuestionKeywords = ['total stok produk', 'total stok', 'stok total', 'jumlah stok produk', 'jumlah stok', 'stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'persediaan', 'ready stock', 'ready stok', 'masih ready', 'masih ada stok', 'stok'];
+        $asksAboutStock = collect($stockQuestionKeywords)
+            ->contains(fn (string $keyword): bool => $this->containsKeyword($message, $keyword));
+
+        if ($asksAboutStock) {
+            $product = $this->findMentionedActiveProduct($message);
+
+            if (! $product) {
+                return response()->json([
+                    'matched' => true,
+                    'reply' => $this->withGreeting($greeting, 'Produk mana yang ingin kamu cek stoknya? Sebutkan nama produknya, nanti aku tampilkan jumlah stok tersedia dan rinciannya per ukuran atau warna jika ada.'),
+                ]);
+            }
+
+            $productAvailability->refresh($product);
+
+            if ($product->variants->isEmpty()) {
+                $availableStock = (int) $product->getAttribute('available_stock');
+                $stockReply = 'Stok tersedia untuk '.$product->name.': '.$availableStock.' unit.';
+            } else {
+                $availableStock = (int) $product->variants->sum('available_stock');
+                $variantStockSummary = $product->variants
+                    ->map(function ($variant): string {
+                        $variantName = collect([$variant->size, $variant->color])
+                            ->filter()
+                            ->implode(' · ');
+
+                        return ($variantName !== '' ? $variantName : 'Varian')
+                            .': '.(int) $variant->available_stock.' unit';
+                    })
+                    ->implode(', ');
+                $stockReply = 'Total stok tersedia untuk '.$product->name.': '.$availableStock.' unit. Rincian: '.$variantStockSummary.'.';
+            }
+
+            return response()->json([
+                'matched' => true,
+                'reply' => $this->withGreeting($greeting, $stockReply.' Stok yang sedang ditahan untuk pesanan belum dibayar tidak dihitung sebagai stok tersedia.'),
+            ]);
+        }
+
         /** @var array<array{keywords: list<string>, reply: string}> $faqResponses */
         $faqResponses = [
             [
@@ -83,14 +136,6 @@ class FaqBotController extends Controller
             [
                 'keywords' => ['bukti pembayaran', 'bukti bayar', 'bukti transfer', 'bukti tf', 'upload bukti', 'unggah bukti', 'upload transfer', 'unggah transfer', 'cara bayar', 'cara pembayaran', 'pembayaran', 'transfer bank', 'transfer', 'tf', 'nomor rekening', 'norek', 'rekening', 'bayar pesanan', 'bayarnya gimana', 'bayar pake apa', 'bayar pakai apa', 'cara tf', 'bayar'],
                 'reply' => 'Setelah admin menetapkan ongkir, buka detail pesanan di menu Pesanan Saya. Ikuti informasi pembayaran yang tercantum di sana, lalu unggah bukti pembayaran sebelum batas waktunya.',
-            ],
-            [
-                'keywords' => ['hold stok', 'stok di-hold', 'di-hold', 'dihold', 'di hold', 'stok ditahan', 'stok pesanan ditahan', 'ditahan'],
-                'reply' => 'Stok ditahan selama 24 jam setelah admin menetapkan ongkir dan pesanan menunggu pembayaran. Stok fisik dikurangi setelah pembayaran dikonfirmasi admin.',
-            ],
-            [
-                'keywords' => ['total stok produk', 'total stok', 'stok total', 'jumlah stok produk', 'jumlah stok', 'stok produk', 'stok habis', 'kehabisan stok', 'stok tersedia', 'persediaan', 'ready stock', 'ready stok', 'masih ready', 'masih ada stok', 'stok'],
-                'reply' => 'Total stok dan rincian stok tiap ukuran atau warna bisa dilihat pada halaman detail produk. Untuk produk yang memiliki varian, jumlah yang tersedia mengikuti stok masing-masing varian. Stok dapat berubah karena sebagian unit ditahan sementara untuk pesanan yang menunggu pembayaran.',
             ],
             [
                 'keywords' => ['buat akun', 'bikin akun', 'bkin akun', 'daftar akun', 'daftar', 'registrasi', 'register', 'sign up', 'sign in', 'masuk akun', 'login', 'log in', 'akun'],
@@ -236,5 +281,26 @@ class FaqBotController extends Controller
         $pattern = '/(?<![\p{L}\p{N}_])'.preg_quote($keyword, '/').'(?![\p{L}\p{N}_])/u';
 
         return preg_match($pattern, $message) === 1;
+    }
+
+    private function findMentionedActiveProduct(string $message): ?Product
+    {
+        $products = Product::query()
+            ->where('is_active', true)
+            ->whereHas('category', fn (Builder $query) => $query->where('is_active', true))
+            ->get(['id', 'name', 'slug', 'stock']);
+
+        $product = $products
+            ->filter(function (Product $product) use ($message): bool {
+                $productName = mb_strtolower(trim($product->name));
+                $productSlug = mb_strtolower(str_replace('-', ' ', trim($product->slug)));
+
+                return $this->containsKeyword($message, $productName)
+                    || $this->containsKeyword($message, $productSlug);
+            })
+            ->sortByDesc(fn (Product $product): int => mb_strlen($product->name))
+            ->first();
+
+        return $product?->load('variants');
     }
 }
