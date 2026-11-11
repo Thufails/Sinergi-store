@@ -99,3 +99,39 @@ This project has domain-specific skills available in `**/skills/**`. You MUST ac
 - Activate the `deploying-to-cloud` skill whenever deploying to Laravel Cloud, configuring Cloud environments or resources, using the Cloud CLI, or troubleshooting Cloud deployments.
 
 </laravel-boost-guidelines>
+
+## Catatan transisi Sinergi Store
+
+Diperbarui: 2026-11-11
+
+### Alur kerja yang disepakati
+
+- Sebelum mengubah atau menambah fitur, cek dulu apakah skema database atau model perlu diubah.
+- Jika perlu migrasi, siapkan migrasi/model terlebih dahulu lalu berhenti agar pemilik proyek bisa menjalankan `php artisan migrate`. Lanjutkan controller/CRUD dan route setelah pemilik mengonfirmasi migrasi selesai.
+- Setelah controller dan route selesai, berhenti agar pemilik bisa mengecek perubahan di VS Code sebelum mengubah Blade. Jika suatu pekerjaan hanya memerlukan Blade, jelaskan hal itu.
+- Jangan menjalankan tes otomatis kecuali diminta secara eksplisit. Pemilik proyek akan mengecek perilaku fitur secara manual.
+- Kerjakan bertahap dan jelaskan file yang diubah beserta alasannya.
+
+### Status chat pembeli dan FAQ
+
+- Percakapan dan pesan produk tersimpan di tabel `product_conversations` dan `product_conversation_messages`. Pemilik proyek sudah menjalankan migrasi chat yang dibuat pada 2026-11-05; jangan membuat ulang migrasi tersebut.
+- Chat produk memiliki inbox admin, riwayat percakapan pembeli, balasan otomatis tentang stok/varian, indikator pesan belum dibaca, serta alur menyelesaikan dan membuka kembali percakapan.
+- Stok tersedia dihitung oleh `ProductAvailabilityService`, termasuk dengan memperhitungkan stok yang dipesan oleh pesanan yang masih menunggu pembayaran.
+- Inbox pembeli serta route untuk memulai, membaca, dan mengirim chat produk mewajibkan guard `customer`. Chat tamu yang dibuat sebelum login akan ditautkan ke akun saat login/daftar jika token tamunya masih ada di session browser.
+- Saat percakapan dimulai, baris produk dikunci selama pemeriksaan/pembuatan chat aktif untuk mengurangi percakapan ganda akibat pembukaan yang bersamaan.
+- Setelah login/daftar, pembeli diarahkan kembali ke halaman produk dan dialog chat dibuka otomatis. Dialog juga menampilkan status jika polling pesan mengalami gangguan koneksi.
+- FAQ masih menggunakan aturan keyword yang deterministik; integrasi AI/LLM belum diperlukan. FAQ dapat menampilkan stok produk aktif yang namanya disebut pembeli serta daftar produk aktif dalam kategori yang disebut.
+
+### Perubahan terbaru yang sudah di-commit
+
+- 2026-11-10 (`d5c89be`): mewajibkan login untuk percakapan; menjaga tujuan kembali yang aman; menautkan chat tamu lama ke akun; mencegah pembuatan chat ganda saat pembukaan bersamaan.
+- 2026-11-10 (`58943f8`): menampilkan nama admin dan keterangan `Admin Sinergi` pada balasan di chat pembeli.
+- 2026-11-10 (`1239cf6`, `a58c016`): membuat jawaban FAQ stok/kategori mengambil data produk dan kategori terkini dari database.
+- 2026-11-06 (`4eaca20`, `ac1a146`): membangun chat produk dan merapikan jawaban FAQ.
+
+### Pengecekan dan pengembangan berikutnya
+
+- Pemilik proyek perlu mengecek manual alur login dan daftar: setelah masuk, pembeli kembali ke produk semula dan dialog chat terbuka. Akses langsung ke inbox pembeli juga harus mengarahkan pengunjung ke login.
+- Cek chat tamu lama muncul di akun setelah login, serta membuka ulang chat produk memakai percakapan aktif yang sama.
+- Pengembangan opsional berikutnya: pencarian/filter inbox admin dan penanganan sesi kedaluwarsa yang lebih jelas. Tunda sampai ada kendala nyata dalam pemakaian.
+- AI/RAG tetap menjadi opsi masa depan, bukan kebutuhan saat ini.
