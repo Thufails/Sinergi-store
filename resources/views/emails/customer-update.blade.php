@@ -13,7 +13,7 @@
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="width:100%; max-width:600px; border-collapse:separate; border-spacing:0; background:#ffffff; border:1px solid #dbe3ee; border-radius:18px; overflow:hidden;">
                     <tr>
                         <td style="padding:28px 36px; border-bottom:1px solid #e5eaf1;">
-                            <img src="{{ $message->embed(public_path('images/logo-sinergi.png')) }}" width="48" height="48" alt="Sinergi Store" style="display:inline-block; width:48px; height:48px; vertical-align:middle;">
+                            <img src="{{ asset('images/logo-sinergi.png') }}" width="48" height="48" alt="" style="display:inline-block; width:48px; height:48px; vertical-align:middle;">
                             <span style="display:inline-block; margin-left:10px; color:#111827; font-size:17px; font-weight:700; letter-spacing:3px; vertical-align:middle;">SINERGI STORE</span>
                         </td>
                     </tr>
