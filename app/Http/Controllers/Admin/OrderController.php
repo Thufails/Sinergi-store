@@ -8,6 +8,7 @@ use App\Models\OrderItem;
 use App\Models\OrderStatusHistory;
 use App\Models\Product;
 use App\Models\ProductVariant;
+use App\Services\CustomerEmailService;
 use App\Services\RajaOngkirShippingService;
 use Carbon\CarbonImmutable;
 use PhpOffice\PhpSpreadsheet\Cell\DataType;
@@ -30,6 +31,8 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class OrderController extends Controller
 {
+    public function __construct(private CustomerEmailService $customerEmailService) {}
+
     private const STATUS_LABELS = [
         Order::STATUS_PENDING_CONFIRMATION => 'Menunggu konfirmasi',
         Order::STATUS_AWAITING_PAYMENT => 'Menunggu pembayaran',
@@ -279,6 +282,20 @@ class OrderController extends Controller
             return back()->with('error', $message);
         }
 
+        $order->refresh();
+        $this->customerEmailService->sendOrderUpdate(
+            $order,
+            'Pesanan menunggu pembayaran',
+            'Total pembayaran sudah ditetapkan',
+            'Admin telah mengonfirmasi ongkir. Silakan selesaikan pembayaran sebelum batas waktu berikut.',
+            [
+                'Nomor pesanan' => $order->order_number,
+                'Ongkir' => 'Rp '.number_format((float) $order->shipping_fee, 0, ',', '.'),
+                'Total pembayaran' => 'Rp '.number_format((float) $order->total_amount, 0, ',', '.'),
+                'Batas pembayaran' => $order->payment_due_at?->format('d/m/Y H:i').' WIB',
+            ],
+        );
+
         return redirect()->route('admin.orders.show', $order)
             ->with('success', 'Ongkir tersimpan, total pembayaran sudah dihitung, dan pesanan menunggu pembayaran.');
     }
@@ -377,6 +394,29 @@ class OrderController extends Controller
             return back()->with('error', $message);
         }
 
+        $order->refresh();
+        if ($validated['decision'] === 'approve') {
+            $this->customerEmailService->sendOrderUpdate(
+                $order,
+                'Pembayaran pesanan dikonfirmasi',
+                'Pembayaranmu sudah dikonfirmasi',
+                'Admin telah memverifikasi pembayaran. Pesananmu akan segera diproses.',
+                ['Nomor pesanan' => $order->order_number],
+            );
+        } else {
+            $this->customerEmailService->sendOrderUpdate(
+                $order,
+                'Bukti pembayaran perlu diperbaiki',
+                'Bukti pembayaran belum dapat diterima',
+                'Silakan periksa catatan admin dan unggah ulang bukti pembayaran sebelum batas waktu.',
+                [
+                    'Nomor pesanan' => $order->order_number,
+                    'Catatan admin' => trim((string) $validated['review_note']),
+                    'Batas pembayaran' => $order->payment_due_at?->format('d/m/Y H:i').' WIB',
+                ],
+            );
+        }
+
         $successMessage = $validated['decision'] === 'approve'
             ? 'Pembayaran berhasil diverifikasi dan stok dikurangi.'
             : 'Bukti pembayaran ditolak. Pembeli dapat mengunggah bukti baru dalam 24 jam.';
@@ -468,6 +508,33 @@ class OrderController extends Controller
             return back()->with('error', $message);
         }
 
+        $order->refresh();
+        $statusUpdates = [
+            Order::STATUS_PROCESSING => [
+                'Pesanan mulai diproses',
+                'Pesananmu sedang disiapkan',
+                'Pembayaran sudah diterima dan pesananmu mulai dikemas.',
+            ],
+            Order::STATUS_CANCELLED => [
+                'Pesanan dibatalkan',
+                'Pesananmu dibatalkan',
+                'Pesanan ini telah dibatalkan oleh admin. Hubungi admin jika kamu membutuhkan bantuan.',
+            ],
+            Order::STATUS_EXPIRED => [
+                'Batas pembayaran pesanan berakhir',
+                'Pesananmu kedaluwarsa',
+                'Batas waktu pembayaran pesanan telah berakhir sehingga pesanan ditandai kedaluwarsa.',
+            ],
+        ];
+        [$subject, $heading, $messageBody] = $statusUpdates[$validated['status']];
+        $this->customerEmailService->sendOrderUpdate(
+            $order,
+            $subject,
+            $heading,
+            $messageBody,
+            ['Nomor pesanan' => $order->order_number],
+        );
+
         return redirect()
             ->route('admin.orders.show', $order)
             ->with('success', 'Status pesanan berhasil diperbarui.');
@@ -516,6 +583,19 @@ class OrderController extends Controller
         if ($message !== null) {
             return back()->with('error', $message);
         }
+
+        $order->refresh();
+        $this->customerEmailService->sendOrderUpdate(
+            $order,
+            'Pesanan sudah dikirim',
+            'Pesananmu dalam perjalanan',
+            'Admin telah mengirim pesananmu. Gunakan informasi berikut untuk melacak pengiriman.',
+            [
+                'Nomor pesanan' => $order->order_number,
+                'Kurir' => trim(implode(' ', array_filter([$order->courier_name, $order->courier_service]))),
+                'Nomor resi' => (string) $order->tracking_number,
+            ],
+        );
 
         return redirect()
             ->route('admin.orders.show', $order)

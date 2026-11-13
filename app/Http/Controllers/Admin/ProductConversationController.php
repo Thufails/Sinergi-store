@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\ProductConversation;
 use App\Models\ProductConversationMessage;
+use App\Services\CustomerEmailService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Http\JsonResponse;
@@ -16,6 +17,8 @@ use Illuminate\View\View;
 class ProductConversationController extends Controller
 {
     private const CUSTOMER_QUEUE_REPLY = 'Terima kasih, pesanmu sudah masuk antrean. Admin akan membalas lewat chat ini secepatnya.';
+
+    public function __construct(private CustomerEmailService $customerEmailService) {}
 
     public function index(Request $request): View
     {
@@ -146,6 +149,8 @@ class ProductConversationController extends Controller
 
             return $message;
         });
+
+        $this->customerEmailService->sendChatReply($conversation, $message);
 
         return response()->json([
             'message' => $this->serializeMessages(collect([$message]))[0],
