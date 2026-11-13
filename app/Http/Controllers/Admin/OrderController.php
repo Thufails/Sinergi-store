@@ -509,31 +509,28 @@ class OrderController extends Controller
         }
 
         $order->refresh();
-        $statusUpdates = [
-            Order::STATUS_PROCESSING => [
-                'Pesanan mulai diproses',
-                'Pesananmu sedang disiapkan',
-                'Pembayaran sudah diterima dan pesananmu mulai dikemas.',
-            ],
-            Order::STATUS_CANCELLED => [
-                'Pesanan dibatalkan',
-                'Pesananmu dibatalkan',
-                'Pesanan ini telah dibatalkan oleh admin. Hubungi admin jika kamu membutuhkan bantuan.',
-            ],
-            Order::STATUS_EXPIRED => [
-                'Batas pembayaran pesanan berakhir',
-                'Pesananmu kedaluwarsa',
-                'Batas waktu pembayaran pesanan telah berakhir sehingga pesanan ditandai kedaluwarsa.',
-            ],
-        ];
-        [$subject, $heading, $messageBody] = $statusUpdates[$validated['status']];
-        $this->customerEmailService->sendOrderUpdate(
-            $order,
-            $subject,
-            $heading,
-            $messageBody,
-            ['Nomor pesanan' => $order->order_number],
-        );
+        if ($validated['status'] !== Order::STATUS_PROCESSING) {
+            $statusUpdates = [
+                Order::STATUS_CANCELLED => [
+                    'Pesanan dibatalkan',
+                    'Pesananmu dibatalkan',
+                    'Pesanan ini telah dibatalkan oleh admin. Hubungi admin jika kamu membutuhkan bantuan.',
+                ],
+                Order::STATUS_EXPIRED => [
+                    'Batas pembayaran pesanan berakhir',
+                    'Pesananmu kedaluwarsa',
+                    'Batas waktu pembayaran pesanan telah berakhir sehingga pesanan ditandai kedaluwarsa.',
+                ],
+            ];
+            [$subject, $heading, $messageBody] = $statusUpdates[$validated['status']];
+            $this->customerEmailService->sendOrderUpdate(
+                $order,
+                $subject,
+                $heading,
+                $messageBody,
+                ['Nomor pesanan' => $order->order_number],
+            );
+        }
 
         return redirect()
             ->route('admin.orders.show', $order)
